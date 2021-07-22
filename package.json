@@ -1,7 +1,7 @@
 {
-  "name": "qg",
+  "name": "lexa",
   "version": "1.0.0",
-  "description": "A Discord Bot for Quarantine Gaming.",
+  "description": "A Discord bot for automation and moderation.",
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
