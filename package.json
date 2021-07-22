@@ -19,19 +19,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JKLorenzo/QG.git"
+    "url": "git+https://github.com/JKLorenzo/Lexa.git"
   },
   "keywords": [
     "nodejs",
     "discord-bot",
-    "quarantine-gaming"
+    "lexa-discord"
   ],
   "author": "Juruel Keanu Lorenzo <keanulorenzo32@gmail.com>",
   "license": "AGPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/JKLorenzo/QG/issues"
+    "url": "https://github.com/JKLorenzo/Lexa/issues"
   },
-  "homepage": "https://github.com/JKLorenzo/QG#readme",
+  "homepage": "https://github.com/JKLorenzo/Lexa#readme",
   "dependencies": {
     "discord-api-types": "^0.20.2",
     "discord.js": "^13.0.0-dev.07017a9.1626869177",
