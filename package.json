@@ -1,0 +1,55 @@
+{
+  "name": "qg",
+  "version": "1.0.0",
+  "description": "A Discord Bot for Quarantine Gaming.",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "clean": "is-ci || rimraf dist",
+    "build": "tsc",
+    "postinstall": "npm run clean && npm run build",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "prettier": "prettier src --check",
+    "prettier:fix": "prettier src --write",
+    "prepare": "is-ci || husky install"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JKLorenzo/QG.git"
+  },
+  "keywords": [
+    "nodejs",
+    "discord-bot",
+    "quarantine-gaming"
+  ],
+  "author": "Juruel Keanu Lorenzo <keanulorenzo32@gmail.com>",
+  "license": "AGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/JKLorenzo/QG/issues"
+  },
+  "homepage": "https://github.com/JKLorenzo/QG#readme",
+  "dependencies": {
+    "discord-api-types": "^0.20.2",
+    "discord.js": "^13.0.0-dev.07017a9.1626869177",
+    "mongodb": "^4.0.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^12.1.4",
+    "@commitlint/config-angular": "^12.1.4",
+    "@typescript-eslint/eslint-plugin": "^4.28.4",
+    "@typescript-eslint/parser": "^4.28.4",
+    "eslint": "^7.31.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^7.0.1",
+    "is-ci": "^3.0.0",
+    "lint-staged": "^11.0.1",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  }
+}

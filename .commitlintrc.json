@@ -1,0 +1,7 @@
+{
+  "extends": ["@commitlint/config-angular"],
+  "rules": {
+    "scope-case": [2, "always", "pascal-case"],
+    "type-enum": [2, "always", ["chore", "feat", "fix", "refactor", "revert", "style", "workflow"]]
+  }
+}
