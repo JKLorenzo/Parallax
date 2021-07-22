@@ -5,7 +5,7 @@
   **An automation and moderation bot**
   
   [![License](https://img.shields.io/github/license/JKLorenzo/Lexa)](https://github.com/JKLorenzo/Lexa/blob/master/LICENSE)
-  [![Testing](https://github.com/JKLorenzo/Lexa/workflows/Testing/badge.svg)](https://github.com/JKLorenzo/Lexa/actions)
+  [![Lint](https://github.com/JKLorenzo/Lexa/workflows/Lint/badge.svg)](https://github.com/JKLorenzo/Lexa/actions/workflows/lint.yml)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/status.svg)](https://depfu.com)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Lexa?project_id=29783)
   [![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
