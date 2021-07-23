@@ -5,14 +5,14 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "clean": "is-ci || rimraf dist",
     "build": "tsc",
+    "clean": "is-ci || rimraf dist",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "postinstall": "npm run clean && npm run build",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "prettier": "prettier src --check",
-    "prettier:fix": "prettier src --write",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "prettier": "prettier --check **/*.{json,yml,yaml}",
+    "prettier:fix": "prettier --write **/*.{json,yml,yaml}"
   },
   "engines": {
     "node": ">=14.0.0"
