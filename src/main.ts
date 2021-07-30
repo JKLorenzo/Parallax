@@ -1,4 +1,6 @@
 import { Client, Intents } from 'discord.js';
+import { connect } from './modules/database.js';
+import { initInteractions } from './modules/interaction.js';
 
 export const client = new Client({
   allowedMentions: {
@@ -17,15 +19,16 @@ export const client = new Client({
   ],
   partials: ['MESSAGE', 'CHANNEL'],
   presence: {
-    activities: [
-      {
-        name: '/commands',
-        type: 'LISTENING',
-      },
-    ],
     status: 'online',
     afk: false,
   },
+});
+
+client.on('ready', async () => {
+  await connect();
+  await initInteractions();
+
+  console.log('initialized');
 });
 
 client.login(process.env.BOT_TOKEN!);
