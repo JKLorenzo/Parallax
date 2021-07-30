@@ -4,10 +4,13 @@ const mongoClient = new mongodb.MongoClient(process.env.DB_URI!, {
   keepAlive: true,
 });
 
-export async function getGuildConfig(guildId: string, key: string): Promise<unknown> {
-  const value = await mongoClient.db(guildId).collection('config').findOne({ _id: key });
+export async function connect(): Promise<void> {
+  await mongoClient.connect();
+}
 
-  return value;
+export async function getGuildConfig(guildId: string, key: string): Promise<unknown> {
+  const guild_config = await mongoClient.db(guildId).collection('config').findOne({ _id: key });
+  return guild_config;
 }
 
 export async function setGuildConfig(guildId: string, key: string, value: unknown): Promise<void> {
