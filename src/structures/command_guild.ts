@@ -12,7 +12,7 @@ export default abstract class GuildCommand extends BaseCommand {
   }
 
   async init(): Promise<void> {
-    for (const guild of client.guilds.cache.array()) {
+    for (const guild of client.guilds.cache.values()) {
       if (this.options.guilds?.includes(guild.id)) {
         let this_command = guild.commands.cache.find(c => c.name === this.data.name);
 

@@ -29,7 +29,7 @@ export async function initInteractions(): Promise<void> {
 export async function syncCommands(): Promise<void> {
   const promises = [];
   await client.application?.commands.fetch();
-  for (const command of _commands.array()) {
+  for (const command of _commands.values()) {
     promises.push(command.init());
   }
   await Promise.all(promises);
