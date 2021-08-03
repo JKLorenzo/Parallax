@@ -13,11 +13,11 @@ type queue_item = {
   };
 };
 
-export function queuerOf(guild_id: Snowflake): Queuer {
-  if (!_queuers.has(guild_id)) {
-    _queuers.set(guild_id, new Queuer(500));
+export function queuerOf(guildId: Snowflake): Queuer {
+  if (!_queuers.has(guildId)) {
+    _queuers.set(guildId, new Queuer(500));
   }
-  return _queuers.get(guild_id)!;
+  return _queuers.get(guildId)!;
 }
 
 export class Queuer {
