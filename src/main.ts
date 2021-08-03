@@ -1,6 +1,5 @@
 import { Client, Intents } from 'discord.js';
-import { connect } from './modules/database.js';
-import { initInteractions } from './modules/interaction.js';
+import { connectDb } from './modules/database.js';
 
 export const client = new Client({
   allowedMentions: {
@@ -24,11 +23,8 @@ export const client = new Client({
   },
 });
 
-client.on('ready', async () => {
-  await connect();
-  await initInteractions();
+await connectDb();
+console.log('Connected');
 
-  console.log('initialized');
-});
-
-client.login(process.env.BOT_TOKEN!);
+await client.login(process.env.BOT_TOKEN!);
+console.log('Online');
