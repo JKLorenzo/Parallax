@@ -19,7 +19,7 @@ export default abstract class GuildCommand extends BaseCommand {
         // Create
         if (!this_command) {
           this_command = await guild.commands.create(this.data);
-          console.log(`Command ${this.data.name} created`);
+          console.log(`Guild Command ${this.data.name} created on ${guild}`);
         }
 
         // Update data
@@ -31,7 +31,7 @@ export default abstract class GuildCommand extends BaseCommand {
         if (!sameDescription || !sameOptions || !sameDefaultPermissions) {
           if (this_command) {
             await this_command.edit(this.data);
-            console.log(`Command ${this.data.name} updated`);
+            console.log(`Guild Command ${this.data.name} updated on ${guild}`);
           }
         }
 
@@ -44,7 +44,7 @@ export default abstract class GuildCommand extends BaseCommand {
             await this_command.permissions.set({
               permissions: this.permissions ?? [],
             });
-            console.log(`Command ${this.data.name} permission updated`);
+            console.log(`Guild Command ${this.data.name} permission updated on ${guild}`);
           }
         }
       }

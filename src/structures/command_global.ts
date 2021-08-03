@@ -13,7 +13,7 @@ export default abstract class GlobalCommand extends BaseCommand {
     // Create
     if (!this_command) {
       this_command = await client.application?.commands.create(this.data);
-      console.log(`Command ${this.data.name} created`);
+      console.log(`Global Command ${this.data.name} created`);
     }
 
     // Update data
@@ -22,7 +22,7 @@ export default abstract class GlobalCommand extends BaseCommand {
     const sameDefaultPermissions = this_command?.defaultPermission === this.data.defaultPermission;
     if (this_command && (!sameDescription || !sameOptions || !sameDefaultPermissions)) {
       await this_command.edit(this.data);
-      console.log(`Command ${this.data.name} updated`);
+      console.log(`Global Command ${this.data.name} updated`);
     }
   }
 }
