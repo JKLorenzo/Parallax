@@ -5,8 +5,7 @@
     "moduleResolution": "Node",
     "outDir": "dist",
     "rootDir": "src",
-    "sourceMap": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ES2021"
   }
 }
