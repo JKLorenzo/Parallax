@@ -17,10 +17,11 @@ export default abstract class GuildCommand extends BaseCommand {
     this._ownerId = await getGlobalConfig('ownerId');
 
     for (const guild of client.guilds.cache.values()) {
-      if (!this._options.guilds || (await Promise.race([this._options.guilds(guild)]))) {
-        await guild.commands.fetch();
-        let this_command = guild.commands.cache.find(c => c.name === this.data.name);
+      await guild.commands.fetch();
+      const isFiltered = typeof this._options.guilds === 'function';
+      let this_command = guild.commands.cache.find(c => c.name === this.data.name);
 
+      if (!isFiltered || (await Promise.race([this._options.guilds!(guild)]))) {
         // Create
         if (!this_command) {
           this_command = await guild.commands.create(this.data);
@@ -43,6 +44,10 @@ export default abstract class GuildCommand extends BaseCommand {
           });
           console.log(`Guild Command ${this.data.name} permission updated on ${guild}`);
         }
+      } else if (isFiltered && this_command) {
+        // Delete
+        await this_command.delete();
+        console.log(`Guild Command ${this.data.name} deleted on ${guild}`);
       }
     }
   }
