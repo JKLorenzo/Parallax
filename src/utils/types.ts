@@ -1,4 +1,4 @@
-import { Snowflake } from 'discord.js';
+import { ColorResolvable, Guild, Snowflake } from 'discord.js';
 
 export type CommandPermissionData = {
   allow?: Snowflake[];
@@ -6,7 +6,7 @@ export type CommandPermissionData = {
 };
 
 export type GuildCommandOptions = {
-  guilds?: Snowflake[];
+  guilds?(guild: Guild): Promise<boolean> | boolean;
   permissions?: {
     users?: CommandPermissionData;
     roles?: CommandPermissionData;
@@ -43,6 +43,7 @@ export type FreeGameConfig = {
 export type GameConfig = {
   enabled?: boolean;
   mentionable?: boolean;
+  color?: ColorResolvable;
   invite_channel?: Snowflake;
   reference_role?: Snowflake;
 };
@@ -61,4 +62,15 @@ export type PlayConfig = {
 export type StreamingConfig = {
   enabled?: boolean;
   streaming_role?: Snowflake;
+};
+
+export type GameData = {
+  name: string;
+  status: 'approved' | 'denied' | 'pending';
+};
+
+export type ImageData = {
+  name: string;
+  iconUrl?: string;
+  bannerUrl?: string;
 };
