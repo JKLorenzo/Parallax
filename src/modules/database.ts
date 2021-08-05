@@ -11,10 +11,31 @@ import {
 } from '../utils/types.js';
 
 const _config = new Collection<Snowflake, GuildConfig>();
+const _global = new Collection<string, unknown>();
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
 
 export async function connectDb(): Promise<void> {
   await mongoClient.connect();
+}
+
+export async function getGlobalConfig<T>(key: string): Promise<T | undefined> {
+  if (!_global.get(key)) {
+    const result = await mongoClient.db('global').collection('config').findOne({ _id: key });
+    if (result) _global.set(key, result._value ?? { ...result });
+  }
+  return _global.get(key) as T;
+}
+
+export async function updateGlobalConfig<T>(key: string, value: T): Promise<void> {
+  await mongoClient
+    .db('global')
+    .collection('config')
+    .updateOne(
+      { _id: key },
+      { $set: Object.keys(value).length ? { ...value } : { _value: value } },
+      { upsert: true },
+    );
+  _global.set(key, value);
 }
 
 export async function getDedicatedConfig(guildId: Snowflake): Promise<DedicatedConfig | undefined> {
