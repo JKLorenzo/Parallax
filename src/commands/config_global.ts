@@ -50,7 +50,6 @@ export default class GlobalConfig extends GuildCommand {
           if (!guildId || guildId !== guild.id) return false;
           return true;
         },
-        permissions: { roles: { allow: ['393013053488103435'] } },
       },
     );
   }
