@@ -37,7 +37,7 @@ export async function updateGlobalConfig<T>(key: string, value: T): Promise<void
     .collection('config')
     .updateOne(
       { _id: key },
-      { $set: Object.keys(value).length ? { ...value } : { _value: value } },
+      { $set: typeof value === 'object' ? { ...value } : { _value: value } },
       { upsert: true },
     );
   _global.set(key, value);
