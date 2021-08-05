@@ -40,21 +40,21 @@ export async function fetchImage(name: string): Promise<ImageData | undefined> {
     ]);
     data.iconUrl = results[0];
     data.bannerUrl = results[1];
-    if (data.bannerUrl || data.iconUrl) await updateImage(name, data);
+    if (data.bannerUrl || data.iconUrl) await updateImage(data);
   } else if (!data.iconUrl) {
     data.iconUrl = await searchImage(`${name} game logo`, {
       ratio: 1,
       minWidth: 100,
       minHeight: 100,
     });
-    if (data.iconUrl) await updateImage(name, { iconUrl: data.iconUrl });
+    if (data.iconUrl) await updateImage({ name: data.name, iconUrl: data.iconUrl });
   } else if (!data.bannerUrl) {
     data.bannerUrl = await searchImage(`${name} game background`, {
       ratio: 1.7,
       minWidth: 1000,
       minHeight: 1000,
     });
-    if (data.bannerUrl) await updateImage(name, { bannerUrl: data.bannerUrl });
+    if (data.bannerUrl) await updateImage({ name: data.name, bannerUrl: data.bannerUrl });
   }
   return data;
 }
