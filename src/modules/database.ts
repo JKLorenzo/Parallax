@@ -1,17 +1,22 @@
 import { Collection, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
+import { utfToHex } from '../utils/functions.js';
 import {
   DedicatedConfig,
   FreeGameConfig,
   GameConfig,
+  GameData,
   GuildConfig,
+  ImageData,
   NSFWConfig,
   PlayConfig,
   StreamingConfig,
 } from '../utils/types.js';
 
 const _config = new Collection<Snowflake, GuildConfig>();
+const _games = new Collection<string, GameData>();
 const _global = new Collection<string, unknown>();
+const _images = new Collection<string, ImageData>();
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
 
 export async function connectDb(): Promise<void> {
@@ -36,6 +41,55 @@ export async function updateGlobalConfig<T>(key: string, value: T): Promise<void
       { upsert: true },
     );
   _global.set(key, value);
+}
+
+export async function getImage(name: string): Promise<ImageData | undefined> {
+  const id = utfToHex(name);
+  if (!_images.get(id)) {
+    const result = await mongoClient.db('global').collection('images').findOne({ _id: id });
+    if (result) {
+      _images.set(id, {
+        name: name,
+        bannerUrl: result.bannerUrl,
+        iconUrl: result.iconUrl,
+      });
+    }
+  }
+  return _images.get(id);
+}
+
+export async function updateImage(name: string, data: ImageData): Promise<void> {
+  if (Object.keys(data).length === 0) return;
+
+  const id = utfToHex(name);
+  await mongoClient
+    .db('global')
+    .collection('images')
+    .updateOne({ _id: id }, { $set: data }, { upsert: true });
+}
+
+export async function getGame(name: string): Promise<GameData | undefined> {
+  const id = utfToHex(name);
+  if (!_games.get(id)) {
+    const result = await mongoClient.db('global').collection('games').findOne({ _id: id });
+    if (result) {
+      _games.set(id, {
+        name: result.name,
+        status: result.status,
+      });
+    }
+  }
+  return _games.get(id);
+}
+
+export async function updateGame(name: string, data: GameData): Promise<void> {
+  if (Object.keys(data).length === 0) return;
+
+  const id = utfToHex(name);
+  await mongoClient
+    .db('global')
+    .collection('games')
+    .updateOne({ _id: id }, { $set: data }, { upsert: true });
 }
 
 export async function getDedicatedConfig(guildId: Snowflake): Promise<DedicatedConfig | undefined> {
