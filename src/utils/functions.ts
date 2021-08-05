@@ -13,3 +13,7 @@ export function getFiles(dir: string): string[] {
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function utfToHex(utf: string): string {
+  return Buffer.from(utf, 'utf8').toString('hex');
+}
