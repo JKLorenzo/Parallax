@@ -1,10 +1,12 @@
-import { ApplicationCommandData, ApplicationCommandPermissionData } from 'discord.js';
+import { ApplicationCommandData, ApplicationCommandPermissionData, Snowflake } from 'discord.js';
 import BaseCommand from './command_base.js';
 import { client } from '../main.js';
+import { getGlobalConfig } from '../modules/database.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
 export default abstract class GuildCommand extends BaseCommand {
   private _options: GuildCommandOptions;
+  private _ownerId?: Snowflake;
 
   constructor(data: ApplicationCommandData, options: GuildCommandOptions) {
     super(data, 'guild');
@@ -12,6 +14,8 @@ export default abstract class GuildCommand extends BaseCommand {
   }
 
   async init(): Promise<void> {
+    this._ownerId = await getGlobalConfig('ownerId');
+
     for (const guild of client.guilds.cache.values()) {
       if (!this._options.guilds || (await Promise.race([this._options.guilds(guild)]))) {
         await guild.commands.fetch();
@@ -32,9 +36,10 @@ export default abstract class GuildCommand extends BaseCommand {
         // Update permissions
         const guildPermissions = await guild.commands.permissions.fetch({});
         const existingPermissions = guildPermissions.get(this_command.id);
-        if (JSON.stringify(existingPermissions) !== JSON.stringify(this.permissions)) {
+        const currentPermissions = this.getPermissions();
+        if (JSON.stringify(existingPermissions) !== JSON.stringify(currentPermissions)) {
           await this_command.permissions.set({
-            permissions: this.permissions ?? [],
+            permissions: currentPermissions ?? [],
           });
           console.log(`Guild Command ${this.data.name} permission updated on ${guild}`);
         }
@@ -42,34 +47,33 @@ export default abstract class GuildCommand extends BaseCommand {
     }
   }
 
-  get permissions(): ApplicationCommandPermissionData[] | undefined {
+  getPermissions(): ApplicationCommandPermissionData[] | undefined {
     const permissions = [] as ApplicationCommandPermissionData[];
 
-    if (this._options.permissions) {
-      if (this._options.permissions.roles) {
-        if (this._options.permissions.roles.allow) {
-          this._options.permissions.roles.allow.forEach(id =>
-            permissions.push({ id: id, permission: true, type: 'ROLE' }),
-          );
-        }
-        if (this._options.permissions.roles.deny) {
-          this._options.permissions.roles.deny.forEach(id =>
-            permissions.push({ id: id, permission: false, type: 'ROLE' }),
-          );
-        }
-      }
-      if (this._options.permissions.users) {
-        if (this._options.permissions.users.allow) {
-          this._options.permissions.users.allow.forEach(id =>
-            permissions.push({ id: id, permission: true, type: 'USER' }),
-          );
-        }
-        if (this._options.permissions.users.deny) {
-          this._options.permissions.users.deny.forEach(id =>
-            permissions.push({ id: id, permission: false, type: 'USER' }),
-          );
-        }
-      }
+    if (this._options?.permissions?.roles?.allow) {
+      this._options.permissions.roles.allow.forEach(id =>
+        permissions.push({ id: id, permission: true, type: 'ROLE' }),
+      );
+    }
+    if (this._options?.permissions?.roles?.deny) {
+      this._options.permissions.roles.deny.forEach(id =>
+        permissions.push({ id: id, permission: false, type: 'ROLE' }),
+      );
+    }
+
+    if (this._ownerId) {
+      permissions.push({ id: this._ownerId, permission: true, type: 'USER' });
+    }
+
+    if (this._options?.permissions?.users?.allow) {
+      this._options.permissions.users.allow.forEach(id =>
+        permissions.push({ id: id, permission: true, type: 'USER' }),
+      );
+    }
+    if (this._options?.permissions?.users?.deny) {
+      this._options.permissions.users.deny.forEach(id =>
+        permissions.push({ id: id, permission: false, type: 'USER' }),
+      );
     }
 
     return permissions.length ? permissions : undefined;
