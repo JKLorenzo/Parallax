@@ -46,7 +46,7 @@ export default class GlobalConfig extends GuildCommand {
       },
       {
         guilds: async guild => {
-          const guildId = (await getGlobalConfig<string>('guildId')) ?? '867716791231971329';
+          const guildId = await getGlobalConfig<string>('guildId');
           if (!guildId || guildId !== guild.id) return false;
           return true;
         },
