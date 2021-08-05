@@ -4,7 +4,7 @@ import { client } from '../main.js';
 
 export default abstract class GlobalCommand extends BaseCommand {
   constructor(data: ApplicationCommandData) {
-    super(data, { type: 'global' });
+    super(data, 'global');
   }
 
   async init(): Promise<void> {
@@ -17,10 +17,7 @@ export default abstract class GlobalCommand extends BaseCommand {
     }
 
     // Update data
-    const sameDescription = this_command?.description === this.data.description;
-    const sameOptions = JSON.stringify(this_command?.options) === JSON.stringify(this.data.options);
-    const sameDefaultPermissions = this_command?.defaultPermission === this.data.defaultPermission;
-    if (this_command && (!sameDescription || !sameOptions || !sameDefaultPermissions)) {
+    if (this_command && !this.isUpdated(this_command)) {
       await this_command.edit(this.data);
       console.log(`Global Command ${this.data.name} updated`);
     }

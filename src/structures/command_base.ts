@@ -1,26 +1,22 @@
 import {
   ApplicationCommandData,
-  ApplicationCommandPermissionData,
+  ApplicationCommandOptionData,
   CommandInteraction,
 } from 'discord.js';
-import { GuildCommandOptions } from '../utils/types';
-
-type CommandOptions = GuildCommandOptions & {
-  type: 'guild' | 'global';
-};
+import GlobalCommand from './command_global.js';
 
 export default abstract class BaseCommand {
   private _data: ApplicationCommandData;
-  private _options: CommandOptions;
+  private _type: 'guild' | 'global';
 
-  constructor(data: ApplicationCommandData, options: CommandOptions) {
+  constructor(data: ApplicationCommandData, type: 'guild' | 'global') {
     this._data = {
       description: data.description,
       name: data.name,
       defaultPermission: data.defaultPermission,
       options: data.options ?? [],
     };
-    this._options = options;
+    this._type = type;
   }
 
   abstract init(): Promise<void>;
@@ -28,47 +24,34 @@ export default abstract class BaseCommand {
   abstract exec(interaction: CommandInteraction): Promise<void>;
 
   get data(): ApplicationCommandData {
-    return this._data;
+    return {
+      name: this._data.name,
+      description: this._data.description,
+      options: this._transformOptions(),
+      defaultPermission: this._data.defaultPermission,
+    };
   }
 
-  get options(): CommandOptions {
-    return this._options;
+  isGlobal(): this is GlobalCommand {
+    return this._type === 'global';
   }
 
-  get permissions(): ApplicationCommandPermissionData[] | undefined {
-    const permissions = [] as ApplicationCommandPermissionData[];
-
-    if (this._options.permissions) {
-      if (this._options.permissions.roles) {
-        if (this._options.permissions.roles.allow) {
-          this._options.permissions.roles.allow.forEach(id =>
-            permissions.push({ id: id, permission: true, type: 'ROLE' }),
-          );
-        }
-        if (this._options.permissions.roles.deny) {
-          this._options.permissions.roles.deny.forEach(id =>
-            permissions.push({ id: id, permission: false, type: 'ROLE' }),
-          );
-        }
-      }
-      if (this._options.permissions.users) {
-        if (this._options.permissions.users.allow) {
-          this._options.permissions.users.allow.forEach(id =>
-            permissions.push({ id: id, permission: true, type: 'USER' }),
-          );
-        }
-        if (this._options.permissions.users.deny) {
-          this._options.permissions.users.deny.forEach(id =>
-            permissions.push({ id: id, permission: false, type: 'USER' }),
-          );
-        }
-      }
-    }
-
-    return permissions.length ? permissions : undefined;
+  isUpdated(data: ApplicationCommandData): boolean {
+    const sameDescription = data.description === this.data.description;
+    const sameOptions = JSON.stringify(data.options) === JSON.stringify(this.data.options);
+    const sameDefaultPermissions = data.defaultPermission === this.data.defaultPermission;
+    return sameDescription && sameOptions && sameDefaultPermissions;
   }
 
-  isGlobal(): boolean {
-    return this._options.type === 'global';
+  private _transformOptions(options = this._data.options): ApplicationCommandOptionData[] {
+    if (!options && !Array.isArray(options)) return [];
+    return options.map(option => ({
+      type: option.type,
+      name: option.name,
+      description: option.description,
+      required: option.required,
+      choices: option.choices,
+      options: option.options ? this._transformOptions(option.options) : undefined,
+    }));
   }
 }
