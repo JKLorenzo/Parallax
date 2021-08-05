@@ -3,6 +3,7 @@ import {
   ApplicationCommandOptionData,
   CommandInteraction,
 } from 'discord.js';
+import _ from 'lodash';
 import GlobalCommand from './command_global.js';
 
 export default abstract class BaseCommand {
@@ -38,7 +39,7 @@ export default abstract class BaseCommand {
 
   isUpdated(data: ApplicationCommandData): boolean {
     const sameDescription = data.description === this.data.description;
-    const sameOptions = JSON.stringify(data.options) === JSON.stringify(this.data.options);
+    const sameOptions = _.isEqual(data.options, this.data.options);
     const sameDefaultPermissions = data.defaultPermission === this.data.defaultPermission;
     return sameDescription && sameOptions && sameDefaultPermissions;
   }
@@ -49,7 +50,10 @@ export default abstract class BaseCommand {
       type: option.type,
       name: option.name,
       description: option.description,
-      required: option.required,
+      required:
+        option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP'
+          ? option.required
+          : option.required ?? false,
       choices: option.choices,
       options: option.options ? this._transformOptions(option.options) : undefined,
     }));
