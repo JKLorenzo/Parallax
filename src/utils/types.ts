@@ -70,7 +70,7 @@ export type GameData = {
 };
 
 export type ImageData = {
-  name: string;
+  name?: string;
   iconUrl?: string;
   bannerUrl?: string;
 };
