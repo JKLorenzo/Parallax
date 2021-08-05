@@ -58,10 +58,11 @@ export async function getImage(name: string): Promise<ImageData | undefined> {
   return _images.get(id);
 }
 
-export async function updateImage(name: string, data: ImageData): Promise<void> {
+export async function updateImage(data: ImageData): Promise<void> {
   if (Object.keys(data).length === 0) return;
+  if (!data.name) return;
 
-  const id = utfToHex(name);
+  const id = utfToHex(data.name);
   await mongoClient
     .db('global')
     .collection('images')
@@ -82,10 +83,11 @@ export async function getGame(name: string): Promise<GameData | undefined> {
   return _games.get(id);
 }
 
-export async function updateGame(name: string, data: GameData): Promise<void> {
+export async function updateGame(data: GameData): Promise<void> {
   if (Object.keys(data).length === 0) return;
+  if (!data.name) return;
 
-  const id = utfToHex(name);
+  const id = utfToHex(data.name);
   await mongoClient
     .db('global')
     .collection('games')
