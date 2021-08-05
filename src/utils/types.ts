@@ -74,3 +74,9 @@ export type ImageData = {
   iconUrl?: string;
   bannerUrl?: string;
 };
+
+export type ImageOptions = {
+  ratio: number;
+  minWidth: number;
+  minHeight: number;
+};
