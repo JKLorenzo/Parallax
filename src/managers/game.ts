@@ -1,8 +1,14 @@
 import { Activity, Collection, MessageEmbed, Presence, Snowflake, TextChannel } from 'discord.js';
 import { getComponent } from './interaction.js';
 import { client } from '../main.js';
-import { getGame, getGameConfig, getGlobalConfig, updateGame } from '../modules/database.js';
-import { addRole, createRole } from '../modules/role.js';
+import {
+  getGame,
+  getGameConfig,
+  getGlobalConfig,
+  updateGame,
+  updateGameConfig,
+} from '../modules/database.js';
+import { addRole, createRole, deleteRole } from '../modules/role.js';
 import { fetchImage } from '../utils/functions.js';
 import { ActivityData } from '../utils/types.js';
 
@@ -16,7 +22,6 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
 
   if (!guild || !member || member.user.bot) return;
   const config = await getGameConfig(guild.id);
-  if (!config || !config.enabled) return;
 
   const _old = new Collection<string, ActivityData>();
   const _new = new Collection<string, ActivityData>();
@@ -44,15 +49,41 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
     const game_data = await getGame(game_name);
     if (!game_data) {
       await screenGame(game_name, activity);
-    } else if (game_data.status === 'approved' && status === 'new') {
-      let game_role = guild.roles.cache.find(role => role.name === game_name);
-      if (!game_role) {
-        game_role = await createRole(guild, {
-          name: game_name,
-          color: config.color,
-        });
+    } else {
+      if (!config || !config.enabled) return;
+
+      if (game_data.status === 'approved' && status === 'new') {
+        let game_role = guild.roles.cache.find(
+          role => role.name === game_name && (config.roles?.includes(role.id) ?? false),
+        );
+
+        if (!game_role) {
+          game_role = await createRole(guild, {
+            name: game_name,
+            color: config.color,
+            mentionable: config.mentionable,
+            position: config.reference_role
+              ? guild.roles.cache.get(config.reference_role)?.position
+              : undefined,
+          });
+        }
+        if (game_role) {
+          if (!config.roles?.includes(game_role.id)) {
+            await updateGameConfig(guild.id, { roles: [...(config.roles ?? []), game_role.id] });
+          }
+          await addRole(member, game_role);
+        }
+      } else if (game_data.status === 'denied') {
+        const game_role = guild.roles.cache.find(
+          role => role.name === game_name && (config.roles?.includes(role.id) ?? false),
+        );
+        if (game_role) {
+          await updateGameConfig(guild.id, {
+            roles: [...(config.roles ?? []).filter(r => r !== game_role.id)],
+          });
+          await deleteRole(game_role);
+        }
       }
-      await addRole(member, game_role);
     }
   }
 }
