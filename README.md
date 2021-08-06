@@ -7,6 +7,7 @@
   [![License](https://img.shields.io/github/license/JKLorenzo/Lexa)](https://github.com/JKLorenzo/Lexa/blob/master/LICENSE)
   [![Lint](https://github.com/JKLorenzo/Lexa/workflows/Lint/badge.svg)](https://github.com/JKLorenzo/Lexa/actions/workflows/lint.yml)
   [![CodeQL](https://github.com/JKLorenzo/Lexa/workflows/CodeQL/badge.svg)](https://github.com/JKLorenzo/Lexa/actions/workflows/codeql.yml)
+  [![Heroku](https://github.com/JKLorenzo/Lexa/workflows/Heroku/badge.svg)](https://github.com/JKLorenzo/Lexa/actions/workflows/heroku.yml)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Lexa?project_id=29783)
   [![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
   
@@ -14,6 +15,6 @@
   
   It is currently under development but it will be available to the public once completed.
   
-  [![Discord](https://discord.com/api/guilds/867716791231971329/embed.png?style=banner2)](https://discord.gg/upMKkmfsDZ)
+  [![Discord](https://discord.com/api/guilds/867716791231971329/embed.png?style=banner2)](https://discord.gg/NaRANRp9ng)
   
 </div>
