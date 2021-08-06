@@ -1,18 +1,42 @@
 import { Activity, Collection, MessageEmbed, Presence, Snowflake, TextChannel } from 'discord.js';
+import cron from 'node-cron';
 import { getComponent } from './interaction.js';
 import { client } from '../main.js';
 import {
+  getExpiredUserGames,
   getGame,
   getGameConfig,
   getGlobalConfig,
   updateGame,
   updateGameConfig,
+  updateUserGame,
 } from '../modules/database.js';
-import { addRole, createRole, deleteRole } from '../modules/role.js';
+import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js';
+import { logError } from '../modules/telemetry.js';
 import { fetchImage } from '../utils/functions.js';
 import { ActivityData } from '../utils/types.js';
 
 export function initGame(): void {
+  cron.schedule('0 * * * *', async () => {
+    try {
+      const expired = await getExpiredUserGames();
+      for (const [userId, game_names] of expired) {
+        for (const guild of client.guilds.cache.values()) {
+          const member = guild.members.cache.get(userId);
+          const config = await getGameConfig(guild.id);
+          const game_roles = [
+            ...guild.roles.cache
+              .filter(r => game_names.includes(r.name) && (config?.roles?.includes(r.id) ?? false))
+              .values(),
+          ];
+          if (member && game_roles) await removeRole(member, game_roles);
+        }
+      }
+    } catch (error) {
+      logError('Game', 'Clear Expired', error);
+    }
+  });
+
   client.on('presenceUpdate', processPresence);
 }
 
@@ -71,7 +95,8 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
           if (!config.roles?.includes(game_role.id)) {
             await updateGameConfig(guild.id, { roles: [...(config.roles ?? []), game_role.id] });
           }
-          await addRole(member, game_role);
+          if (!member.roles.cache.has(game_role.id)) await addRole(member, game_role);
+          await updateUserGame(member.id, game_role.name);
         }
       } else if (game_data.status === 'denied') {
         const game_role = guild.roles.cache.find(
