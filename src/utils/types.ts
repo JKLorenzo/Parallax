@@ -46,6 +46,7 @@ export type GameConfig = {
   color?: ColorResolvable;
   invite_channel?: Snowflake;
   reference_role?: Snowflake;
+  roles?: Snowflake[];
 };
 
 export type NSFWConfig = {
