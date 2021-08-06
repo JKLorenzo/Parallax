@@ -1,4 +1,10 @@
-import { CommandInteraction, MessageAttachment, MessageEmbed } from 'discord.js';
+import {
+  CommandInteraction,
+  GuildMember,
+  MessageAttachment,
+  MessageEmbed,
+  Permissions,
+} from 'discord.js';
 import { getGameConfig, updateGameConfig } from '../modules/database.js';
 import GlobalCommand from '../structures/command_global.js';
 import { GameConfig } from '../utils/types.js';
@@ -54,25 +60,39 @@ export default class Config extends GlobalCommand {
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {
-    if (!interaction.inGuild()) return;
-    await interaction.defer({ ephemeral: true });
+    const member = interaction.member as GuildMember;
+    const command = interaction.options.getSubcommand();
+    const commandGroup = interaction.options.getSubcommandGroup();
 
-    if (interaction.options.getSubcommandGroup() === 'game') {
-      let config = {} as GameConfig;
-      if (interaction.options.getSubcommand() === 'get') {
-        config = (await getGameConfig(interaction.guildId)) ?? {};
-      } else {
+    // Block dm commands
+    if (!interaction.inGuild()) {
+      await interaction.reply('This is only available on a guild channel.');
+      return;
+    }
+    // Block members without manage server permissions
+    if (command !== 'get' && !member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
+      await interaction.reply(
+        'You need to have the `Manage Server` permission to use this command.',
+      );
+      return;
+    }
+    await interaction.defer();
+
+    if (commandGroup === 'game') {
+      const config = (await getGameConfig(interaction.guildId)) ?? {};
+      if (interaction.options.getSubcommand() === 'update') {
+        const data = {} as GameConfig;
         const enabled = interaction.options.getBoolean('enabled');
         const channel = interaction.options.getChannel('channel');
         const mentionable = interaction.options.getBoolean('mentionable');
         const color = interaction.options.getString('color');
 
-        if (typeof enabled === 'boolean') config.enabled = enabled;
-        if (typeof mentionable === 'boolean') config.mentionable = mentionable;
-        if (channel) config.invite_channel = channel.id;
-        if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = `#${color}`;
+        if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+        if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
+        if (channel) config.invite_channel = data.invite_channel = channel.id;
+        if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
 
-        if (config) await updateGameConfig(interaction.guildId, config);
+        if (data) await updateGameConfig(interaction.guildId, data);
       }
 
       await interaction.editReply({
@@ -93,6 +113,9 @@ export default class Config extends GlobalCommand {
               }`,
               `**Game Role Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
             ].join('\n'),
+            footer: {
+              text: 'Do `/config game update` to edit this configuration.',
+            },
             thumbnail: { url: 'attachment://settings.png' },
             color: 'BLURPLE',
           }),
