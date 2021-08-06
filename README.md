@@ -15,6 +15,6 @@
   
   It is currently under development but it will be available to the public once completed.
   
-  [![Discord](https://discord.com/api/guilds/867716791231971329/embed.png?style=banner2)](https://discord.gg/yJdKVRNHEB)
+  [![Discord](https://discord.com/api/guilds/867716791231971329/embed.png?style=banner2)](https://discord.gg/NaRANRp9ng)
   
 </div>
