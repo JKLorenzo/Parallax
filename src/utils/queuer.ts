@@ -40,9 +40,9 @@ export class Queuer {
         this_queue?.promise.resolve(promise);
       } catch (error) {
         this_queue?.promise.reject(error);
+      } finally {
+        if (this.timeout > 0) await sleep(this.timeout);
       }
-
-      if (this.timeout > 0) await sleep(this.timeout);
     }
 
     this.running = false;
