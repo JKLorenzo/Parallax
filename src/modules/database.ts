@@ -188,6 +188,7 @@ export async function getGameConfig(guildId: Snowflake): Promise<GameConfig | un
         color: result?.color,
         invite_channel: result?.invite_channel,
         reference_role: result?.reference_role,
+        roles: result?.roles,
       },
     });
   }
@@ -203,8 +204,10 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
   if ('enabled' in data) config.game.enabled = data.enabled;
   if ('mentionable' in data) config.game.mentionable = data.mentionable;
   if ('color' in data) config.game.color = data.color;
+  if ('roles' in data) config.game.roles = data.roles;
   if ('invite_channel' in data) config.game.invite_channel = data.invite_channel;
   if ('reference_role' in data) config.game.reference_role = data.reference_role;
+
   _config.set(guildId, config);
 
   await mongoClient
