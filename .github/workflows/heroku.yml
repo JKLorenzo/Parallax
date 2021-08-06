@@ -26,7 +26,7 @@ jobs:
           heroku_app_name: 'lexa-jkl'
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          procfile: 'web: node ./dist/index.js'
+          procfile: 'web: node ./dist/main.js'
           buildpack: 'https://github.com/heroku/heroku-buildpack-nodejs.git'
         env:
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
