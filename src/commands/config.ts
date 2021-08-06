@@ -76,7 +76,7 @@ export default class Config extends GlobalCommand {
       );
       return;
     }
-    await interaction.defer();
+    await interaction.deferReply();
 
     if (commandGroup === 'game') {
       const config = (await getGameConfig(interaction.guildId)) ?? {};

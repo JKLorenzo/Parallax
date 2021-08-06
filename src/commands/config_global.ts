@@ -56,7 +56,7 @@ export default class GlobalConfig extends GuildCommand {
 
   async exec(interaction: CommandInteraction): Promise<void> {
     const key = interaction.options.getString('key', true);
-    await interaction.defer({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: true });
 
     if (interaction.options.getSubcommand() === 'get') {
       const result = await getGlobalConfig<string>(key);
