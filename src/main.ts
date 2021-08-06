@@ -1,3 +1,4 @@
+import 'newrelic';
 import { Client, Intents } from 'discord.js';
 import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
