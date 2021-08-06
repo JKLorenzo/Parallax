@@ -36,5 +36,5 @@ jobs:
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           HD_DB_URI: ${{secrets.DB_URI}}
           HD_NEW_RELIC_APP_NAME: 'lexa-jkl'
-          HD_NEW_RELIC_LICENSE_KEY: ${{NEW_RELIC_LICENSE_KEY}}
+          HD_NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
           HD_NEW_RELIC_NO_CONFIG_FILE: 'true'
