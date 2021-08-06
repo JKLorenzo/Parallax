@@ -1,6 +1,6 @@
 import { Collection, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
-import { utfToHex } from '../utils/functions.js';
+import { hexToUtf, utfToHex } from '../utils/functions.js';
 import {
   DedicatedConfig,
   FreeGameConfig,
@@ -17,6 +17,7 @@ const _config = new Collection<Snowflake, GuildConfig>();
 const _games = new Collection<string, GameData>();
 const _global = new Collection<string, unknown>();
 const _images = new Collection<string, ImageData>();
+const _userGameBuffer = new Collection<string, true>();
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
 
 export async function connectDb(): Promise<void> {
@@ -41,6 +42,50 @@ export async function updateGlobalConfig<T>(key: string, value: T): Promise<void
       { upsert: true },
     );
   _global.set(key, value);
+}
+
+export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
+  const hex_name = utfToHex(game_name);
+  const bufferId = `${userId}-${hex_name}`;
+
+  // Only update user game once in a span of 30 mins
+  if (_userGameBuffer.has(bufferId)) return;
+  _userGameBuffer.set(bufferId, true);
+  setTimeout(() => {
+    _userGameBuffer.delete(bufferId);
+  }, 1800000);
+
+  await mongoClient
+    .db('users')
+    .collection(userId)
+    .updateOne(
+      { _id: hex_name, type: 'game' },
+      { $set: { _id: hex_name, type: 'game', last_updated: Date.now() } },
+      { upsert: true },
+    );
+}
+
+export async function getExpiredUserGames(): Promise<Collection<string, string[]>> {
+  const collections = await mongoClient.db('users').collections();
+  const expired = new Collection<string, string[]>();
+  for (const collection of collections) {
+    // Expire in 7 days
+    const expire_time = Date.now() - 604800000;
+    const result = await collection
+      .find({
+        type: 'game',
+        last_updated: { $lte: expire_time },
+      })
+      .toArray();
+
+    if (result.length === 0) continue;
+
+    expired.set(
+      collection.collectionName,
+      result.map(r => hexToUtf(r._id)),
+    );
+  }
+  return expired;
 }
 
 export async function getImage(name: string): Promise<ImageData | undefined> {
