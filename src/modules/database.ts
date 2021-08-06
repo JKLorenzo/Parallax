@@ -88,6 +88,7 @@ export async function updateGame(data: GameData): Promise<void> {
   if (!data.name) return;
 
   const id = utfToHex(data.name);
+  _games.set(id, data);
   await mongoClient
     .db('global')
     .collection('games')
