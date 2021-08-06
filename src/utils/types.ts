@@ -1,4 +1,4 @@
-import { ColorResolvable, Guild, Snowflake } from 'discord.js';
+import { Activity, ColorResolvable, Guild, Snowflake } from 'discord.js';
 
 export type CommandPermissionData = {
   allow?: Snowflake[];
@@ -79,4 +79,9 @@ export type ImageOptions = {
   ratio: number;
   minWidth: number;
   minHeight: number;
+};
+
+export type ActivityData = {
+  activity: Activity;
+  status: 'old' | 'new';
 };
