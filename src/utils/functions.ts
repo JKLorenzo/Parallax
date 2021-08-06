@@ -22,6 +22,10 @@ export function utfToHex(utf: string): string {
   return Buffer.from(utf, 'utf8').toString('hex');
 }
 
+export function hexToUtf(hex: string): string {
+  return Buffer.from(hex, 'hex').toString('utf8');
+}
+
 export async function fetchImage(name: string): Promise<ImageData | undefined> {
   let data = await getImage(name);
   if (!data) {
