@@ -14,7 +14,7 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
   const guild = newPresence.guild;
   const member = newPresence.member;
 
-  if (!guild || !member) return;
+  if (!guild || !member || member.user.bot) return;
   const config = await getGameConfig(guild.id);
   if (!config || !config.enabled) return;
 
