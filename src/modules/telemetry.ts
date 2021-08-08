@@ -1,21 +1,15 @@
-import { Snowflake, TextChannel, Webhook } from 'discord.js';
+import { WebhookClient } from 'discord.js';
 import express, { json } from 'express';
-import { getGlobalConfig } from './database.js';
+import { getBotConfig } from './database.js';
 import { client } from '../main.js';
 
-let webhook: Webhook | undefined;
+let webhook: WebhookClient | undefined;
 const port = process.env.PORT ?? 3000;
 const app = express().use(json());
 
 export async function initTelemetry(): Promise<void> {
-  const guildId = await getGlobalConfig<Snowflake>('guildId');
-  const channelId = await getGlobalConfig<Snowflake>('telemetryId');
-  if (guildId && channelId) {
-    const guild = client.guilds.cache.get(guildId);
-    const telemetry = guild?.channels.cache.get(channelId);
-    const webhooks = await (telemetry as TextChannel)?.fetchWebhooks();
-    webhook = webhooks?.find(w => w.name === 'Telemetry');
-  }
+  const telemetryUrl = await getBotConfig('TelemetryWebhookURL');
+  if (telemetryUrl) webhook = new WebhookClient({ url: telemetryUrl });
 
   app.listen(port);
 
