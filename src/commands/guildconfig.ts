@@ -9,10 +9,10 @@ import { getGameConfig, updateGameConfig } from '../modules/database.js';
 import GlobalCommand from '../structures/command_global.js';
 import { GameConfig } from '../utils/types.js';
 
-export default class Config extends GlobalCommand {
+export default class GuildConfig extends GlobalCommand {
   constructor() {
     super({
-      name: 'config',
+      name: 'guildconfig',
       description: 'Gets or updates the configuration of this server.',
       defaultPermission: true,
       options: [
