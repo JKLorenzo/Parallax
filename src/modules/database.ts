@@ -35,7 +35,10 @@ export async function getBotConfig(key: BotConfigKeys): Promise<string | undefin
 
 export async function setBotConfig(key: BotConfigKeys, value: string): Promise<void> {
   _botconfig.set(key, value);
-  await mongoClient.db('global').collection('config').updateOne({ _id: key }, { value });
+  await mongoClient
+    .db('global')
+    .collection('config')
+    .updateOne({ _id: key }, { $set: { value: value } }, { upsert: true });
 }
 
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
