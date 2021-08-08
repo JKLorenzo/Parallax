@@ -1,5 +1,5 @@
 import { ApplicationCommandData, ApplicationCommandPermissionData, Snowflake } from 'discord.js';
-import BaseCommand from './command_base.js';
+import BaseCommand from './basecommand.js';
 import { client } from '../main.js';
 import { getBotConfig } from '../modules/database.js';
 import { GuildCommandOptions } from '../utils/types.js';
