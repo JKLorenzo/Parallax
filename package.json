@@ -1,7 +1,7 @@
 {
-  "name": "lexa",
+  "name": "quarantine-gaming",
   "version": "1.0.0",
-  "description": "A Discord bot for automation and moderation.",
+  "description": "A Discord bot for Quarantine Gaming.",
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
@@ -19,19 +19,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JKLorenzo/Lexa.git"
+    "url": "git+https://github.com/JKLorenzo/Quarantine-Gaming.git"
   },
   "keywords": [
     "nodejs",
     "discord-bot",
-    "lexa-discord"
+    "qg-discord"
   ],
   "author": "Juruel Keanu Lorenzo <keanulorenzo32@gmail.com>",
   "license": "AGPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/JKLorenzo/Lexa/issues"
+    "url": "https://github.com/JKLorenzo/Quarantine-Gaming/issues"
   },
-  "homepage": "https://github.com/JKLorenzo/Lexa#readme",
+  "homepage": "https://github.com/JKLorenzo/Quarantine-Gaming#readme",
   "dependencies": {
     "discord-api-types": "^0.22.0",
     "discord.js": "^13.0.0",
