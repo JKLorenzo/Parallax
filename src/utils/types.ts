@@ -1,5 +1,12 @@
 import { Activity, ColorResolvable, Guild, Snowflake } from 'discord.js';
 
+export type BotConfigKeys =
+  | 'BotOwnerId'
+  | 'ControlServerId'
+  | 'TelemetryWebhookURL'
+  | 'GameScreeningChannelId'
+  | 'GuildMaxRoles';
+
 export type CommandPermissionData = {
   allow?: Snowflake[];
   deny?: Snowflake[];
