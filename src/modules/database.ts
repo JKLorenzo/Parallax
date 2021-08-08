@@ -2,6 +2,7 @@ import { Collection, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
 import { hexToUtf, utfToHex } from '../utils/functions.js';
 import {
+  BotConfigKeys,
   DedicatedConfig,
   FreeGameConfig,
   GameConfig,
@@ -15,7 +16,7 @@ import {
 
 const _config = new Collection<Snowflake, GuildConfig>();
 const _games = new Collection<string, GameData>();
-const _global = new Collection<string, unknown>();
+const _botconfig = new Collection<string, string>();
 const _images = new Collection<string, ImageData>();
 const _userGameBuffer = new Collection<string, true>();
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
@@ -24,24 +25,17 @@ export async function connectDb(): Promise<void> {
   await mongoClient.connect();
 }
 
-export async function getGlobalConfig<T>(key: string): Promise<T | undefined> {
-  if (!_global.get(key)) {
+export async function getBotConfig(key: BotConfigKeys): Promise<string | undefined> {
+  if (!_botconfig.get(key)) {
     const result = await mongoClient.db('global').collection('config').findOne({ _id: key });
-    if (result) _global.set(key, result._value ?? { ...result });
+    if (result?.value) _botconfig.set(key, result.value);
   }
-  return _global.get(key) as T;
+  return _botconfig.get(key);
 }
 
-export async function updateGlobalConfig<T>(key: string, value: T): Promise<void> {
-  await mongoClient
-    .db('global')
-    .collection('config')
-    .updateOne(
-      { _id: key },
-      { $set: typeof value === 'object' ? { ...value } : { _value: value } },
-      { upsert: true },
-    );
-  _global.set(key, value);
+export async function setBotConfig(key: BotConfigKeys, value: string): Promise<void> {
+  _botconfig.set(key, value);
+  await mongoClient.db('global').collection('config').updateOne({ _id: key }, { value });
 }
 
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
