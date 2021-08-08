@@ -4,7 +4,7 @@ import {
   CommandInteraction,
 } from 'discord.js';
 import _ from 'lodash';
-import GlobalCommand from './command_global.js';
+import GlobalCommand from './globalcommand.js';
 
 export default abstract class BaseCommand {
   private _data: ApplicationCommandData;
