@@ -35,12 +35,32 @@ export async function initInteraction(): Promise<void> {
       _components.set(component.name, component);
     }
 
-    const promises = [];
+    let promises = [];
     await client.application?.commands.fetch();
     for (const command of _commands.values()) {
       promises.push(command.init());
     }
     await Promise.all(promises);
+
+    // Delete invalid commands
+    promises = [];
+    for (const command of client.application?.commands.cache.values() ?? []) {
+      if (!_commands.has(command.name)) promises.push(command.delete());
+    }
+    for (const guild of client.guilds.cache.values()) {
+      const invalid_comamnds = guild.commands.cache.filter(c => !_commands.has(c.name));
+      for (const command of invalid_comamnds.values()) {
+        promises.push(command.delete());
+      }
+    }
+    const deleted_commands = await Promise.all(promises);
+    for (const command of deleted_commands) {
+      if (command.guildId) {
+        console.log(`Guild Command ${command.name} deleted on ${command.guild}`);
+      } else {
+        console.log(`Global Command ${command.name} deleted`);
+      }
+    }
   } catch (error) {
     console.error(error);
     logError('Interaction', 'Initialize', error);
