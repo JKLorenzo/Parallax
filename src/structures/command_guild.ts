@@ -1,7 +1,7 @@
 import { ApplicationCommandData, ApplicationCommandPermissionData, Snowflake } from 'discord.js';
 import BaseCommand from './command_base.js';
 import { client } from '../main.js';
-import { getGlobalConfig } from '../modules/database.js';
+import { getBotConfig } from '../modules/database.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
 export default abstract class GuildCommand extends BaseCommand {
@@ -14,7 +14,7 @@ export default abstract class GuildCommand extends BaseCommand {
   }
 
   async init(): Promise<void> {
-    this._ownerId = await getGlobalConfig('ownerId');
+    this._ownerId = await getBotConfig('BotOwnerId');
 
     for (const guild of client.guilds.cache.values()) {
       await guild.commands.fetch();

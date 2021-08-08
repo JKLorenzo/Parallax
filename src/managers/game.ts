@@ -1,12 +1,12 @@
-import { Activity, Collection, MessageEmbed, Presence, Snowflake, TextChannel } from 'discord.js';
+import { Activity, Collection, MessageEmbed, Presence, TextChannel } from 'discord.js';
 import cron from 'node-cron';
 import { getComponent } from './interaction.js';
 import { client } from '../main.js';
 import {
+  getBotConfig,
   getExpiredUserGames,
   getGame,
   getGameConfig,
-  getGlobalConfig,
   updateGame,
   updateGameConfig,
   updateUserGame,
@@ -114,7 +114,7 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
 }
 
 async function screenGame(game_name: string, activity: Activity): Promise<void> {
-  const channelId = await getGlobalConfig<Snowflake>('game_screening_id');
+  const channelId = await getBotConfig('GameScreeningChannelId');
   if (!channelId) return;
   const screeningChannel = client.channels.cache.get(channelId) as TextChannel;
   if (!screeningChannel) return;

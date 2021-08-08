@@ -1,11 +1,11 @@
 import { CreateRoleOptions, Guild, GuildMember, Role } from 'discord.js';
-import { getGlobalConfig } from './database.js';
+import { getBotConfig } from './database.js';
 import { queuerOf } from '../utils/queuer.js';
 
 export function createRole(guild: Guild, data: CreateRoleOptions): Promise<Role | undefined> {
   return queuerOf(guild.id).queue(async () => {
-    const maxRoles = await getGlobalConfig<number>('maxRoles');
-    if (!maxRoles || guild.roles.cache.size >= maxRoles) return;
+    const maxRoles = await getBotConfig('GuildMaxRoles');
+    if (!maxRoles || guild.roles.cache.size >= parseInt(maxRoles)) return;
     const role = await guild.roles.create(data);
     return role;
   });
