@@ -1,5 +1,5 @@
 import { ApplicationCommandData } from 'discord.js';
-import BaseCommand from './command_base.js';
+import BaseCommand from './basecommand.js';
 import { client } from '../main.js';
 
 export default abstract class GlobalCommand extends BaseCommand {
