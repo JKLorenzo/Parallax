@@ -5,10 +5,10 @@ import { getBotConfig } from '../modules/database.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
 export default abstract class GuildCommand extends BaseCommand {
-  private _options: GuildCommandOptions;
+  private _options?: GuildCommandOptions;
   private _ownerId?: Snowflake;
 
-  constructor(data: ApplicationCommandData, options: GuildCommandOptions) {
+  constructor(data: ApplicationCommandData, options?: GuildCommandOptions) {
     super(data, 'guild');
     this._options = options;
   }
@@ -18,10 +18,10 @@ export default abstract class GuildCommand extends BaseCommand {
 
     for (const guild of client.guilds.cache.values()) {
       await guild.commands.fetch();
-      const isFiltered = typeof this._options.guilds === 'function';
+      const isFiltered = typeof this._options?.guilds === 'function';
       let this_command = guild.commands.cache.find(c => c.name === this.data.name);
 
-      if (!isFiltered || (await Promise.race([this._options.guilds!(guild)]))) {
+      if (!isFiltered || (await Promise.race([this._options?.guilds!(guild)]))) {
         // Create
         if (!this_command) {
           this_command = await guild.commands.create(this.data);
