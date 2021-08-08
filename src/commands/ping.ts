@@ -1,5 +1,5 @@
 import { CommandInteraction } from 'discord.js';
-import GlobalCommand from '../structures/command_global.js';
+import GlobalCommand from '../structures/globalcommand.js';
 
 export default class Ping extends GlobalCommand {
   constructor() {

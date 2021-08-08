@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
 import { getBotConfig, setBotConfig } from '../modules/database.js';
-import GuildCommand from '../structures/command_guild.js';
+import GuildCommand from '../structures/guildcommand.js';
 import { BotConfigKeys } from '../utils/types.js';
 
 export default class BotConfig extends GuildCommand {

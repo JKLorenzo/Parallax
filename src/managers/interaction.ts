@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { client } from '../main.js';
 import { logError } from '../modules/telemetry.js';
-import BaseCommand from '../structures/command_base.js';
+import BaseCommand from '../structures/basecommand.js';
 import Component from '../structures/component.js';
 import { getFiles } from '../utils/functions.js';
 

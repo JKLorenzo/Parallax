@@ -6,7 +6,7 @@ import {
   Permissions,
 } from 'discord.js';
 import { getGameConfig, updateGameConfig } from '../modules/database.js';
-import GlobalCommand from '../structures/command_global.js';
+import GlobalCommand from '../structures/globalcommand.js';
 import { GameConfig } from '../utils/types.js';
 
 export default class GuildConfig extends GlobalCommand {
