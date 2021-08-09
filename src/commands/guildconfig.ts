@@ -66,15 +66,13 @@ export default class GuildConfig extends GlobalCommand {
 
     // Block dm commands
     if (!interaction.inGuild()) {
-      await interaction.reply('This is only available on a guild channel.');
-      return;
+      return interaction.reply('This is only available on a guild channel.');
     }
     // Block members without manage server permissions
     if (command !== 'get' && !member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
-      await interaction.reply(
+      return interaction.reply(
         'You need to have the `Manage Server` permission to use this command.',
       );
-      return;
     }
     await interaction.deferReply();
 

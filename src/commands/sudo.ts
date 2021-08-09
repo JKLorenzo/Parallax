@@ -48,7 +48,7 @@ export default class Sudo extends GuildCommand {
     return this._sensitivePattern!;
   }
 
-  async exec(interaction: CommandInteraction): Promise<void> {
+  async exec(interaction: CommandInteraction): Promise<unknown> {
     await interaction.deferReply({ ephemeral: true });
 
     let command = interaction.options.getString('command', true);
@@ -68,8 +68,7 @@ export default class Sudo extends GuildCommand {
       this._lastResult = eval(command);
       hrDiff = process.hrtime(hrStart);
     } catch (err) {
-      interaction.editReply(`Command Failed: \`${err}\``);
-      return;
+      return interaction.editReply(`Command Failed: \`${err}\``);
     }
 
     // Prepare for callback time and respond
