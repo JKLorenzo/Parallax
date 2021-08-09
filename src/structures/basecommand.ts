@@ -22,7 +22,7 @@ export default abstract class BaseCommand {
 
   abstract init(): Promise<void>;
 
-  abstract exec(interaction: CommandInteraction): Promise<void>;
+  abstract exec(interaction: CommandInteraction): Promise<unknown>;
 
   get data(): ApplicationCommandData {
     return {
