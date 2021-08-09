@@ -1,6 +1,7 @@
-import { Collection, Snowflake } from 'discord.js';
+import { Collection, Role, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
 import { hexToUtf, utfToHex } from '../utils/functions.js';
+import Limiter from '../utils/limiter.js';
 import {
   BotConfigKeys,
   DedicatedConfig,
@@ -22,7 +23,9 @@ const _guildconfig = new Collection<Snowflake, GuildConfig>();
 const _games = new Collection<string, GameData>();
 const _images = new Collection<string, ImageData>();
 
-const _userGameBuffer = new Collection<string, true>();
+const _gameroles = new Collection<string, Collection<string, string>>();
+
+const _limiter = new Limiter(1800000);
 
 export async function connectDb(): Promise<void> {
   await mongoClient.connect();
@@ -46,14 +49,8 @@ export async function setBotConfig(key: BotConfigKeys, value: string): Promise<v
 
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
   const hex_name = utfToHex(game_name);
-  const bufferId = `${userId}-${hex_name}`;
 
-  // Only update user game once in a span of 30 mins
-  if (_userGameBuffer.has(bufferId)) return;
-  _userGameBuffer.set(bufferId, true);
-  setTimeout(() => {
-    _userGameBuffer.delete(bufferId);
-  }, 1800000);
+  if (_limiter.limit(`${userId}-${hex_name}`)) return;
 
   await mongoClient
     .db('users')
@@ -233,7 +230,6 @@ export async function getGameConfig(guildId: Snowflake): Promise<GameConfig | un
         color: result?.color,
         invite_channel: result?.invite_channel,
         reference_role: result?.reference_role,
-        roles: result?.roles,
       },
     });
   }
@@ -249,7 +245,6 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
   if ('enabled' in data) config.game.enabled = data.enabled;
   if ('mentionable' in data) config.game.mentionable = data.mentionable;
   if ('color' in data) config.game.color = data.color;
-  if ('roles' in data) config.game.roles = data.roles;
   if ('invite_channel' in data) config.game.invite_channel = data.invite_channel;
   if ('reference_role' in data) config.game.reference_role = data.reference_role;
 
@@ -259,6 +254,27 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
     .db(guildId)
     .collection('config')
     .updateOne({ _id: 'game' }, { $set: config.game }, { upsert: true });
+}
+
+export async function getGuildGameRoles(guildId: Snowflake): Promise<Collection<string, string>> {
+  if (!_gameroles.get(guildId)) {
+    const result = await mongoClient.db(guildId).collection('game_roles').find().toArray();
+    _gameroles.set(guildId, new Collection(result.map(r => [r._id, r.role_id])));
+  }
+  return _gameroles.get(guildId) ?? new Collection();
+}
+
+export async function addGuildGameRole(role: Role): Promise<void> {
+  const guildId = role.guild.id;
+  const games = await getGuildGameRoles(guildId);
+  const hex_name = utfToHex(role.name);
+
+  _gameroles.set(guildId, games.set(hex_name, role.id));
+
+  await mongoClient
+    .db(guildId)
+    .collection('game_roles')
+    .updateOne({ _id: hex_name }, { $set: { role_id: role.id } }, { upsert: true });
 }
 
 export async function getNSFWConfig(guildId: Snowflake): Promise<NSFWConfig | undefined> {
