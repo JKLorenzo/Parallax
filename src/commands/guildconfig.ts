@@ -65,7 +65,7 @@ export default class GuildConfig extends GlobalCommand {
 
     if (command === 'game') {
       const data = {} as GameConfig;
-      const config = (await getGameConfig(interaction.guildId)) ?? data;
+      const config = (await getGameConfig(interaction.guildId)) ?? {};
 
       const enabled = interaction.options.getBoolean('enabled');
       const channel = interaction.options.getChannel('channel');
