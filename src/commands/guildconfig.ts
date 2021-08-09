@@ -19,39 +19,27 @@ export default class GuildConfig extends GlobalCommand {
         {
           name: 'game',
           description: 'Gets or updates the game configuration of this server.',
-          type: 'SUB_COMMAND_GROUP',
+          type: 'SUB_COMMAND',
           options: [
             {
-              name: 'get',
-              description: 'Gets the current game configuration of this server.',
-              type: 'SUB_COMMAND',
+              name: 'enabled',
+              description: 'Enable or disable this config.',
+              type: 'BOOLEAN',
             },
             {
-              name: 'update',
-              description: 'Updates the game configuration of this server.',
-              type: 'SUB_COMMAND',
-              options: [
-                {
-                  name: 'enabled',
-                  description: 'Enable or disable this config.',
-                  type: 'BOOLEAN',
-                },
-                {
-                  name: 'channel',
-                  description: 'The channel where game invites will be sent.',
-                  type: 'CHANNEL',
-                },
-                {
-                  name: 'mentionable',
-                  description: 'Whether the generated game roles are mentionable.',
-                  type: 'BOOLEAN',
-                },
-                {
-                  name: 'color',
-                  description: 'The role color of generated game roles in hex.',
-                  type: 'STRING',
-                },
-              ],
+              name: 'channel',
+              description: 'The channel where game invites will be sent.',
+              type: 'CHANNEL',
+            },
+            {
+              name: 'mentionable',
+              description: 'Whether the generated game roles are mentionable.',
+              type: 'BOOLEAN',
+            },
+            {
+              name: 'color',
+              description: 'The role color of generated game roles in hex.',
+              type: 'STRING',
             },
           ],
         },
@@ -62,21 +50,20 @@ export default class GuildConfig extends GlobalCommand {
   async exec(interaction: CommandInteraction): Promise<void> {
     const member = interaction.member as GuildMember;
     const command = interaction.options.getSubcommand();
-    const commandGroup = interaction.options.getSubcommandGroup();
 
     // Block dm commands
     if (!interaction.inGuild()) {
       return interaction.reply('This is only available on a guild channel.');
     }
     // Block members without manage server permissions
-    if (command !== 'get' && !member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
+    if (!member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
       return interaction.reply(
         'You need to have the `Manage Server` permission to use this command.',
       );
     }
     await interaction.deferReply();
 
-    if (commandGroup === 'game') {
+    if (command === 'game') {
       const config = (await getGameConfig(interaction.guildId)) ?? {};
       if (interaction.options.getSubcommand() === 'update') {
         const data = {} as GameConfig;
