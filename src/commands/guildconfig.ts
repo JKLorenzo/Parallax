@@ -65,20 +65,18 @@ export default class GuildConfig extends GlobalCommand {
 
     if (command === 'game') {
       const config = (await getGameConfig(interaction.guildId)) ?? {};
-      if (interaction.options.getSubcommand() === 'update') {
-        const data = {} as GameConfig;
-        const enabled = interaction.options.getBoolean('enabled');
-        const channel = interaction.options.getChannel('channel');
-        const mentionable = interaction.options.getBoolean('mentionable');
-        const color = interaction.options.getString('color');
+      const data = {} as GameConfig;
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+      const mentionable = interaction.options.getBoolean('mentionable');
+      const color = interaction.options.getString('color');
 
-        if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
-        if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
-        if (channel) config.invite_channel = data.invite_channel = channel.id;
-        if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
+      if (channel) config.invite_channel = data.invite_channel = channel.id;
+      if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
 
-        if (data) await updateGameConfig(interaction.guildId, data);
-      }
+      if (data) await updateGameConfig(interaction.guildId, data);
 
       await interaction.editReply({
         files: [new MessageAttachment('./src/assets/settings.png')],
