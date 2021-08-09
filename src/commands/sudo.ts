@@ -111,20 +111,20 @@ export default class Sudo extends GuildCommand {
     if (command) {
       return Util.splitMessage(
         tags.stripIndents`
-				*Executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${hrDiff[1] / 1000000}ms.*
 				\`\`\`js
 				${inspected}
 				\`\`\`
+        Executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${hrDiff[1] / 1000000} ms.
 			`,
         { maxLength: 3996, prepend, append },
       );
     } else {
       return Util.splitMessage(
         tags.stripIndents`
-				*Callback executed after ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${hrDiff[1] / 1000000}ms.*
 				\`\`\`js
 				${inspected}
 				\`\`\`
+        Callback executed after ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${hrDiff[1] / 1000000} ms.
 			`,
         { maxLength: 3996, prepend, append },
       );
