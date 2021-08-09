@@ -99,7 +99,7 @@ export default class GuildConfig extends GlobalCommand {
               `**Game Role Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
             ].join('\n'),
             footer: {
-              text: 'Do `/config game update` to edit this configuration.',
+              text: 'Do `/guildconfig game` to edit this configuration.',
             },
             thumbnail: { url: 'attachment://settings.png' },
             color: 'BLURPLE',
