@@ -47,104 +47,112 @@ export function initGame(): void {
 }
 
 async function processPresence(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
-  const guild = newPresence.guild;
-  const member = newPresence.member;
+  try {
+    const guild = newPresence.guild;
+    const member = newPresence.member;
 
-  if (!guild || !member || member.user.bot) return;
-  const config = await getGameConfig(guild.id);
+    if (!guild || !member || member.user.bot) return;
+    const config = await getGameConfig(guild.id);
 
-  const games = await getGuildGameRoles(guild.id);
-  const _old = new Collection<string, ActivityData>();
-  const _new = new Collection<string, ActivityData>();
+    const games = await getGuildGameRoles(guild.id);
+    const _old = new Collection<string, ActivityData>();
+    const _new = new Collection<string, ActivityData>();
 
-  oldPresence?.activities
-    .filter(a => a.type === 'PLAYING')
-    .forEach(a => {
-      _old.set(a.name.trim(), {
-        activity: a,
-        status: 'old',
+    oldPresence?.activities
+      .filter(a => a.type === 'PLAYING')
+      .forEach(a => {
+        _old.set(a.name.trim(), {
+          activity: a,
+          status: 'old',
+        });
       });
-    });
 
-  newPresence.activities
-    .filter(a => a.type === 'PLAYING')
-    .forEach(a => {
-      _new.set(a.name.trim(), {
-        activity: a,
-        status: 'new',
+    newPresence.activities
+      .filter(a => a.type === 'PLAYING')
+      .forEach(a => {
+        _new.set(a.name.trim(), {
+          activity: a,
+          status: 'new',
+        });
       });
-    });
 
-  const diff = _old.difference(_new);
-  for (const [game_name, { activity, status }] of diff) {
-    const game_data = await getGame(game_name);
-    if (!game_data) {
-      await screenGame(game_name, activity);
-    } else {
-      if (!config || !config.enabled) return;
+    const diff = _old.difference(_new);
+    for (const [game_name, { activity, status }] of diff) {
+      const game_data = await getGame(game_name);
+      if (!game_data) {
+        await screenGame(game_name, activity);
+      } else {
+        if (!config || !config.enabled) return;
 
-      let game_role;
-      const role_id = games.get(utfToHex(game_name));
-      if (role_id) game_role = guild.roles.cache.get(role_id);
+        let game_role;
+        const role_id = games.get(utfToHex(game_name));
+        if (role_id) game_role = guild.roles.cache.get(role_id);
 
-      if (game_data.status === 'approved' && status === 'new') {
-        if (!game_role) {
-          game_role = await createRole(guild, {
-            name: game_name,
-            color: config.color,
-            mentionable: config.mentionable,
-            position: config.reference_role
-              ? guild.roles.cache.get(config.reference_role)?.position
-              : undefined,
-          });
+        if (game_data.status === 'approved' && status === 'new') {
+          if (!game_role) {
+            game_role = await createRole(guild, {
+              name: game_name,
+              color: config.color,
+              mentionable: config.mentionable,
+              position: config.reference_role
+                ? guild.roles.cache.get(config.reference_role)?.position
+                : undefined,
+            });
+          }
+          if (game_role) {
+            await addGuildGameRole(game_role);
+            if (!member.roles.cache.has(game_role.id)) await addRole(member, game_role);
+            await updateUserGame(member.id, game_role.name);
+          }
+        } else if (game_data.status === 'denied') {
+          if (game_role) await deleteRole(game_role);
         }
-        if (game_role) {
-          await addGuildGameRole(game_role);
-          if (!member.roles.cache.has(game_role.id)) await addRole(member, game_role);
-          await updateUserGame(member.id, game_role.name);
-        }
-      } else if (game_data.status === 'denied') {
-        if (game_role) await deleteRole(game_role);
       }
     }
+  } catch (error) {
+    logError('Game Manager', 'Process Presence', error);
   }
 }
 
 async function screenGame(game_name: string, activity: Activity): Promise<void> {
-  if (_screeningLimiter.limit(game_name)) return;
-  const channelId = await getBotConfig('GameScreeningChannelId');
-  if (!channelId) return;
-  const screeningChannel = client.channels.cache.get(channelId) as TextChannel;
-  if (!screeningChannel) return;
-  await updateGame({ name: game_name, status: 'pending' });
-  const image = await fetchImage(game_name);
-  await screeningChannel.send({
-    embeds: [
-      new MessageEmbed({
-        author: { name: 'Global Configuration: Game Manager' },
-        title: 'Game Screening',
-        fields: [
-          {
-            name: 'Name:',
-            value: game_name,
+  try {
+    if (_screeningLimiter.limit(game_name)) return;
+    const channelId = await getBotConfig('GameScreeningChannelId');
+    if (!channelId) return;
+    const screeningChannel = client.channels.cache.get(channelId) as TextChannel;
+    if (!screeningChannel) return;
+    await updateGame({ name: game_name, status: 'pending' });
+    const image = await fetchImage(game_name);
+    await screeningChannel.send({
+      embeds: [
+        new MessageEmbed({
+          author: { name: 'Global Configuration: Game Manager' },
+          title: 'Game Screening',
+          fields: [
+            {
+              name: 'Name:',
+              value: game_name,
+            },
+            {
+              name: 'App:',
+              value: activity.applicationId ? `Verified (${activity.applicationId})` : 'Unverified',
+            },
+            {
+              name: 'Status:',
+              value: 'Pending',
+            },
+          ],
+          thumbnail: { url: image?.iconUrl },
+          image: { url: image?.bannerUrl },
+          footer: {
+            text: 'Apply actions by clicking one of the buttons below.',
           },
-          {
-            name: 'App:',
-            value: activity.applicationId ? `Verified (${activity.applicationId})` : 'Unverified',
-          },
-          {
-            name: 'Status:',
-            value: 'Pending',
-          },
-        ],
-        thumbnail: { url: image?.iconUrl },
-        image: { url: image?.bannerUrl },
-        footer: {
-          text: 'Apply actions by clicking one of the buttons below.',
-        },
-        color: 'BLURPLE',
-      }),
-    ],
-    components: getComponent('game_screening'),
-  });
+          color: 'BLURPLE',
+        }),
+      ],
+      components: getComponent('game_screening'),
+    });
+  } catch (error) {
+    logError('Game Manager', 'Screen Game', error);
+  }
 }

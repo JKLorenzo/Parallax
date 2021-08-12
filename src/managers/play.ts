@@ -97,6 +97,6 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
       }
     }
   } catch (error) {
-    console.error(error);
+    logError('Play Manager', 'Process Presence', error);
   }
 }
