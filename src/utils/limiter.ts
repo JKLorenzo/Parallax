@@ -1,12 +1,10 @@
-import { Collection } from 'discord.js';
-
 export default class Limiter {
   private timeout: number;
-  private data: Collection<string, number>;
+  private data: Map<string, number>;
 
   constructor(timeout: number) {
     this.timeout = timeout;
-    this.data = new Collection();
+    this.data = new Map();
   }
 
   limit(id: string): boolean {

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
-import { Collection, Snowflake } from 'discord.js';
+import { Snowflake } from 'discord.js';
 import { sleep } from './functions.js';
 
-const _queuers = new Collection<string, Queuer>();
+const _queuers = new Map<string, Queuer>();
 
 type queue_item = {
   function: Function;

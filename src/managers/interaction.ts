@@ -1,7 +1,6 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import {
-  Collection,
   CommandInteraction,
   MessageActionRowOptions,
   MessageComponentInteraction,
@@ -12,8 +11,8 @@ import BaseCommand from '../structures/basecommand.js';
 import Component from '../structures/component.js';
 import { getFiles } from '../utils/functions.js';
 
-const _commands = new Collection<string, BaseCommand>();
-const _components = new Collection<string, Component>();
+const _commands = new Map<string, BaseCommand>();
+const _components = new Map<string, Component>();
 
 export async function initInteraction(): Promise<void> {
   try {

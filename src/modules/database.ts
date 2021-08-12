@@ -1,4 +1,4 @@
-import { Collection, Role, Snowflake } from 'discord.js';
+import { Role, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
 import { hexToUtf, utfToHex } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
@@ -17,13 +17,13 @@ import {
 
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
 
-const _botconfig = new Collection<string, string>();
-const _guildconfig = new Collection<Snowflake, GuildConfig>();
+const _botconfig = new Map<string, string>();
+const _guildconfig = new Map<Snowflake, GuildConfig>();
 
-const _games = new Collection<string, GameData>();
-const _images = new Collection<string, ImageData>();
+const _games = new Map<string, GameData>();
+const _images = new Map<string, ImageData>();
 
-const _gameroles = new Collection<string, Collection<string, string>>();
+const _gameroles = new Map<string, Map<string, string>>();
 
 const _limiter = new Limiter(1800000);
 
@@ -62,9 +62,9 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
     );
 }
 
-export async function getExpiredUserGames(): Promise<Collection<string, string[]>> {
+export async function getExpiredUserGames(): Promise<Map<string, string[]>> {
   const collections = await mongoClient.db('users').collections();
-  const expired = new Collection<string, string[]>();
+  const expired = new Map<string, string[]>();
   for (const collection of collections) {
     // Expire in 7 days
     const expire_time = Date.now() - 604800000;
@@ -254,12 +254,12 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
     .updateOne({ _id: 'game' }, { $set: config.game }, { upsert: true });
 }
 
-export async function getGuildGameRoles(guildId: Snowflake): Promise<Collection<string, string>> {
+export async function getGuildGameRoles(guildId: Snowflake): Promise<Map<string, string>> {
   if (!_gameroles.get(guildId)) {
     const result = await mongoClient.db(guildId).collection('game_roles').find().toArray();
-    _gameroles.set(guildId, new Collection(result.map(r => [r._id, r.role_id])));
+    _gameroles.set(guildId, new Map(result.map(r => [r._id, r.role_id])));
   }
-  return _gameroles.get(guildId) ?? new Collection();
+  return _gameroles.get(guildId) ?? new Map();
 }
 
 export async function addGuildGameRole(role: Role): Promise<void> {
