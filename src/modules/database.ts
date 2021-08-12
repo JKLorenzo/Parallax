@@ -314,6 +314,7 @@ export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | un
     _guildconfig.set(guildId, {
       play: {
         enabled: result?.enabled,
+        hoisted: result?.hoisted,
         mentionable: result?.mentionable,
         color: result?.color,
         reference_role: result?.reference_role,
@@ -330,6 +331,7 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
   const config = _guildconfig.get(guildId) ?? {};
   if (!config.play) config.play = {};
   if ('enabled' in data) config.play.enabled = data.enabled;
+  if ('hoisted' in data) config.play.hoisted = data.hoisted;
   if ('mentionable' in data) config.play.mentionable = data.mentionable;
   if ('color' in data) config.play.color = data.color;
   if ('reference_role' in data) config.play.reference_role = data.reference_role;
