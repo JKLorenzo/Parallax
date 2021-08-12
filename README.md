@@ -16,5 +16,7 @@
   Quarantine Gaming is an invite-only discord community server for gamers and friends.
   
   This repository powers the Quarantine Gaming Discord Bot.
+
+  [Quarantine Gaming Discord Bot Invite Link](https://discord.com/api/oauth2/authorize?client_id=782308458803232842&permissions=8&scope=bot%20applications.commands)
   
 </div>
