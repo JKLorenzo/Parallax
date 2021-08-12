@@ -27,8 +27,10 @@ export function initPlay(): void {
           }
           await Promise.all(promises);
 
-          if (play_role.members.size) continue;
-          await deleteRole(play_role);
+          const game_data = await getGame(play_role.name.replace(play_prefix, ''));
+          if (play_role.members.size === 0 || (game_data && game_data.status === 'denied')) {
+            await deleteRole(play_role);
+          }
         }
       }
     } catch (error) {
@@ -72,11 +74,11 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
     const diff = _old.difference(_new);
     for (const [game_name, { status }] of diff) {
       const game_data = await getGame(game_name);
-      if (game_data) {
+      if (game_data && game_data.status === 'approved') {
         const play_name = `${play_prefix}${game_name}`;
         let play_role = guild.roles.cache.find(r => r.name === play_name);
 
-        if (game_data.status === 'approved' && status === 'new') {
+        if (status === 'new') {
           if (!play_role) {
             play_role = await createRole(guild, {
               name: play_name,
@@ -87,11 +89,9 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
                 : undefined,
             });
           }
-          if (play_role) {
-            if (!member.roles.cache.has(play_role.id)) await addRole(member, play_role);
-          }
-        } else if (game_data.status === 'denied') {
-          if (play_role) await deleteRole(play_role);
+          if (play_role && !member.roles.cache.has(play_role.id)) await addRole(member, play_role);
+        } else if (play_role && member.roles.cache.has(play_role.id)) {
+          await removeRole(member, play_role);
         }
       }
     }
