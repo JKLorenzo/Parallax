@@ -10,6 +10,7 @@
   [![Discord](https://img.shields.io/discord/351178660725915649?color=7289da&logo=discord&logoColor=white)](https://discord.gg/xBZTuDFhwT)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/status.svg)](https://depfu.com)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Quarantine-Gaming?project_id=29783)
+  [![Patreon](https://img.shields.io/badge/donate-patreon-F96854.svg)](https://www.patreon.com/QuarantineGaming)
   [![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
   
   Quarantine Gaming is an invite-only discord community server for gamers and friends.
