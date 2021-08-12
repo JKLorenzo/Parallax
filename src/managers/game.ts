@@ -92,10 +92,15 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
           if (!game_role) {
             game_role = await createRole(guild, {
               name: game_name,
-              color: config.color,
               mentionable: config.mentionable,
+              color: config.reference_role
+                ? guild.roles.cache.get(config.reference_role)?.color
+                : undefined,
               position: config.reference_role
                 ? guild.roles.cache.get(config.reference_role)?.position
+                : undefined,
+              permissions: config.reference_role
+                ? guild.roles.cache.get(config.reference_role)?.permissions
                 : undefined,
             });
           }
