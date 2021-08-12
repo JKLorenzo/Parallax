@@ -39,7 +39,7 @@ export default class GuildConfig extends GlobalCommand {
             {
               name: 'role',
               description: 'The reference role to be used for positioning.',
-              type: 'STRING',
+              type: 'ROLE',
             },
             {
               name: 'mentionable',
@@ -66,7 +66,7 @@ export default class GuildConfig extends GlobalCommand {
             {
               name: 'role',
               description: 'The reference role to be used for positioning.',
-              type: 'STRING',
+              type: 'ROLE',
             },
             {
               name: 'mentionable',
