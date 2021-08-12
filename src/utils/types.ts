@@ -1,4 +1,4 @@
-import { Activity, ColorResolvable, Guild, Snowflake } from 'discord.js';
+import { Activity, Guild, Snowflake } from 'discord.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
@@ -50,7 +50,6 @@ export type FreeGameConfig = {
 export type GameConfig = {
   enabled?: boolean;
   mentionable?: boolean;
-  color?: ColorResolvable;
   invite_channel?: Snowflake;
   reference_role?: Snowflake;
 };
@@ -64,7 +63,6 @@ export type PlayConfig = {
   enabled?: boolean;
   hoisted?: boolean;
   mentionable?: boolean;
-  color?: ColorResolvable;
   reference_role?: Snowflake;
 };
 
