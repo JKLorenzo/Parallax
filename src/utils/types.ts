@@ -62,6 +62,7 @@ export type NSFWConfig = {
 
 export type PlayConfig = {
   enabled?: boolean;
+  hoisted?: boolean;
   mentionable?: boolean;
   color?: ColorResolvable;
   reference_role?: Snowflake;
