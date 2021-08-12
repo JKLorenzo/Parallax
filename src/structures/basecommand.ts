@@ -2,6 +2,7 @@ import {
   ApplicationCommandData,
   ApplicationCommandOptionData,
   CommandInteraction,
+  Guild,
 } from 'discord.js';
 import _ from 'lodash';
 import GlobalCommand from './globalcommand.js';
@@ -20,7 +21,7 @@ export default abstract class BaseCommand {
     this._type = type;
   }
 
-  abstract init(): Promise<void>;
+  abstract init(guild?: Guild): Promise<void>;
 
   abstract exec(interaction: CommandInteraction): Promise<unknown>;
 
@@ -30,6 +31,15 @@ export default abstract class BaseCommand {
       description: this._data.description,
       options: this._transformOptions(),
       defaultPermission: this._data.defaultPermission,
+    };
+  }
+
+  patch(data: ApplicationCommandData): void {
+    this._data = {
+      description: data.description,
+      name: data.name,
+      defaultPermission: data.defaultPermission,
+      options: data.options ?? [],
     };
   }
 
