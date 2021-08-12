@@ -40,6 +40,7 @@ app.get('/status', (req, res) => {
 });
 
 export function logError(name: string, title: string, error: string): void {
+  console.error(error);
   webhook?.send({
     username: `Telemetry: ${name}`,
     content: `**${title}** - ${error}`,
