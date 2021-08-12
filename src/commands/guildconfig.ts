@@ -32,16 +32,6 @@ export default class GuildConfig extends GlobalCommand {
               type: 'BOOLEAN',
             },
             {
-              name: 'channel',
-              description: 'The channel where game invites will be sent.',
-              type: 'CHANNEL',
-            },
-            {
-              name: 'role',
-              description: 'The reference role to be used for positioning.',
-              type: 'ROLE',
-            },
-            {
               name: 'mentionable',
               description: 'Whether the generated game roles are mentionable.',
               type: 'BOOLEAN',
@@ -50,6 +40,16 @@ export default class GuildConfig extends GlobalCommand {
               name: 'color',
               description: 'The role color of generated game roles in hex.',
               type: 'STRING',
+            },
+            {
+              name: 'invite_channel',
+              description: 'The channel where game invites will be sent.',
+              type: 'CHANNEL',
+            },
+            {
+              name: 'role_reference',
+              description: 'The reference role to be used for positioning.',
+              type: 'ROLE',
             },
           ],
         },
@@ -64,9 +64,9 @@ export default class GuildConfig extends GlobalCommand {
               type: 'BOOLEAN',
             },
             {
-              name: 'role',
-              description: 'The reference role to be used for positioning.',
-              type: 'ROLE',
+              name: 'hoisted',
+              description: 'Whether the generated play roles are hoisted.',
+              type: 'BOOLEAN',
             },
             {
               name: 'mentionable',
@@ -77,6 +77,11 @@ export default class GuildConfig extends GlobalCommand {
               name: 'color',
               description: 'The role color of generated game roles in hex.',
               type: 'STRING',
+            },
+            {
+              name: 'role_reference',
+              description: 'The reference role to be used for positioning.',
+              type: 'ROLE',
             },
           ],
         },
@@ -118,37 +123,37 @@ export default class GuildConfig extends GlobalCommand {
 
       const enabled = interaction.options.getBoolean('enabled');
       const mentionable = interaction.options.getBoolean('mentionable');
-      const channel = interaction.options.getChannel('channel');
-      const role = interaction.options.getRole('role');
       const color = interaction.options.getString('color');
+      const channel = interaction.options.getChannel('invite_channel');
+      const role = interaction.options.getRole('role_reference');
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
+      if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
       if (channel) config.invite_channel = data.invite_channel = channel.id;
       if (role) config.reference_role = data.reference_role = role.id;
-      if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
 
       if (data) await updateGameConfig(interaction.guildId, data);
 
       embed.setDescription(
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
-          `**Game Role Color**: ${config.color ?? 'Not Set'}`,
-          `**Game Invite Channel**: ${
+          `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
+          `**Color**: ${config.color ?? 'Not Set'}`,
+          `**Invite Channel**: ${
             config.invite_channel
               ? interaction.client.guilds.cache
                   .get(interaction.guildId)
                   ?.channels.cache.get(config.invite_channel)
               : 'Not Set' ?? 'Invalid'
           }`,
-          `**Game Role Reference**: ${
+          `**Role Reference**: ${
             config.reference_role
               ? interaction.client.guilds.cache
                   .get(interaction.guildId)
                   ?.roles.cache.get(config.reference_role)
               : 'Not Set' ?? 'Invalid'
           }`,
-          `**Game Role Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
         ].join('\n'),
       );
     } else if (command === 'play') {
@@ -156,29 +161,32 @@ export default class GuildConfig extends GlobalCommand {
       const config = (await getPlayConfig(interaction.guildId)) ?? {};
 
       const enabled = interaction.options.getBoolean('enabled');
+      const hoisted = interaction.options.getBoolean('hoisted');
       const mentionable = interaction.options.getBoolean('mentionable');
-      const role = interaction.options.getRole('role');
       const color = interaction.options.getString('color');
+      const role = interaction.options.getRole('role_reference');
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (typeof hoisted === 'boolean') config.hoisted = data.hoisted = hoisted;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
-      if (role) config.reference_role = data.reference_role = role.id;
       if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
+      if (role) config.reference_role = data.reference_role = role.id;
 
       if (data) await updatePlayConfig(interaction.guildId, data);
 
       embed.setDescription(
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
-          `**Play Role Color**: ${config.color ?? 'Not Set'}`,
-          `**Play Role Reference**: ${
+          `**Hoisted**: ${config.hoisted ? 'True' : 'False'}`,
+          `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
+          `**Color**: ${config.color ?? 'Not Set'}`,
+          `**Role Reference**: ${
             config.reference_role
               ? interaction.client.guilds.cache
                   .get(interaction.guildId)
                   ?.roles.cache.get(config.reference_role)
               : 'Not Set' ?? 'Invalid'
           }`,
-          `**Play Role Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
         ].join('\n'),
       );
     }
