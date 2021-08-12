@@ -307,7 +307,7 @@ export async function updateNSFWConfig(guildId: Snowflake, data: NSFWConfig): Pr
     .updateOne({ _id: 'nsfw' }, { $set: config.nsfw }, { upsert: true });
 }
 
-export async function getPlayConfig(guildId: Snowflake): Promise<GameConfig | undefined> {
+export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | undefined> {
   if (!_guildconfig.get(guildId)?.play) {
     const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'play' });
 
@@ -315,6 +315,7 @@ export async function getPlayConfig(guildId: Snowflake): Promise<GameConfig | un
       play: {
         enabled: result?.enabled,
         mentionable: result?.mentionable,
+        color: result?.color,
         reference_role: result?.reference_role,
       },
     });
@@ -330,6 +331,7 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
   if (!config.play) config.play = {};
   if ('enabled' in data) config.play.enabled = data.enabled;
   if ('mentionable' in data) config.play.mentionable = data.mentionable;
+  if ('color' in data) config.play.color = data.color;
   if ('reference_role' in data) config.play.reference_role = data.reference_role;
   _guildconfig.set(guildId, config);
 
