@@ -83,6 +83,7 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
             play_role = await createRole(guild, {
               name: play_name,
               color: config.color,
+              hoist: config.hoisted,
               mentionable: config.mentionable,
               position: config.reference_role
                 ? guild.roles.cache.get(config.reference_role)?.position
