@@ -39,7 +39,7 @@ export function initGame(): void {
         }
       }
     } catch (error) {
-      logError('Game', 'Clear Expired', error);
+      logError('Game Manager', 'Clear Expired', error);
     }
   });
 
