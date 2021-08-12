@@ -227,7 +227,6 @@ export async function getGameConfig(guildId: Snowflake): Promise<GameConfig | un
       game: {
         enabled: result?.enabled,
         mentionable: result?.mentionable,
-        color: result?.color,
         invite_channel: result?.invite_channel,
         reference_role: result?.reference_role,
       },
@@ -244,7 +243,6 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
   if (!config.game) config.game = {};
   if ('enabled' in data) config.game.enabled = data.enabled;
   if ('mentionable' in data) config.game.mentionable = data.mentionable;
-  if ('color' in data) config.game.color = data.color;
   if ('invite_channel' in data) config.game.invite_channel = data.invite_channel;
   if ('reference_role' in data) config.game.reference_role = data.reference_role;
 
@@ -316,7 +314,6 @@ export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | un
         enabled: result?.enabled,
         hoisted: result?.hoisted,
         mentionable: result?.mentionable,
-        color: result?.color,
         reference_role: result?.reference_role,
       },
     });
@@ -333,7 +330,6 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
   if ('enabled' in data) config.play.enabled = data.enabled;
   if ('hoisted' in data) config.play.hoisted = data.hoisted;
   if ('mentionable' in data) config.play.mentionable = data.mentionable;
-  if ('color' in data) config.play.color = data.color;
   if ('reference_role' in data) config.play.reference_role = data.reference_role;
   _guildconfig.set(guildId, config);
 

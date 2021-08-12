@@ -37,11 +37,6 @@ export default class GuildConfig extends GlobalCommand {
               type: 'BOOLEAN',
             },
             {
-              name: 'color',
-              description: 'The role color of generated game roles in hex.',
-              type: 'STRING',
-            },
-            {
               name: 'invite_channel',
               description: 'The channel where game invites will be sent.',
               type: 'CHANNEL',
@@ -72,11 +67,6 @@ export default class GuildConfig extends GlobalCommand {
               name: 'mentionable',
               description: 'Whether the generated play roles are mentionable.',
               type: 'BOOLEAN',
-            },
-            {
-              name: 'color',
-              description: 'The role color of generated game roles in hex.',
-              type: 'STRING',
             },
             {
               name: 'role_reference',
@@ -123,13 +113,11 @@ export default class GuildConfig extends GlobalCommand {
 
       const enabled = interaction.options.getBoolean('enabled');
       const mentionable = interaction.options.getBoolean('mentionable');
-      const color = interaction.options.getString('color');
       const channel = interaction.options.getChannel('invite_channel');
       const role = interaction.options.getRole('role_reference');
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
-      if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
       if (channel) config.invite_channel = data.invite_channel = channel.id;
       if (role) config.reference_role = data.reference_role = role.id;
 
@@ -139,7 +127,6 @@ export default class GuildConfig extends GlobalCommand {
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
           `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
-          `**Color**: ${config.color ?? 'Not Set'}`,
           `**Invite Channel**: ${
             config.invite_channel
               ? interaction.client.guilds.cache
@@ -163,13 +150,11 @@ export default class GuildConfig extends GlobalCommand {
       const enabled = interaction.options.getBoolean('enabled');
       const hoisted = interaction.options.getBoolean('hoisted');
       const mentionable = interaction.options.getBoolean('mentionable');
-      const color = interaction.options.getString('color');
       const role = interaction.options.getRole('role_reference');
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (typeof hoisted === 'boolean') config.hoisted = data.hoisted = hoisted;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
-      if (color && /^[0-9A-F]{6}$/i.test(color)) config.color = data.color = `#${color}`;
       if (role) config.reference_role = data.reference_role = role.id;
 
       if (data) await updatePlayConfig(interaction.guildId, data);
@@ -179,7 +164,6 @@ export default class GuildConfig extends GlobalCommand {
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
           `**Hoisted**: ${config.hoisted ? 'True' : 'False'}`,
           `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
-          `**Color**: ${config.color ?? 'Not Set'}`,
           `**Role Reference**: ${
             config.reference_role
               ? interaction.client.guilds.cache
