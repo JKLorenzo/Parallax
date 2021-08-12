@@ -2,6 +2,7 @@ import 'newrelic';
 import { Client, Intents } from 'discord.js';
 import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
+import { initPlay } from './managers/play.js';
 import { connectDb } from './modules/database.js';
 import { initTelemetry } from './modules/telemetry.js';
 
@@ -33,6 +34,7 @@ client.on('ready', async () => {
   await initTelemetry();
   await initInteraction();
   await initGame();
+  await initPlay();
   console.log('Initialized');
 });
 
