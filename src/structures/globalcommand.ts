@@ -1,14 +1,16 @@
-import { ApplicationCommandData } from 'discord.js';
+import { ChatInputApplicationCommandData } from 'discord.js';
 import BaseCommand from './basecommand.js';
 import { client } from '../main.js';
 
 export default abstract class GlobalCommand extends BaseCommand {
-  constructor(data: ApplicationCommandData) {
+  constructor(data: ChatInputApplicationCommandData) {
     super(data, 'global');
   }
 
   async init(): Promise<void> {
-    let this_command = client.application?.commands.cache.find(c => c.name === this.data.name);
+    let this_command = client.application?.commands.cache.find(
+      c => c.name === this.data.name && c.type === 'CHAT_INPUT',
+    );
 
     // Create
     if (!this_command) {
@@ -17,7 +19,14 @@ export default abstract class GlobalCommand extends BaseCommand {
     }
 
     // Update data
-    if (this_command && !this.isUpdated(this_command)) {
+    const data = {
+      name: this_command?.name,
+      description: this_command?.description,
+      options: this_command?.options,
+      defaultPermission: this_command?.defaultPermission,
+    } as ChatInputApplicationCommandData;
+
+    if (this_command && !this.isUpdated(data)) {
       await this_command.edit(this.data);
       console.log(`Global Command ${this.data.name} updated`);
     }

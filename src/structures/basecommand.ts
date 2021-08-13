@@ -1,6 +1,6 @@
 import {
-  ApplicationCommandData,
   ApplicationCommandOptionData,
+  ChatInputApplicationCommandData,
   CommandInteraction,
   Guild,
 } from 'discord.js';
@@ -8,15 +8,15 @@ import _ from 'lodash';
 import GlobalCommand from './globalcommand.js';
 
 export default abstract class BaseCommand {
-  private _data: ApplicationCommandData;
+  private _data: ChatInputApplicationCommandData;
   private _type: 'guild' | 'global';
 
-  constructor(data: ApplicationCommandData, type: 'guild' | 'global') {
+  constructor(data: ChatInputApplicationCommandData, type: 'guild' | 'global') {
     this._data = {
-      description: data.description,
       name: data.name,
-      defaultPermission: data.defaultPermission,
+      description: data.description,
       options: data.options ?? [],
+      defaultPermission: data.defaultPermission,
     };
     this._type = type;
   }
@@ -25,21 +25,22 @@ export default abstract class BaseCommand {
 
   abstract exec(interaction: CommandInteraction): Promise<unknown>;
 
-  get data(): ApplicationCommandData {
+  get data(): ChatInputApplicationCommandData {
     return {
       name: this._data.name,
       description: this._data.description,
+      type: 'CHAT_INPUT',
       options: this._transformOptions(),
       defaultPermission: this._data.defaultPermission,
     };
   }
 
-  patch(data: ApplicationCommandData): void {
+  patch(data: ChatInputApplicationCommandData): void {
     this._data = {
-      description: data.description,
       name: data.name,
-      defaultPermission: data.defaultPermission,
+      description: data.description,
       options: data.options ?? [],
+      defaultPermission: data.defaultPermission,
     };
   }
 
@@ -47,7 +48,7 @@ export default abstract class BaseCommand {
     return this._type === 'global';
   }
 
-  isUpdated(data: ApplicationCommandData): boolean {
+  isUpdated(data: ChatInputApplicationCommandData): boolean {
     const sameDescription = data.description === this.data.description;
     const sameOptions = _.isEqual(data.options, this.data.options);
     const sameDefaultPermissions = data.defaultPermission === this.data.defaultPermission;
@@ -64,8 +65,11 @@ export default abstract class BaseCommand {
         option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP'
           ? option.required
           : option.required ?? false,
-      choices: option.choices,
-      options: option.options ? this._transformOptions(option.options) : undefined,
-    }));
+      choices: option.type === 'STRING' || option.type === 'NUMBER' ? option.choices : undefined,
+      options:
+        (option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP') && option.options
+          ? this._transformOptions(option.options)
+          : undefined,
+    })) as ApplicationCommandOptionData[];
   }
 }

@@ -1,6 +1,6 @@
 import {
-  ApplicationCommandData,
   ApplicationCommandPermissionData,
+  ChatInputApplicationCommandData,
   Guild,
   Snowflake,
 } from 'discord.js';
@@ -13,7 +13,7 @@ export default abstract class GuildCommand extends BaseCommand {
   private _options?: GuildCommandOptions;
   private _ownerId?: Snowflake;
 
-  constructor(data: ApplicationCommandData, options?: GuildCommandOptions) {
+  constructor(data: ChatInputApplicationCommandData, options?: GuildCommandOptions) {
     super(data, 'guild');
     this._options = options;
   }
@@ -34,7 +34,14 @@ export default abstract class GuildCommand extends BaseCommand {
         }
 
         // Update data
-        if (!this.isUpdated(this_command)) {
+        const data = {
+          name: this_command?.name,
+          description: this_command?.description,
+          options: this_command?.options,
+          defaultPermission: this_command?.defaultPermission,
+        } as ChatInputApplicationCommandData;
+
+        if (!this.isUpdated(data)) {
           await this_command.edit(this.data);
           console.log(`Guild Command ${this.data.name} updated on ${guild}`);
         }
