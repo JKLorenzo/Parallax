@@ -23,7 +23,7 @@ const _guildconfig = new Map<Snowflake, GuildConfig>();
 const _games = new Map<string, GameData>();
 const _images = new Map<string, ImageData>();
 
-const _gameroles = new Map<string, Map<string, string>>();
+const _gameroles = new Map<string, Map<string, Snowflake>>();
 
 const _limiter = new Limiter(1800000);
 
@@ -254,7 +254,7 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
     .updateOne({ _id: 'game' }, { $set: config.game }, { upsert: true });
 }
 
-export async function getGuildGameRoles(guildId: Snowflake): Promise<Map<string, string>> {
+export async function getGuildGameRoles(guildId: Snowflake): Promise<Map<string, Snowflake>> {
   if (!_gameroles.get(guildId)) {
     const result = await mongoClient.db(guildId).collection('game_roles').find().toArray();
     _gameroles.set(guildId, new Map(result.map(r => [r._id, r.role_id])));
