@@ -65,7 +65,10 @@ export default abstract class BaseCommand {
         option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP'
           ? option.required
           : option.required ?? false,
-      choices: option.type === 'STRING' || option.type === 'NUMBER' ? option.choices : undefined,
+      choices:
+        option.type === 'STRING' || option.type === 'NUMBER' || option.type === 'INTEGER'
+          ? option.choices
+          : undefined,
       options:
         (option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP') && option.options
           ? this._transformOptions(option.options)
