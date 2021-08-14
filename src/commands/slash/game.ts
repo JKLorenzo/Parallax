@@ -8,11 +8,11 @@ import {
   Role,
 } from 'discord.js';
 import _ from 'lodash';
-import { client } from '../main.js';
-import { getComponent } from '../managers/interaction.js';
-import { getGameConfig, getGuildGameRoles } from '../modules/database.js';
-import Command from '../structures/command.js';
-import { fetchImage, hexToUtf } from '../utils/functions.js';
+import { client } from '../../main.js';
+import { getComponent } from '../../managers/interaction.js';
+import { getGameConfig, getGuildGameRoles } from '../../modules/database.js';
+import Command from '../../structures/command.js';
+import { fetchImage, hexToUtf } from '../../utils/functions.js';
 
 export default class Game extends Command {
   private _inviteoptions: ApplicationCommandSubCommandData[];

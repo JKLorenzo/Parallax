@@ -10,9 +10,9 @@ import {
   getPlayConfig,
   updateGameConfig,
   updatePlayConfig,
-} from '../modules/database.js';
-import Command from '../structures/command.js';
-import { GameConfig, PlayConfig } from '../utils/types.js';
+} from '../../modules/database.js';
+import Command from '../../structures/command.js';
+import { GameConfig, PlayConfig } from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
   constructor() {

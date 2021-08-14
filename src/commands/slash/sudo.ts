@@ -2,9 +2,9 @@ import util from 'util';
 import tags from 'common-tags';
 import { CommandInteraction, MessageEmbed, Util } from 'discord.js';
 import _ from 'lodash';
-import { client } from '../main.js';
-import { getBotConfig } from '../modules/database.js';
-import Command from '../structures/command.js';
+import { client } from '../../main.js';
+import { getBotConfig } from '../../modules/database.js';
+import Command from '../../structures/command.js';
 
 const nl = '!!NL!!';
 const nlPattern = new RegExp(nl, 'g');
