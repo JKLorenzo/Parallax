@@ -8,6 +8,7 @@ import {
   Role,
 } from 'discord.js';
 import _ from 'lodash';
+import cron from 'node-cron';
 import { client } from '../../main.js';
 import { getComponent } from '../../managers/interaction.js';
 import { getGameConfig, getGuildGameRoles } from '../../modules/database.js';
@@ -112,45 +113,50 @@ export default class Game extends Command {
   async init(): Promise<void> {
     const template = _.cloneDeep(this.data);
 
-    for (const guild of client.guilds.cache.values()) {
-      const data = _.cloneDeep(template);
-      this._inviteoptions = [];
+    const init_this = async () => {
+      for (const guild of client.guilds.cache.values()) {
+        const data = _.cloneDeep(template);
+        this._inviteoptions = [];
 
-      const partitions = [] as Role[][];
-      const game_roles = await getGuildGameRoles(guild.id);
-      const games = [
-        ...guild.roles.cache.filter(r => [...game_roles.values()].includes(r.id)).values(),
-      ];
-      const games_alphabetical = games.map(r => r.name.toLowerCase()).sort();
-      for (const game_name of games_alphabetical) {
-        // Initialize the first and the next partition
-        if (!partitions.length || partitions[partitions.length - 1].length > 24) {
-          partitions.push([]);
+        const partitions = [] as Role[][];
+        const game_roles = await getGuildGameRoles(guild.id);
+        const games = [
+          ...guild.roles.cache.filter(r => [...game_roles.values()].includes(r.id)).values(),
+        ];
+        const games_alphabetical = games.map(r => r.name.toLowerCase()).sort();
+        for (const game_name of games_alphabetical) {
+          // Initialize the first and the next partition
+          if (!partitions.length || partitions[partitions.length - 1].length > 24) {
+            partitions.push([]);
+          }
+          const this_role = games.find(r => r.name.toLowerCase() === game_name);
+          if (this_role) partitions[partitions.length - 1].push(this_role);
         }
-        const this_role = games.find(r => r.name.toLowerCase() === game_name);
-        if (this_role) partitions[partitions.length - 1].push(this_role);
-      }
 
-      for (const partition of partitions) {
-        this.registerPartitionAsSubcommand(partition);
-      }
-
-      if (data.type === 'CHAT_INPUT') {
-        if (data.options && this._inviteoptions.length) {
-          data.options = data.options.map(option => {
-            if (option.name === 'invite' && option.type === 'SUB_COMMAND_GROUP') {
-              option.options = this._inviteoptions;
-            }
-            return option;
-          });
-        } else if (data.options) {
-          data.options = data.options.filter(o => o.name !== 'invite');
+        for (const partition of partitions) {
+          this.registerPartitionAsSubcommand(partition);
         }
-      }
 
-      this.patch(data);
-      await super.init(guild);
-    }
+        if (data.type === 'CHAT_INPUT') {
+          if (data.options && this._inviteoptions.length) {
+            data.options = data.options.map(option => {
+              if (option.name === 'invite' && option.type === 'SUB_COMMAND_GROUP') {
+                option.options = this._inviteoptions;
+              }
+              return option;
+            });
+          } else if (data.options) {
+            data.options = data.options.filter(o => o.name !== 'invite');
+          }
+        }
+
+        this.patch(data);
+        await super.init(guild);
+      }
+    };
+
+    await init_this();
+    cron.schedule('*/60 * * * *', init_this);
   }
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
