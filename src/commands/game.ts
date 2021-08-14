@@ -161,9 +161,9 @@ export default class Game extends Command {
       return interaction.reply('This is only available on a guild channel.');
     }
 
-    await interaction.deferReply();
-
     if (subcommand_group === 'invite') {
+      await interaction.deferReply({ ephemeral: true });
+
       const config = await getGameConfig(interaction.guildId);
       if (!config || !config.enabled || !config.invite_channel) {
         return interaction.editReply('This command is currently disabled or is not set up.');
