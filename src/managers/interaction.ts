@@ -61,7 +61,6 @@ export async function initInteraction(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error(error);
     logError('Interaction', 'Initialize', error);
   }
 
@@ -84,7 +83,6 @@ async function processCommand(interaction: CommandInteraction): Promise<void> {
   try {
     await this_command.exec(interaction);
   } catch (error) {
-    console.error(error);
     logError('Interaction', 'Process Command', error);
   }
 }
@@ -96,7 +94,6 @@ async function processComponent(interaction: MessageComponentInteraction): Promi
   try {
     await this_component.exec(interaction, customId);
   } catch (error) {
-    console.error(error);
     logError('Interaction', 'Process Component', error);
   }
 }

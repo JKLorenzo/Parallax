@@ -90,7 +90,7 @@ export default abstract class Command {
         );
       }
     } else {
-      if (!this._ownerId) this._ownerId = await getBotConfig('BotOwnerId');
+      this._ownerId ??= await getBotConfig('BotOwnerId');
 
       for (const this_guild of context) {
         await this_guild.commands.fetch();

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
+import { setTimeout } from 'timers/promises';
 import { Snowflake } from 'discord.js';
-import { sleep } from './functions.js';
 
 const _queuers = new Map<string, Queuer>();
 
@@ -41,7 +41,7 @@ export class Queuer {
       } catch (error) {
         this_queue?.promise.reject(error);
       } finally {
-        if (this.timeout > 0) await sleep(this.timeout);
+        if (this.timeout > 0) await setTimeout(this.timeout);
       }
     }
 

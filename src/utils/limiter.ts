@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers/promises';
+
 export default class Limiter {
   private timeout: number;
   private data: Map<string, number>;
@@ -14,9 +16,9 @@ export default class Limiter {
       this.data.set(id, now);
 
       // GC non-limited
-      setTimeout(() => {
+      setTimeout(this.timeout + 10000, () => {
         if (!this.isLimited(id)) this.data.delete(id);
-      }, this.timeout + 10000);
+      });
     }
     return isLimited;
   }
