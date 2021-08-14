@@ -23,12 +23,12 @@ jobs:
       - name: Deploy
         uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_app_name: 'quarantine-gaming-beta'
+          heroku_app_name: 'quarantine-gaming'
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           procfile: 'web: node ./dist/main.js'
           buildpack: 'https://github.com/heroku/heroku-buildpack-nodejs.git'
-          healthcheck: 'https://quarantine-gaming-beta.herokuapp.com/status'
+          healthcheck: 'https://quarantine-gaming.herokuapp.com/status'
           checkstring: 'online'
           rollbackonhealthcheckfailed: true
           delay: 30
