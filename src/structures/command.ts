@@ -3,13 +3,11 @@ import {
   ApplicationCommandData,
   ApplicationCommandOptionData,
   ApplicationCommandPermissionData,
-  ApplicationCommandType,
   ClientApplication,
   CommandInteraction,
   Guild,
   Snowflake,
 } from 'discord.js';
-import { ApplicationCommandTypes } from 'discord.js/typings/enums.js';
 import _ from 'lodash';
 import { client } from '../main.js';
 import { getBotConfig } from '../modules/database.js';
@@ -35,15 +33,6 @@ export default abstract class Command {
 
   patch(data: ApplicationCommandData): void {
     switch (data.type) {
-      case 'CHAT_INPUT':
-        this._data = {
-          type: 'CHAT_INPUT',
-          name: data.name,
-          description: data.description,
-          defaultPermission: data.defaultPermission,
-          options: this._transformOptions(data.options),
-        };
-        break;
       case 'USER':
       case 'MESSAGE':
         this._data = {
@@ -52,9 +41,20 @@ export default abstract class Command {
           defaultPermission: data.defaultPermission,
         };
         break;
+      case 'CHAT_INPUT':
+        this._data = {
+          type: data.type,
+          name: data.name,
+          description: data.description,
+          defaultPermission: data.defaultPermission,
+          options: this._transformOptions(data.options),
+        };
+        break;
       default:
         throw new TypeError(
-          `${this.scope} ${`${this.type}`.toLowerCase()} command ${data.name} has unknown type`,
+          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
+            data.name
+          } has unknown type`,
         );
     }
   }
@@ -78,7 +78,7 @@ export default abstract class Command {
       if (!this_command) {
         this_command = await client.application?.commands.create(this.data);
         console.log(
-          `${this.scope} ${`${this.type}`.toLowerCase()} command ${this.data.name} created`,
+          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} created`,
         );
       }
 
@@ -86,7 +86,7 @@ export default abstract class Command {
       if (this_command && !this.isUpdated(this_command)) {
         await this_command.edit(this.data);
         console.log(
-          `${this.scope} ${`${this.type}`.toLowerCase()} command ${this.data.name} updated`,
+          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} updated`,
         );
       }
     } else {
@@ -104,7 +104,7 @@ export default abstract class Command {
           if (!this_command) {
             this_command = await this_guild.commands.create(this.data);
             console.log(
-              `${this.scope} ${`${this.type}`.toLowerCase()} command ${
+              `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                 this.data.name
               } created on ${this_guild}`,
             );
@@ -114,14 +114,14 @@ export default abstract class Command {
           if (this_command && !this.isUpdated(this_command)) {
             await this_command.edit(this.data);
             console.log(
-              `${this.scope} ${`${this.type}`.toLowerCase()} command ${
+              `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                 this.data.name
               } updated on ${this_guild}`,
             );
           }
 
           // Update permissions
-          if (this.type === 'CHAT_INPUT') {
+          if (this.data.type === 'CHAT_INPUT') {
             const guildPermissions = await this_guild.commands.permissions.fetch({});
             const existingPermissions = guildPermissions.get(this_command.id);
             const currentPermissions = this.getPermissions();
@@ -130,7 +130,7 @@ export default abstract class Command {
                 permissions: currentPermissions ?? [],
               });
               console.log(
-                `${this.scope} ${`${this.type}`.toLowerCase()} command ${
+                `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                   this.data.name
                 } permissions updated on ${this_guild}`,
               );
@@ -140,7 +140,7 @@ export default abstract class Command {
           // Delete
           await this_command.delete();
           console.log(
-            `${this.scope} ${`${this.type}`.toLowerCase()} command ${
+            `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
               this.data.name
             } deleted on ${this_guild}`,
           );
@@ -159,18 +159,11 @@ export default abstract class Command {
     return this._scope;
   }
 
-  get type(): ApplicationCommandType | ApplicationCommandTypes {
-    return this.data.type ?? 'CHAT_INPUT';
-  }
-
   isUpdated(data: ApplicationCommand): boolean {
     if (this.data.defaultPermission !== data.defaultPermission) return false;
     if (this.data.type === 'CHAT_INPUT' && data.type === 'CHAT_INPUT') {
       if (this.data.description !== data.description) return false;
-      if (JSON.stringify(this.data.options) !== JSON.stringify(data.options)) {
-        console.log(this.data.name, this.data.options, data.options);
-        return false;
-      }
+      if (JSON.stringify(this.data.options) !== JSON.stringify(data.options)) return false;
     }
     return true;
   }
