@@ -12,15 +12,15 @@ export default class GameScreening extends Component {
           type: 'ACTION_ROW',
           components: [
             {
-              type: 'BUTTON',
               customId: 'approve',
+              type: 'BUTTON',
               label: 'Approve',
               emoji: client.emojis.cache.find(e => e.name === 'accept'),
               style: 'SUCCESS',
             },
             {
-              type: 'BUTTON',
               customId: 'deny',
+              type: 'BUTTON',
               label: 'Deny',
               emoji: client.emojis.cache.find(e => e.name === 'reject'),
               style: 'DANGER',
