@@ -65,7 +65,7 @@ export async function initInteraction(): Promise<void> {
   }
 
   client.on('interactionCreate', interaction => {
-    if (interaction.isCommand()) {
+    if (interaction.isCommand() || interaction.isContextMenu()) {
       return processCommand(interaction);
     } else if (interaction.isMessageComponent()) {
       return processComponent(interaction);
