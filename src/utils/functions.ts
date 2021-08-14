@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Snowflake } from 'discord.js';
 import gis from 'g-i-s';
 import probe from 'probe-image-size';
 import { getImage, updateImage } from '../modules/database.js';
@@ -20,6 +21,18 @@ export function utfToHex(utf: string): string {
 
 export function hexToUtf(hex: string): string {
   return Buffer.from(hex, 'hex').toString('utf8');
+}
+
+export function contains(base: string, part: string | string[]): boolean {
+  const parts = Array.isArray(part) ? part : [part];
+  for (const this_part of parts) {
+    if (base.indexOf(this_part) !== -1) return true;
+  }
+  return false;
+}
+
+export function parseMention(mention: string): Snowflake {
+  return String(mention).replace(/\W/g, '');
 }
 
 export async function fetchImage(name: string): Promise<ImageData | undefined> {
