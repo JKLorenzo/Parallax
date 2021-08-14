@@ -4,9 +4,12 @@ import { client } from '../main.js';
 import { getGame, getPlayConfig } from '../modules/database.js';
 import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js';
 import { logError } from '../modules/telemetry.js';
+import { Queuer } from '../utils/queuer.js';
 import { ActivityData } from '../utils/types.js';
 
 const play_prefix = 'Play 🔰';
+
+const queuer = new Queuer();
 
 export function initPlay(): void {
   cron.schedule('*/30 * * * *', async () => {
@@ -38,7 +41,9 @@ export function initPlay(): void {
     }
   });
 
-  client.on('presenceUpdate', processPresence);
+  client.on('presenceUpdate', (oldPresence, newPresence) => {
+    queuer.queue(() => processPresence(oldPresence, newPresence));
+  });
 }
 
 async function processPresence(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
