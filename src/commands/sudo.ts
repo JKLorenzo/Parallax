@@ -4,21 +4,23 @@ import { CommandInteraction, MessageEmbed, Util } from 'discord.js';
 import _ from 'lodash';
 import { client } from '../main.js';
 import { getBotConfig } from '../modules/database.js';
-import GuildCommand from '../structures/guildcommand.js';
+import Command from '../structures/command.js';
 
 const nl = '!!NL!!';
 const nlPattern = new RegExp(nl, 'g');
 
-export default class Sudo extends GuildCommand {
+export default class Sudo extends Command {
   private _lastResult?: unknown;
   private _hrStart?: [number, number];
   private _sensitivePattern?: RegExp;
 
   constructor() {
     super(
+      'guild',
       {
         name: 'sudo',
         description: 'Executes a command as a superuser.',
+        type: 'CHAT_INPUT',
         defaultPermission: false,
         options: [
           {

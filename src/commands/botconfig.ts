@@ -1,14 +1,16 @@
 import { CommandInteraction } from 'discord.js';
 import { getBotConfig, setBotConfig } from '../modules/database.js';
-import GuildCommand from '../structures/guildcommand.js';
+import Command from '../structures/command.js';
 import { BotConfigKeys } from '../utils/types.js';
 
-export default class BotConfig extends GuildCommand {
+export default class BotConfig extends Command {
   constructor() {
     super(
+      'guild',
       {
         name: 'botconfig',
         description: 'Gets or sets the bot configuration.',
+        type: 'CHAT_INPUT',
         defaultPermission: false,
         options: [
           {

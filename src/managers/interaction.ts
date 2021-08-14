@@ -7,11 +7,11 @@ import {
 } from 'discord.js';
 import { client } from '../main.js';
 import { logError } from '../modules/telemetry.js';
-import BaseCommand from '../structures/basecommand.js';
+import Command from '../structures/command.js';
 import Component from '../structures/component.js';
 import { getFiles } from '../utils/functions.js';
 
-const _commands = new Map<string, BaseCommand>();
+const _commands = new Map<string, Command>();
 const _components = new Map<string, Component>();
 
 export async function initInteraction(): Promise<void> {
@@ -21,7 +21,7 @@ export async function initInteraction(): Promise<void> {
       if (command_path.endsWith('.map')) continue;
       const file_path = pathToFileURL(command_path).href;
       const { default: ApplicationCommand } = await import(file_path);
-      const command = new ApplicationCommand() as BaseCommand;
+      const command = new ApplicationCommand() as Command;
       _commands.set(command.data.name, command);
     }
 

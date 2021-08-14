@@ -1,11 +1,12 @@
 import { CommandInteraction } from 'discord.js';
-import GlobalCommand from '../structures/globalcommand.js';
+import Command from '../structures/command.js';
 
-export default class Ping extends GlobalCommand {
+export default class Ping extends Command {
   constructor() {
-    super({
+    super('global', {
       name: 'ping',
       description: 'Checks the ping of this bot.',
+      type: 'CHAT_INPUT',
       defaultPermission: true,
     });
   }

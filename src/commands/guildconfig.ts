@@ -11,14 +11,15 @@ import {
   updateGameConfig,
   updatePlayConfig,
 } from '../modules/database.js';
-import GlobalCommand from '../structures/globalcommand.js';
+import Command from '../structures/command.js';
 import { GameConfig, PlayConfig } from '../utils/types.js';
 
-export default class GuildConfig extends GlobalCommand {
+export default class GuildConfig extends Command {
   constructor() {
-    super({
+    super('global', {
       name: 'guildconfig',
       description: 'Gets or updates the configuration of this server.',
+      type: 'CHAT_INPUT',
       defaultPermission: true,
       options: [
         {
