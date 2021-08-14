@@ -123,11 +123,9 @@ export default abstract class Command {
           // Update permissions
           if (this.data.type === 'CHAT_INPUT') {
             const guildPermissions = await this_guild.commands.permissions.fetch({});
-            const existingPermissions = guildPermissions.get(this_command.id);
-            const currentPermissions = this.getPermissions();
-            if (!_.isEqual(currentPermissions, existingPermissions)) {
+            if (!_.isEqual(guildPermissions.get(this_command.id), this.permissions)) {
               await this_command.permissions.set({
-                permissions: currentPermissions ?? [],
+                permissions: this.permissions ?? [],
               });
               console.log(
                 `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
@@ -159,16 +157,7 @@ export default abstract class Command {
     return this._scope;
   }
 
-  isUpdated(data: ApplicationCommand): boolean {
-    if (this.data.defaultPermission !== data.defaultPermission) return false;
-    if (this.data.type === 'CHAT_INPUT' && data.type === 'CHAT_INPUT') {
-      if (this.data.description !== data.description) return false;
-      if (JSON.stringify(this.data.options) !== JSON.stringify(data.options)) return false;
-    }
-    return true;
-  }
-
-  getPermissions(): ApplicationCommandPermissionData[] | undefined {
+  get permissions(): ApplicationCommandPermissionData[] | undefined {
     const permissions = [] as ApplicationCommandPermissionData[];
 
     if (this._options?.permissions?.roles?.allow) {
@@ -198,6 +187,15 @@ export default abstract class Command {
     }
 
     return permissions.length ? permissions : undefined;
+  }
+
+  isUpdated(data: ApplicationCommand): boolean {
+    if (this.data.defaultPermission !== data.defaultPermission) return false;
+    if (this.data.type === 'CHAT_INPUT' && data.type === 'CHAT_INPUT') {
+      if (this.data.description !== data.description) return false;
+      if (JSON.stringify(this.data.options) !== JSON.stringify(data.options)) return false;
+    }
+    return true;
   }
 
   private _transformOptions(
