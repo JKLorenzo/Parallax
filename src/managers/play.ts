@@ -84,7 +84,12 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
         let play_role = guild.roles.cache.find(r => r.name === play_name);
 
         if (status === 'new') {
-          if (!play_role) {
+          if (play_role) {
+            const position = config.reference_role
+              ? guild.roles.cache.get(config.reference_role)?.position
+              : undefined;
+            if (position) await play_role.setPosition(position);
+          } else {
             play_role = await createRole(guild, {
               name: play_name,
               hoist: config.hoisted,
