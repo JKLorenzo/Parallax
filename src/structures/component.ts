@@ -19,7 +19,7 @@ export default abstract class Component {
     this._options = data.options;
   }
 
-  abstract exec(interaction: MessageComponentInteraction, customId: string): Promise<void>;
+  abstract exec(interaction: MessageComponentInteraction, customId: string): Promise<unknown>;
 
   get name(): string {
     return this._name;
