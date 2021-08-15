@@ -70,9 +70,10 @@ export default class Purge extends Command {
     } while (retries > 0 && deleted_count < message_count);
 
     const elapsedTime = (Date.now() - interaction.createdTimestamp) / 1000;
-    const affected = Object.entries(deleted)
-      .map(entry => `${entry[0]}: ${entry[1]}`)
-      .join('\n');
+    const affected = [] as string[];
+    for (const elements of deleted) {
+      affected.push(`${elements[0]}: ${elements[1]}`);
+    }
 
     await interaction.editReply({
       embeds: [
@@ -83,7 +84,7 @@ export default class Purge extends Command {
           fields: [
             {
               name: 'Affected Authors:',
-              value: affected.length ? affected : 'None',
+              value: affected.length ? affected.join('\n') : 'None',
             },
           ],
           footer: {
