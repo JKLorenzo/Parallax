@@ -33,6 +33,11 @@ export async function initTelemetry(): Promise<void> {
       content: `${error.name}: ${error.message}`,
     });
   });
+
+  await webhook?.send({
+    username: 'Telemetry: Client',
+    content: `Online on ${client.guilds.cache.size} servers`,
+  });
 }
 
 app.get('/status', (req, res) => {
