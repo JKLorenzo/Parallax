@@ -11,8 +11,8 @@ const play_prefix = 'Play 🔰';
 
 const queuer = new Queuer();
 
-export function initPlay(): void {
-  cron.schedule('*/30 * * * *', async () => {
+export async function initPlay(): Promise<void> {
+  const clearExpired = async () => {
     try {
       for (const guild of client.guilds.cache.values()) {
         const promises = [];
@@ -39,7 +39,11 @@ export function initPlay(): void {
     } catch (error) {
       logError('Play Manager', 'Clear Expired', error);
     }
-  });
+  };
+
+  cron.schedule('*/30 * * * *', clearExpired);
+
+  await clearExpired();
 
   client.on('presenceUpdate', (oldPresence, newPresence) => {
     queuer.queue(() => processPresence(oldPresence, newPresence));
