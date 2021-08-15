@@ -133,3 +133,6 @@ export default class Sudo extends Command {
     }
   }
 }
+
+// Primarily based on discord.js-commando's eval util command:
+// Cebulskie S. (2021). Commando (version 0.12.3). URL: https://github.com/discordjs/Commando
