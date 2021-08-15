@@ -2,6 +2,7 @@ import { Activity, Guild, Snowflake } from 'discord.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
+  | 'BotInviteLink'
   | 'ControlServerId'
   | 'TelemetryWebhookURL'
   | 'GameScreeningChannelId'
