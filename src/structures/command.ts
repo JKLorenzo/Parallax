@@ -201,7 +201,7 @@ export default abstract class Command {
   private _transformOptions(
     options?: ApplicationCommandOptionData[],
   ): ApplicationCommandOptionData[] {
-    if (!options && !Array.isArray(options)) return [];
+    if (!options || !Array.isArray(options)) return [];
     return options.map(option => ({
       type: option.type,
       name: option.name,
