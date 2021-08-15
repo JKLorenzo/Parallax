@@ -34,9 +34,23 @@ export async function initTelemetry(): Promise<void> {
     });
   });
 
+  client.on('guildCreate', guild => {
+    webhook?.send({
+      username: 'Telemetry: Client',
+      content: `Joined \`${guild.name}\` server with a total of ${guild.memberCount} members.`,
+    });
+  });
+
+  client.on('guildDelete', guild => {
+    webhook?.send({
+      username: 'Telemetry: Client',
+      content: `Left \`${guild.name}\` server. Joined on \`${guild.joinedAt}\`.`,
+    });
+  });
+
   await webhook?.send({
     username: 'Telemetry: Client',
-    content: `Online on ${client.guilds.cache.size} servers`,
+    content: `Online on ${client.guilds.cache.size} servers.`,
   });
 }
 
