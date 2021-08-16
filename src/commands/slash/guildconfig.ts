@@ -1,18 +1,23 @@
 import {
   CommandInteraction,
+  Guild,
   GuildMember,
   MessageAttachment,
   MessageEmbed,
   Permissions,
+  TextChannel,
 } from 'discord.js';
+import { client } from '../../main.js';
 import {
+  getFreeGameConfig,
   getGameConfig,
   getPlayConfig,
+  updateFreeGameConfig,
   updateGameConfig,
   updatePlayConfig,
 } from '../../modules/database.js';
 import Command from '../../structures/command.js';
-import { GameConfig, PlayConfig } from '../../utils/types.js';
+import { FreeGameConfig, GameConfig, PlayConfig } from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
   constructor() {
@@ -76,11 +81,58 @@ export default class GuildConfig extends Command {
             },
           ],
         },
+        {
+          name: 'free_game',
+          description: 'Gets or updates the free game configuration of this server.',
+          type: 'SUB_COMMAND',
+          options: [
+            {
+              name: 'show_options',
+              description: 'Sends the role selection pane to this channel.',
+              type: 'CHANNEL',
+            },
+            {
+              name: 'enabled',
+              description: 'Enable or disable this config.',
+              type: 'BOOLEAN',
+            },
+            {
+              name: 'channel',
+              description: 'The channel where free games will be sent.',
+              type: 'CHANNEL',
+            },
+            {
+              name: 'steam',
+              description: 'The role to mention when theres a free game on Steam.',
+              type: 'ROLE',
+            },
+            {
+              name: 'epic',
+              description: 'The role to mention when theres a free game on Epic Games.',
+              type: 'ROLE',
+            },
+            {
+              name: 'gog',
+              description: 'The role to mention when theres a free game on GOG.',
+              type: 'ROLE',
+            },
+            {
+              name: 'ps',
+              description: 'The role to mention when theres a free game for PlayStation.',
+              type: 'ROLE',
+            },
+            {
+              name: 'xbox',
+              description: 'The role to mention when theres a free game for Xbox.',
+              type: 'ROLE',
+            },
+          ],
+        },
       ],
     });
   }
 
-  async exec(interaction: CommandInteraction): Promise<void> {
+  async exec(interaction: CommandInteraction): Promise<unknown> {
     const member = interaction.member as GuildMember;
     const command = interaction.options.getSubcommand();
 
@@ -88,13 +140,17 @@ export default class GuildConfig extends Command {
     if (!interaction.inGuild()) {
       return interaction.reply('This is only available on a guild channel.');
     }
+
     // Block members without manage server permissions
     if (!member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
       return interaction.reply(
         'You need to have the `Manage Server` permission to use this command.',
       );
     }
+
     await interaction.deferReply();
+
+    const guild = client.guilds.cache.get(interaction.guildId) as Guild;
 
     const embed = new MessageEmbed({
       author: {
@@ -174,11 +230,132 @@ export default class GuildConfig extends Command {
           }`,
         ].join('\n'),
       );
+    } else if (command === 'free_game') {
+      const data = {} as FreeGameConfig;
+      const config = (await getFreeGameConfig(interaction.guildId)) ?? {};
+
+      const show_options = interaction.options.getChannel('show_options');
+
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+      const steam_role = interaction.options.getRole('steam');
+      const epic_role = interaction.options.getRole('epic');
+      const gog_role = interaction.options.getRole('gog');
+      const ps_role = interaction.options.getRole('ps');
+      const xbox_role = interaction.options.getRole('xbox');
+
+      if (channel && channel.type !== 'GUILD_TEXT') {
+        return interaction.editReply(
+          `The selected channel ${channel} is not a text-based channel.`,
+        );
+      }
+
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (channel) config.channel = data.channel = channel.id;
+      if (steam_role) config.steam_role = data.steam_role = steam_role.id;
+      if (epic_role) config.epic_role = data.epic_role = epic_role.id;
+      if (gog_role) config.gog_role = data.gog_role = gog_role.id;
+      if (ps_role) config.ps_role = data.ps_role = ps_role.id;
+      if (xbox_role) config.xbox_role = data.xbox_role = xbox_role.id;
+
+      if (data) await updateFreeGameConfig(interaction.guildId, data);
+
+      if (show_options) {
+        if (!config.channel) {
+          return interaction.editReply('Invalid config: `channel` option is not set.');
+        }
+
+        const free_game_channel = guild.channels.cache.get(config.channel);
+        if (!free_game_channel) {
+          return interaction.editReply('Invalid config: `channel` option is no longer valid.');
+        }
+
+        if (show_options.type !== 'GUILD_TEXT') {
+          return interaction.editReply(
+            `The selected channel (${show_options}) is not a text-based channel. ${
+              data ? 'All changes are saved.' : ''
+            }`,
+          );
+        }
+
+        const role_descriptions = [] as string[];
+        if (config.steam_role) {
+          const steam = guild.roles.cache.get(config.steam_role);
+          const steam_emoji = client.emojis.cache.find(e => e.name === 'steam');
+          if (steam) role_descriptions.push(`    ${steam_emoji} - ${steam}\n`);
+        }
+        if (config.epic_role) {
+          const epic = guild.roles.cache.get(config.epic_role);
+          const epic_emoji = client.emojis.cache.find(e => e.name === 'epic');
+          if (epic) role_descriptions.push(`    ${epic_emoji} - ${epic}\n`);
+        }
+        if (config.gog_role) {
+          const gog = guild.roles.cache.get(config.gog_role);
+          const gog_emoji = client.emojis.cache.find(e => e.name === 'gog');
+          if (gog) role_descriptions.push(`    ${gog_emoji} - ${gog}\n`);
+        }
+        if (config.ps_role) {
+          const ps = guild.roles.cache.get(config.ps_role);
+          const ps_emoji = client.emojis.cache.find(e => e.name === 'ps');
+          if (ps) role_descriptions.push(`    ${ps_emoji} - ${ps}\n`);
+        }
+        if (config.xbox_role) {
+          const xbox = guild.roles.cache.get(config.xbox_role);
+          const xbox_emoji = client.emojis.cache.find(e => e.name === 'xbox');
+          if (xbox) role_descriptions.push(`    ${xbox_emoji} - ${xbox}\n`);
+        }
+
+        await (show_options as TextChannel).send({
+          files: [new MessageAttachment('./src/assets/gaming.gif')],
+          embeds: [
+            new MessageEmbed({
+              author: { name: 'Role Selection Pane' },
+              title: 'Free Game Updates',
+              description: [
+                `All notifications will be made available on ${free_game_channel} channel.`,
+                '',
+                ...role_descriptions,
+              ].join('\n'),
+              image: {
+                url: 'attachment://gaming.gif',
+              },
+              footer: { text: 'Update your role by interacting with the buttons below.' },
+              color: 'GREEN',
+            }),
+          ],
+        });
+      }
+
+      embed.setDescription(
+        [
+          `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
+          `**Channel**: ${
+            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**Steam**: ${
+            config.steam_role ? guild.roles.cache.get(config.steam_role) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**Epic Games**: ${
+            config.epic_role ? guild.roles.cache.get(config.epic_role) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**GOG**: ${
+            config.gog_role ? guild.roles.cache.get(config.gog_role) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**PlayStation**: ${
+            config.ps_role ? guild.roles.cache.get(config.ps_role) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**Xbox**: ${
+            config.xbox_role ? guild.roles.cache.get(config.xbox_role) : 'Not Set' ?? 'Invalid'
+          }`,
+        ].join('\n'),
+      );
     }
 
-    await interaction.editReply({
-      files: [new MessageAttachment('./src/assets/settings.png')],
-      embeds: [embed],
-    });
+    if (embed.description) {
+      await interaction.editReply({
+        files: [new MessageAttachment('./src/assets/settings.png')],
+        embeds: [embed],
+      });
+    }
   }
 }
