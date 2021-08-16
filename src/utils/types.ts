@@ -38,13 +38,12 @@ export type DedicatedConfig = {
 };
 
 export type FreeGameConfig = {
-  free_games_channel?: Snowflake;
+  enabled?: boolean;
+  channel?: Snowflake;
+  steam_role?: Snowflake;
   epic_role?: Snowflake;
   gog_role?: Snowflake;
   ps_role?: Snowflake;
-  steam_role?: Snowflake;
-  uplay_role?: Snowflake;
-  wii_role?: Snowflake;
   xbox_role?: Snowflake;
 };
 
