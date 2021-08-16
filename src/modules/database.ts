@@ -180,13 +180,11 @@ export async function getFreeGameConfig(guildId: Snowflake): Promise<FreeGameCon
 
     _guildconfig.set(guildId, {
       free_game: {
-        free_games_channel: result?.free_games_channel,
+        channel: result?.channel,
+        steam_role: result?.steam_role,
         epic_role: result?.epic_role,
         gog_role: result?.gog_role,
         ps_role: result?.ps_role,
-        steam_role: result?.steam_role,
-        uplay_role: result?.uplay_role,
-        wii_role: result?.wii_role,
         xbox_role: result?.xbox_role,
       },
     });
@@ -203,13 +201,11 @@ export async function updateFreeGameConfig(
 
   const config = _guildconfig.get(guildId) ?? {};
   if (!config.free_game) config.free_game = {};
-  if ('free_games_channel' in data) config.free_game.free_games_channel = data.free_games_channel;
+  if ('channel' in data) config.free_game.channel = data.channel;
+  if ('steam_role' in data) config.free_game.steam_role = data.steam_role;
   if ('epic_role' in data) config.free_game.epic_role = data.epic_role;
   if ('gog_role' in data) config.free_game.gog_role = data.gog_role;
   if ('ps_role' in data) config.free_game.ps_role = data.ps_role;
-  if ('steam_role' in data) config.free_game.steam_role = data.steam_role;
-  if ('uplay_role' in data) config.free_game.uplay_role = data.uplay_role;
-  if ('wii_role' in data) config.free_game.wii_role = data.wii_role;
   if ('xbox_role' in data) config.free_game.xbox_role = data.xbox_role;
   _guildconfig.set(guildId, config);
 
