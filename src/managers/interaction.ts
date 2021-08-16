@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import {
+import Discord, {
+  Collection,
   CommandInteraction,
   MessageActionRowOptions,
   MessageComponentInteraction,
@@ -11,20 +12,12 @@ import Command from '../structures/command.js';
 import Component from '../structures/component.js';
 import { getFiles } from '../utils/functions.js';
 
-const _commands = new Map<string, Command>();
-const _components = new Map<string, Component>();
+const _commands = new Collection<string, Command>();
+const _components = new Collection<string, Component>();
 
 export async function initInteraction(): Promise<void> {
   try {
-    const commands_dir = join(process.cwd(), 'dist/commands');
-    for (const command_path of getFiles(commands_dir)) {
-      if (command_path.endsWith('.map')) continue;
-      const file_path = pathToFileURL(command_path).href;
-      const { default: ApplicationCommand } = await import(file_path);
-      const command = new ApplicationCommand() as Command;
-      _commands.set(command.data.name, command);
-    }
-
+    // Load components
     const components_dir = join(process.cwd(), 'dist/components');
     for (const component_path of getFiles(components_dir)) {
       if (component_path.endsWith('.map')) continue;
@@ -34,24 +27,37 @@ export async function initInteraction(): Promise<void> {
       _components.set(component.name, component);
     }
 
-    let promises = [];
+    // Load commands
+    const commands_dir = join(process.cwd(), 'dist/commands');
+    for (const command_path of getFiles(commands_dir)) {
+      if (command_path.endsWith('.map')) continue;
+      const file_path = pathToFileURL(command_path).href;
+      const { default: ApplicationCommand } = await import(file_path);
+      const command = new ApplicationCommand() as Command;
+      _commands.set(command.data.name, command);
+    }
+
+    // Initialize commands
     await client.application?.commands.fetch();
     for (const command of _commands.values()) {
-      promises.push(command.init());
+      await command.init();
     }
-    await Promise.all(promises);
 
     // Delete invalid commands
-    promises = [];
-    for (const command of client.application?.commands.cache.values() ?? []) {
-      if (!_commands.has(command.name)) promises.push(command.delete());
-    }
-    for (const guild of client.guilds.cache.values()) {
-      const invalid_comamnds = guild.commands.cache.filter(c => !_commands.has(c.name));
-      for (const command of invalid_comamnds.values()) {
-        promises.push(command.delete());
-      }
-    }
+    const promises = [] as Promise<Discord.ApplicationCommand>[];
+
+    client.application?.commands.cache
+      .filter(command => !_commands.some(c => c.data.name === command.name && c.scope === 'global'))
+      .forEach(command => promises.push(command.delete()));
+
+    client.guilds.cache.forEach(guild =>
+      guild.commands.cache
+        .filter(
+          command => !_commands.some(c => c.data.name === command.name && c.scope === 'guild'),
+        )
+        .forEach(command => promises.push(command.delete())),
+    );
+
     const deleted_commands = await Promise.all(promises);
     for (const command of deleted_commands) {
       if (command.guildId) {
