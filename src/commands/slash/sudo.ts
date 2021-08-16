@@ -25,7 +25,7 @@ export default class Sudo extends Command {
         options: [
           {
             name: 'command',
-            description: 'The command the execute.',
+            description: 'The command to execute.',
             type: 'STRING',
             required: true,
           },
