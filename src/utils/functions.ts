@@ -42,6 +42,15 @@ export function parseMention(mention: string): Snowflake {
   return String(mention).replace(/\W/g, '');
 }
 
+export function parseHTML(html: string): string {
+  return html
+    .replaceAll('&quot', '"')
+    .replaceAll('&apos', "'")
+    .replaceAll('&amp', '&')
+    .replaceAll('&lt', '<')
+    .replaceAll('&gt', '>');
+}
+
 export async function fetchImage(name: string): Promise<ImageData | undefined> {
   let data = await getImage(name);
   if (!data) {
