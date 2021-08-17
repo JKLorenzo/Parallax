@@ -179,10 +179,20 @@ export default class GuildConfig extends Command {
       const channel = interaction.options.getChannel('invite_channel');
       const role = interaction.options.getRole('role_reference');
 
-      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
       if (channel) config.invite_channel = data.invite_channel = channel.id;
       if (role) config.reference_role = data.reference_role = role.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.mentionable = data.mentionable = undefined;
+          config.invite_channel = data.invite_channel = undefined;
+          config.reference_role = data.reference_role = undefined;
+        }
+      }
 
       if (data) await updateGameConfig(interaction.guildId, data);
 
@@ -219,6 +229,17 @@ export default class GuildConfig extends Command {
       if (typeof hoisted === 'boolean') config.hoisted = data.hoisted = hoisted;
       if (typeof mentionable === 'boolean') config.mentionable = data.mentionable = mentionable;
       if (role) config.reference_role = data.reference_role = role.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.hoisted = data.hoisted = undefined;
+          config.mentionable = data.mentionable = undefined;
+          config.reference_role = data.reference_role = undefined;
+        }
+      }
 
       if (data) await updatePlayConfig(interaction.guildId, data);
 
@@ -263,6 +284,20 @@ export default class GuildConfig extends Command {
       if (gog_role) config.gog_role = data.gog_role = gog_role.id;
       if (ps_role) config.ps_role = data.ps_role = ps_role.id;
       if (xbox_role) config.xbox_role = data.xbox_role = xbox_role.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
+          config.steam_role = data.steam_role = undefined;
+          config.epic_role = data.epic_role = undefined;
+          config.gog_role = data.gog_role = undefined;
+          config.ps_role = data.ps_role = undefined;
+          config.xbox_role = data.xbox_role = undefined;
+        }
+      }
 
       if (data) await updateFreeGameConfig(interaction.guildId, data);
 
