@@ -92,3 +92,24 @@ export type ActivityData = {
   activity: Activity;
   status: 'old' | 'new';
 };
+
+export type RedditPostData = {
+  author: string;
+  created: number;
+  domain: string;
+  link_flair_text: string | null;
+  permalink: string;
+  score: number;
+  selftext: string;
+  title: string;
+  upvote_ratio: number;
+  url: string;
+};
+
+export type RedditResponseData = {
+  data: {
+    children: {
+      data: RedditPostData;
+    }[];
+  };
+};
