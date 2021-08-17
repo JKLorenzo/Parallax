@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import {
   CommandInteraction,
   GuildMember,
@@ -57,16 +58,19 @@ export default class Purge extends Command {
           if (messages_to_delete.length >= message_count) break;
         }
       });
-      await channel.bulkDelete(messages_to_delete, true).then(messages => {
-        for (const this_message of messages.values()) {
-          deleted_count++;
-          const author = authors.get(this_message.id);
-          if (!author) continue;
-          const msgs = deleted.get(author) ?? 0;
-          deleted.set(author, msgs + 1);
-        }
-      });
+      if (messages_to_delete) {
+        await channel.bulkDelete(messages_to_delete, true).then(messages => {
+          for (const this_message of messages.values()) {
+            deleted_count++;
+            const author = authors.get(this_message.id);
+            if (!author) continue;
+            const msgs = deleted.get(author) ?? 0;
+            deleted.set(author, msgs + 1);
+          }
+        });
+      }
       retries--;
+      if (retries > 0 && deleted_count < message_count) await setTimeout(5000);
     } while (retries > 0 && deleted_count < message_count);
 
     const elapsedTime = (Date.now() - interaction.createdTimestamp) / 1000;
