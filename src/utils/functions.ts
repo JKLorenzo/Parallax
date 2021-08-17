@@ -23,12 +23,19 @@ export function hexToUtf(hex: string): string {
   return Buffer.from(hex, 'hex').toString('utf8');
 }
 
-export function contains(base: string, part: string | string[]): boolean {
+export function hasAny(base: string, part: string | string[]): boolean {
   const parts = Array.isArray(part) ? part : [part];
   for (const this_part of parts) {
     if (base.indexOf(this_part) !== -1) return true;
   }
   return false;
+}
+
+export function hasAll(base: string, parts: string[]): boolean {
+  for (const this_part of parts) {
+    if (!hasAny(base, this_part)) return false;
+  }
+  return true;
 }
 
 export function parseMention(mention: string): Snowflake {
