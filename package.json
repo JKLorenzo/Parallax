@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/JKLorenzo/Quarantine-Gaming#readme",
   "dependencies": {
+    "color": "^4.0.1",
     "common-tags": "^1.8.0",
     "discord-api-types": "^0.22.0",
     "discord.js": "^13.1.0",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@commitlint/cli": "^13.1.0",
     "@commitlint/config-conventional": "^13.1.0",
+    "@types/color": "^3.0.2",
     "@types/common-tags": "^1.8.1",
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.172",
