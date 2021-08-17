@@ -12,6 +12,7 @@ import {
   ImageData,
   NSFWConfig,
   PlayConfig,
+  RedditPostData,
   StreamingConfig,
 } from '../utils/types.js';
 
@@ -22,6 +23,7 @@ const _guildconfig = new Map<Snowflake, GuildConfig>();
 
 const _games = new Map<string, GameData>();
 const _images = new Map<string, ImageData>();
+const _freegames = new Map<string, RedditPostData>();
 
 const _gameroles = new Map<string, Map<string, Snowflake>>();
 
@@ -135,6 +137,43 @@ export async function updateGame(data: GameData): Promise<void> {
     .db('global')
     .collection('games')
     .updateOne({ _id: id }, { $set: data }, { upsert: true });
+}
+
+export async function getFreeGame(url: string): Promise<RedditPostData | undefined> {
+  if (!_freegames.get(url)) {
+    // Only get the latest (a week old)
+    const week_old = Date.now() - 604800000;
+    const result = await mongoClient
+      .db('global')
+      .collection('free_games')
+      .find({ url: url, created: { $gte: week_old } })
+      .sort({ created: -1 })
+      .limit(1)
+      .toArray();
+
+    if (result && result.length) {
+      const data = result[0];
+      _freegames.set(url, {
+        author: data.author,
+        created: data.created,
+        domain: data.domain,
+        link_flair_text: data.link_flair_text,
+        permalink: data.permalink,
+        score: data.score,
+        selftext: data.selftext,
+        title: data.title,
+        upvote_ratio: data.upvote_ratio,
+        url: data.url,
+      });
+    }
+  }
+
+  return _freegames.get(url);
+}
+
+export async function pushFreeGame(data: RedditPostData): Promise<void> {
+  _freegames.set(data.url, data);
+  await mongoClient.db('global').collection('free_games').insertOne(data);
 }
 
 export async function getDedicatedConfig(guildId: Snowflake): Promise<DedicatedConfig | undefined> {
