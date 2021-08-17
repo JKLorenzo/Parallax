@@ -352,7 +352,7 @@ export default class GuildConfig extends Command {
             ...options,
             components: options.components.filter(component => {
               if (component instanceof MessageButton) {
-                if (!component.emoji || !hasAny(role_descriptions.join(), `${component.emoji}`)) {
+                if (!component.emoji?.id || !hasAny(role_descriptions.join(), component.emoji.id)) {
                   return false;
                 }
               }
