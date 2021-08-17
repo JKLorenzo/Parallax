@@ -161,7 +161,8 @@ export default class GuildConfig extends Command {
       },
       title: `${command
         .split('_')
-        .map(c => `${c.charAt(0).toUpperCase()}${c.slice(1)}`)} Configuration`,
+        .map(c => `${c.charAt(0).toUpperCase()}${c.slice(1)}`)
+        .join(' ')} Configuration`,
       footer: {
         text: `Do \`/guildconfig ${command}\` to edit this configuration.`,
       },
