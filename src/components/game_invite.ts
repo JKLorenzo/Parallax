@@ -1,7 +1,7 @@
 import { GuildMember, Message, MessageComponentInteraction } from 'discord.js';
 import { client } from '../main.js';
 import Component from '../structures/component.js';
-import { contains, parseMention } from '../utils/functions.js';
+import { hasAny, parseMention } from '../utils/functions.js';
 import { Queuer } from '../utils/queuer.js';
 
 const invites = new Queuer();
@@ -41,7 +41,7 @@ export default class GameInvite extends Component {
     const embed = message.embeds[0];
     const bracket_name = embed.title;
     const slots = embed.fields.length;
-    const isLimited = contains(embed.footer?.text ?? '', 'limited');
+    const isLimited = hasAny(embed.footer?.text ?? '', 'limited');
     const inviterId = parseMention(embed.fields[0].value);
     const inviter = interaction.guild?.members.cache.get(inviterId);
     const players = embed.fields.map(field => field.value).filter(p => p !== 'Slot Available');
@@ -57,7 +57,7 @@ export default class GameInvite extends Component {
     await interaction.deferUpdate();
 
     await invites.queue(async () => {
-      if (!embed.footer?.text || contains(embed.footer.text, 'bracket is now full')) return;
+      if (!embed.footer?.text || hasAny(embed.footer.text, 'bracket is now full')) return;
 
       switch (customId) {
         case 'join':
@@ -103,7 +103,7 @@ export default class GameInvite extends Component {
           1,
           slots - 1 > 0 ? slots - 1 : 0,
           players
-            .filter(p => !contains(p, inviter?.id ?? ''))
+            .filter(p => !hasAny(p, inviter?.id ?? ''))
             .map((value, index) => ({
               name: `Player ${index + 2}:`,
               value: value,
