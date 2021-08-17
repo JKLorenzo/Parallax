@@ -338,9 +338,9 @@ export default class GuildConfig extends Command {
               title: 'Free Game Updates',
               description: [
                 `All notifications will be made available on ${free_game_channel} channel. ` +
-                  `Powered by [(${client.emojis.cache.find(
+                  `Powered by [${client.emojis.cache.find(
                     e => e.name === 'reddit',
-                  )}) r/FreeGameFindings](https://www.reddit.com/r/FreeGameFindings/).`,
+                  )} r/FreeGameFindings](https://www.reddit.com/r/FreeGameFindings/).`,
                 '',
                 ...role_descriptions,
               ].join('\n'),
