@@ -180,6 +180,7 @@ export async function getFreeGameConfig(guildId: Snowflake): Promise<FreeGameCon
 
     _guildconfig.set(guildId, {
       free_game: {
+        enabled: result?.enabled,
         channel: result?.channel,
         steam_role: result?.steam_role,
         epic_role: result?.epic_role,
@@ -201,6 +202,7 @@ export async function updateFreeGameConfig(
 
   const config = _guildconfig.get(guildId) ?? {};
   if (!config.free_game) config.free_game = {};
+  if ('enabled' in data) config.free_game.enabled = data.enabled;
   if ('channel' in data) config.free_game.channel = data.channel;
   if ('steam_role' in data) config.free_game.steam_role = data.steam_role;
   if ('epic_role' in data) config.free_game.epic_role = data.epic_role;
