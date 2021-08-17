@@ -289,7 +289,7 @@ export default class GuildConfig extends Command {
           const steam = guild.roles.cache.get(config.steam_role);
           const steam_emoji = client.emojis.cache.find(e => e.name === 'steam');
           if (steam) {
-            role_descriptions.push(`    **${steam_emoji} - Steam (${steam})**`);
+            role_descriptions.push(`**${steam_emoji} - Steam (${steam})**`);
             role_descriptions.push('Notifies you with games that are currently free on Steam.\n');
           }
         }
@@ -297,7 +297,7 @@ export default class GuildConfig extends Command {
           const epic = guild.roles.cache.get(config.epic_role);
           const epic_emoji = client.emojis.cache.find(e => e.name === 'epic');
           if (epic) {
-            role_descriptions.push(`    **${epic_emoji} - Epic Games (${epic})**`);
+            role_descriptions.push(`**${epic_emoji} - Epic Games (${epic})**`);
             role_descriptions.push(
               'Notifies you with games that are currently free on Epic Games.\n',
             );
@@ -307,7 +307,7 @@ export default class GuildConfig extends Command {
           const gog = guild.roles.cache.get(config.gog_role);
           const gog_emoji = client.emojis.cache.find(e => e.name === 'gog');
           if (gog) {
-            role_descriptions.push(`    **${gog_emoji} - GOG (${gog})**`);
+            role_descriptions.push(`**${gog_emoji} - GOG (${gog})**`);
             role_descriptions.push('Notifies you with games that are currently free on GOG.\n');
           }
         }
@@ -315,7 +315,7 @@ export default class GuildConfig extends Command {
           const ps = guild.roles.cache.get(config.ps_role);
           const ps_emoji = client.emojis.cache.find(e => e.name === 'ps');
           if (ps) {
-            role_descriptions.push(`    **${ps_emoji} - PlayStation (${ps})**`);
+            role_descriptions.push(`**${ps_emoji} - PlayStation (${ps})**`);
             role_descriptions.push(
               'Notifies you with games that are currently free on PlayStation.\n',
             );
@@ -325,7 +325,7 @@ export default class GuildConfig extends Command {
           const xbox = guild.roles.cache.get(config.xbox_role);
           const xbox_emoji = client.emojis.cache.find(e => e.name === 'xbox');
           if (xbox) {
-            role_descriptions.push(`    **${xbox_emoji} - Xbox (${xbox})**`);
+            role_descriptions.push(`**${xbox_emoji} - Xbox (${xbox})**`);
             role_descriptions.push('Notifies you with games that are currently free on Xbox.\n');
           }
         }
@@ -334,10 +334,13 @@ export default class GuildConfig extends Command {
           files: [new MessageAttachment('./src/assets/gaming.gif')],
           embeds: [
             new MessageEmbed({
-              author: { name: 'Role Selection Pane' },
+              author: { name: `${client.user?.username}: Role Selection Pane` },
               title: 'Free Game Updates',
               description: [
-                `All notifications will be made available on ${free_game_channel} channel.`,
+                `All notifications will be made available on ${free_game_channel} channel. ` +
+                  `Powered by [(${client.emojis.cache.find(
+                    e => e.name === 'reddit',
+                  )}) r/FreeGameFindings](https://www.reddit.com/r/FreeGameFindings/).`,
                 '',
                 ...role_descriptions,
               ].join('\n'),
