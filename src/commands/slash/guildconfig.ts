@@ -3,11 +3,13 @@ import {
   Guild,
   GuildMember,
   MessageAttachment,
+  MessageButton,
   MessageEmbed,
   Permissions,
   TextChannel,
 } from 'discord.js';
 import { client } from '../../main.js';
+import { getComponent } from '../../managers/interaction.js';
 import {
   getFreeGameConfig,
   getGameConfig,
@@ -17,6 +19,7 @@ import {
   updatePlayConfig,
 } from '../../modules/database.js';
 import Command from '../../structures/command.js';
+import { hasAny } from '../../utils/functions.js';
 import { FreeGameConfig, GameConfig, PlayConfig } from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
@@ -282,27 +285,46 @@ export default class GuildConfig extends Command {
         if (config.steam_role) {
           const steam = guild.roles.cache.get(config.steam_role);
           const steam_emoji = client.emojis.cache.find(e => e.name === 'steam');
-          if (steam) role_descriptions.push(`    ${steam_emoji} - ${steam}\n`);
+          if (steam) {
+            role_descriptions.push(`    **${steam_emoji} - Steam (${steam})**`);
+            role_descriptions.push('Notifies you with games that are currently free on Steam.\n');
+          }
         }
         if (config.epic_role) {
           const epic = guild.roles.cache.get(config.epic_role);
           const epic_emoji = client.emojis.cache.find(e => e.name === 'epic');
-          if (epic) role_descriptions.push(`    ${epic_emoji} - ${epic}\n`);
+          if (epic) {
+            role_descriptions.push(`    **${epic_emoji} - Epic Games (${epic})**`);
+            role_descriptions.push(
+              'Notifies you with games that are currently free on Epic Games.\n',
+            );
+          }
         }
         if (config.gog_role) {
           const gog = guild.roles.cache.get(config.gog_role);
           const gog_emoji = client.emojis.cache.find(e => e.name === 'gog');
-          if (gog) role_descriptions.push(`    ${gog_emoji} - ${gog}\n`);
+          if (gog) {
+            role_descriptions.push(`    **${gog_emoji} - GOG (${gog})**`);
+            role_descriptions.push('Notifies you with games that are currently free on GOG.\n');
+          }
         }
         if (config.ps_role) {
           const ps = guild.roles.cache.get(config.ps_role);
           const ps_emoji = client.emojis.cache.find(e => e.name === 'ps');
-          if (ps) role_descriptions.push(`    ${ps_emoji} - ${ps}\n`);
+          if (ps) {
+            role_descriptions.push(`    **${ps_emoji} - PlayStation (${ps})**`);
+            role_descriptions.push(
+              'Notifies you with games that are currently free on PlayStation.\n',
+            );
+          }
         }
         if (config.xbox_role) {
           const xbox = guild.roles.cache.get(config.xbox_role);
           const xbox_emoji = client.emojis.cache.find(e => e.name === 'xbox');
-          if (xbox) role_descriptions.push(`    ${xbox_emoji} - ${xbox}\n`);
+          if (xbox) {
+            role_descriptions.push(`    **${xbox_emoji} - Xbox (${xbox})**`);
+            role_descriptions.push('Notifies you with games that are currently free on Xbox.\n');
+          }
         }
 
         await (show_options as TextChannel).send({
@@ -323,6 +345,17 @@ export default class GuildConfig extends Command {
               color: 'GREEN',
             }),
           ],
+          components: getComponent('free_games')?.map(options => ({
+            ...options,
+            components: options.components.filter(component => {
+              if (component instanceof MessageButton) {
+                if (!component.emoji || !hasAny(role_descriptions.join(), `${component.emoji}`)) {
+                  return false;
+                }
+              }
+              return true;
+            }),
+          })),
         });
       }
 
