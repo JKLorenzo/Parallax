@@ -78,6 +78,9 @@ export default class FreeGames extends Component {
     }
 
     if (!role) return interaction.editReply('The role for this platform no longer exist.');
+    if (role.id === guild.roles.everyone.id || role.managed) {
+      return interaction.editReply('The role for this platform is not assignable.');
+    }
 
     if (member.roles.cache.has(role.id)) {
       await removeRole(member, role);
