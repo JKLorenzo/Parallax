@@ -1,5 +1,6 @@
 import 'newrelic';
 import { Client, Intents } from 'discord.js';
+import { initFreeGame } from './managers/free_game.js';
 import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
 import { initPlay } from './managers/play.js';
@@ -33,9 +34,11 @@ client.on('ready', async () => {
   await connectDb();
   await initTelemetry();
   await initInteraction();
-  await initGame();
-  await initPlay();
   console.log('Initialized');
+  initGame();
+  await initPlay();
+  await initFreeGame();
+  console.log('Done');
 });
 
 client.login(process.env.BOT_TOKEN!);
