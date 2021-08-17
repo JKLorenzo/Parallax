@@ -81,6 +81,14 @@ export default class FreeGames extends Component {
     if (role.id === guild.roles.everyone.id || role.managed) {
       return interaction.editReply('The role for this platform is not assignable.');
     }
+    if (role.position > (guild.me?.roles.highest.position ?? 0)) {
+      return interaction.editReply(
+        'The role for this platform is positioned higher than the highest role of this bot.',
+      );
+    }
+    if (!guild.me?.permissions.has('MANAGE_ROLES')) {
+      return interaction.editReply('This bot is missing the `Manage Roles` permission.');
+    }
 
     if (member.roles.cache.has(role.id)) {
       await removeRole(member, role);
