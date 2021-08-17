@@ -28,16 +28,18 @@ export default class Purge extends Command {
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {
+    if (!interaction.inGuild()) {
+      return interaction.reply('This is only available on a guild channel.');
+    }
+
     const channel = interaction.channel as TextChannel;
+    const member = interaction.member as GuildMember;
     const message_count = interaction.options.getInteger('message_count', true);
 
-    if (interaction.inGuild()) {
-      const member = interaction.member as GuildMember;
-      if (!member.permissionsIn(channel).has('MANAGE_MESSAGES')) {
-        return interaction.reply(
-          'You need to have the `Manage Messages` permission to use this command.',
-        );
-      }
+    if (!member.permissionsIn(channel).has('MANAGE_MESSAGES')) {
+      return interaction.reply(
+        'You need to have the `Manage Messages` permission to use this command.',
+      );
     }
 
     await interaction.deferReply({ ephemeral: true });
@@ -82,7 +84,7 @@ export default class Purge extends Command {
     await interaction.editReply({
       embeds: [
         new MessageEmbed({
-          author: { name: 'Message Cleanup' },
+          author: { name: 'Channel Message Cleanup' },
           title: 'Purge Complete',
           description: `A total of ${deleted_count} messages were removed.`,
           fields: [
