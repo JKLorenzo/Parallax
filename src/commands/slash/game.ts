@@ -3,7 +3,9 @@ import {
   ApplicationCommandNonOptionsData,
   ApplicationCommandOptionChoice,
   ApplicationCommandSubCommandData,
+  ChatInputApplicationCommandData,
   CommandInteraction,
+  GuildMember,
   MessageEmbed,
   Role,
 } from 'discord.js';
@@ -11,12 +13,14 @@ import _ from 'lodash';
 import cron from 'node-cron';
 import { client } from '../../main.js';
 import { getComponent } from '../../managers/interaction.js';
+import { play_prefix } from '../../managers/play.js';
 import { getGameConfig, getGuildGameRoles } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { fetchImage, hexToUtf } from '../../utils/functions.js';
 
 export default class Game extends Command {
   private _inviteoptions: ApplicationCommandSubCommandData[];
+  private _playersoptions: ApplicationCommandSubCommandData[];
 
   constructor() {
     super('guild', {
@@ -32,31 +36,16 @@ export default class Game extends Command {
           options: [],
         },
         {
-          name: 'override',
-          description: 'Overrides the global game screening status of a game.',
+          name: 'players',
+          description: 'Show the list of players of a game.',
           type: 'SUB_COMMAND_GROUP',
-          options: [
-            {
-              name: 'allow',
-              description: 'Overrides the global game screening status of a game.',
-              type: 'SUB_COMMAND',
-            },
-            {
-              name: 'deny',
-              description: 'Overrides the global game screening status of a game.',
-              type: 'SUB_COMMAND',
-            },
-            {
-              name: 'default',
-              description: 'Use the global game screening status for a game.',
-              type: 'SUB_COMMAND',
-            },
-          ],
+          options: [],
         },
       ],
     });
 
     this._inviteoptions = [];
+    this._playersoptions = [];
   }
 
   registerPartitionAsSubcommand(partition: Role[], iteration = 0): void {
@@ -80,7 +69,7 @@ export default class Game extends Command {
 
       this._inviteoptions.push({
         name: this_name,
-        description: `Invite members to play a game. (${start.toUpperCase()} to ${end.toUpperCase()})`,
+        description: `Invite other members to play a game. (${start.toUpperCase()} to ${end.toUpperCase()})`,
         type: 'SUB_COMMAND',
         options: [
           {
@@ -107,6 +96,24 @@ export default class Game extends Command {
           ...reserved_options,
         ],
       });
+
+      this._playersoptions.push({
+        name: this_name,
+        description: `Show the list of players of a game. (${start.toUpperCase()} to ${end.toUpperCase()})`,
+        type: 'SUB_COMMAND',
+        options: [
+          {
+            name: 'game',
+            description: 'Select the game you want to check.',
+            type: 'STRING',
+            choices: partition.map(role => ({
+              name: role.name,
+              value: role.id,
+            })),
+            required: true,
+          },
+        ],
+      });
     }
   }
 
@@ -115,8 +122,9 @@ export default class Game extends Command {
 
     const init_this = async () => {
       for (const guild of client.guilds.cache.values()) {
-        const data = _.cloneDeep(template);
+        const data = _.cloneDeep(template) as ChatInputApplicationCommandData;
         this._inviteoptions = [];
+        this._playersoptions = [];
 
         const partitions = [] as Role[][];
         const game_roles = await getGuildGameRoles(guild.id);
@@ -137,17 +145,15 @@ export default class Game extends Command {
           this.registerPartitionAsSubcommand(partition);
         }
 
-        if (data.type === 'CHAT_INPUT') {
-          if (data.options && this._inviteoptions.length) {
-            data.options = data.options.map(option => {
-              if (option.name === 'invite' && option.type === 'SUB_COMMAND_GROUP') {
-                option.options = this._inviteoptions;
-              }
-              return option;
-            });
-          } else if (data.options) {
-            data.options = data.options.filter(o => o.name !== 'invite');
-          }
+        if (data.options && (this._inviteoptions.length || this._playersoptions.length)) {
+          data.options = data.options.map(option => {
+            if (option.type !== 'SUB_COMMAND_GROUP') return option;
+            if (option.name === 'invite') option.options = this._inviteoptions;
+            if (option.name === 'players') option.options = this._playersoptions;
+            return option;
+          });
+        } else if (data.options) {
+          data.options = data.options.filter(o => o.name !== 'invite' && o.name !== 'players');
         }
 
         this.patch(data);
@@ -253,6 +259,82 @@ export default class Game extends Command {
       return interaction.editReply(
         `Got it! [This bracket](${invite_message.url}) is now available on the ${invite_channel} channel.`,
       );
+    } else if (subcommand_group === 'players') {
+      await interaction.deferReply({ ephemeral: true });
+
+      const game_id = interaction.options.getString('game', true);
+      const game_role = interaction.guild?.roles.cache.get(game_id);
+      if (!game_role) return interaction.editReply('This game is no longer valid.');
+
+      const ingame = [] as GuildMember[];
+      const inothergame = [] as GuildMember[];
+      const online = [] as GuildMember[];
+      const unavailable = [] as GuildMember[];
+      const offline = [] as GuildMember[];
+
+      game_role.members
+        .sort((a, b) => a.displayName.charCodeAt(0) - b.displayName.charCodeAt(0))
+        .forEach(member => {
+          if (member.roles.cache.some(r => r.name.startsWith(play_prefix))) {
+            if (member.roles.cache.some(r => r.name === `${play_prefix}${game_role.name}`)) {
+              ingame.push(member);
+            } else {
+              inothergame.push(member);
+            }
+          } else {
+            switch (member.presence?.status) {
+              case 'online':
+                online.push(member);
+                break;
+              case 'offline':
+                offline.push(member);
+                break;
+              default:
+                unavailable.push(member);
+                break;
+            }
+          }
+        });
+
+      const games = await getGuildGameRoles(interaction.guildId);
+      let game_name = '';
+      for (const [hex_name, role_id] of games) {
+        if (role_id === game_id) {
+          game_name = hexToUtf(hex_name);
+          break;
+        }
+      }
+
+      const image = game_name ? await fetchImage(game_name) : undefined;
+      const embed = new MessageEmbed({
+        author: { name: `${interaction.guild?.name}: List of Players` },
+        title: game_role.name,
+        description: 'All players who played this game for the last 7 days are as follows:',
+        footer: {
+          text: `This game is being played by a total of ${game_role.members.size} players.`,
+        },
+        thumbnail: { url: image?.iconUrl },
+        image: { url: image?.bannerUrl },
+        color: game_role.color,
+      });
+
+      if (ingame.length) {
+        embed.addField(`In Game: ${ingame.length}`, ingame.join(', '));
+      }
+      if (inothergame.length) {
+        embed.addField(`In Other Game: ${inothergame.length}`, inothergame.join(', '));
+      }
+      if (online.length) {
+        embed.addField(`Online: ${online.length}`, online.join(', '));
+      }
+      if (unavailable.length) {
+        embed.addField(`Busy or AFK: ${unavailable.length}`, unavailable.join(', '));
+      }
+      if (offline.length) {
+        embed.addField(`Offline: ${offline.length}`, offline.join(', '));
+      }
+
+      return interaction.editReply({ embeds: [embed] });
     }
   }
 }
