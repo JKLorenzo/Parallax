@@ -26,7 +26,7 @@ export async function initFreeGame(): Promise<void> {
 export async function scan(url?: string): Promise<string> {
   try {
     const baseURL = 'https://www.reddit.com/r/FreeGameFindings';
-    const response = await fetch(`${baseURL}/new/.json?limit=25&sort=new`)
+    const response = await fetch(`${baseURL}/new/.json?limit=10&sort=new`)
       .then(data => data.json() as Promise<RedditResponseData>)
       .then(entry =>
         entry.data.children
