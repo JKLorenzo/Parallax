@@ -7,7 +7,7 @@ import { logError } from '../modules/telemetry.js';
 import { Queuer } from '../utils/queuer.js';
 import { ActivityData } from '../utils/types.js';
 
-const play_prefix = 'Play 🔰';
+export const play_prefix = 'Play 🔰';
 
 const queuer = new Queuer();
 
