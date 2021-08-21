@@ -48,7 +48,9 @@
     "newrelic": "^8.1.0",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
-    "probe-image-size": "^7.2.1"
+    "probe-image-size": "^7.2.1",
+    "youtube-dl-exec": "^1.2.4",
+    "ytdl-core": "^4.9.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^13.1.0",
