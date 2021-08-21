@@ -12,7 +12,8 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { raw as ytdl } from 'youtube-dl-exec';
-import { getInfo } from 'ytdl-core';
+import ytdl_core from 'ytdl-core';
+const { getInfo } = ytdl_core;
 
 /**
  * This is the data required to create a Track object
