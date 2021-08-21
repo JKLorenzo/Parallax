@@ -58,6 +58,10 @@ app.get('/status', (req, res) => {
   res.send(client.ws.ping ? 'online' : 'offline');
 });
 
+app.get('/ping', (req, res) => {
+  res.send(client.ws.ping);
+});
+
 export function logError(name: string, title: string, error: string): void {
   console.error(error);
   webhook?.send({
