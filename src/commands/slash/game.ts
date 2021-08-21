@@ -273,7 +273,11 @@ export default class Game extends Command {
       const offline = [] as GuildMember[];
 
       game_role.members
-        .sort((a, b) => a.displayName.charCodeAt(0) - b.displayName.charCodeAt(0))
+        .sort((a, b) => {
+          const char_a = a.displayName.toLowerCase().charCodeAt(0);
+          const char_b = b.displayName.toLowerCase().charCodeAt(0);
+          return char_a - char_b;
+        })
         .forEach(member => {
           if (member.roles.cache.some(r => r.name.startsWith(play_prefix))) {
             if (member.roles.cache.some(r => r.name === `${play_prefix}${game_role.name}`)) {
@@ -286,11 +290,12 @@ export default class Game extends Command {
               case 'online':
                 online.push(member);
                 break;
-              case 'offline':
-                offline.push(member);
+              case 'dnd':
+              case 'idle':
+                unavailable.push(member);
                 break;
               default:
-                unavailable.push(member);
+                offline.push(member);
                 break;
             }
           }
