@@ -24,7 +24,7 @@ import { FreeGameConfig, GameConfig, PlayConfig } from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
   constructor() {
-    super('global', {
+    super('guild', {
       name: 'guildconfig',
       description: 'Gets or updates the configuration of this server.',
       type: 'CHAT_INPUT',
@@ -138,11 +138,7 @@ export default class GuildConfig extends Command {
   async exec(interaction: CommandInteraction): Promise<unknown> {
     const member = interaction.member as GuildMember;
     const command = interaction.options.getSubcommand();
-
-    // Block dm commands
-    if (!interaction.inGuild()) {
-      return interaction.reply('This is only available on a guild channel.');
-    }
+    const guild = client.guilds.cache.get(interaction.guildId!) as Guild;
 
     // Block members without manage server permissions
     if (!member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
@@ -152,8 +148,6 @@ export default class GuildConfig extends Command {
     }
 
     await interaction.deferReply();
-
-    const guild = client.guilds.cache.get(interaction.guildId) as Guild;
 
     const embed = new MessageEmbed({
       author: {
@@ -172,7 +166,7 @@ export default class GuildConfig extends Command {
 
     if (command === 'game') {
       const data = {} as GameConfig;
-      const config = (await getGameConfig(interaction.guildId)) ?? {};
+      const config = (await getGameConfig(guild.id)) ?? {};
 
       const enabled = interaction.options.getBoolean('enabled');
       const mentionable = interaction.options.getBoolean('mentionable');
@@ -194,7 +188,7 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updateGameConfig(interaction.guildId, data);
+      if (data) await updateGameConfig(guild.id, data);
 
       embed.setDescription(
         [
@@ -202,23 +196,19 @@ export default class GuildConfig extends Command {
           `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
           `**Invite Channel**: ${
             config.invite_channel
-              ? interaction.client.guilds.cache
-                  .get(interaction.guildId)
-                  ?.channels.cache.get(config.invite_channel)
+              ? guild.channels.cache.get(config.invite_channel)
               : 'Not Set' ?? 'Invalid'
           }`,
           `**Role Reference**: ${
             config.reference_role
-              ? interaction.client.guilds.cache
-                  .get(interaction.guildId)
-                  ?.roles.cache.get(config.reference_role)
+              ? guild.roles.cache.get(config.reference_role)
               : 'Not Set' ?? 'Invalid'
           }`,
         ].join('\n'),
       );
     } else if (command === 'play') {
       const data = {} as PlayConfig;
-      const config = (await getPlayConfig(interaction.guildId)) ?? {};
+      const config = (await getPlayConfig(guild.id)) ?? {};
 
       const enabled = interaction.options.getBoolean('enabled');
       const hoisted = interaction.options.getBoolean('hoisted');
@@ -241,7 +231,7 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updatePlayConfig(interaction.guildId, data);
+      if (data) await updatePlayConfig(guild.id, data);
 
       embed.setDescription(
         [
@@ -250,16 +240,14 @@ export default class GuildConfig extends Command {
           `**Mentionable**: ${config.mentionable ? 'True' : 'False'}`,
           `**Role Reference**: ${
             config.reference_role
-              ? interaction.client.guilds.cache
-                  .get(interaction.guildId)
-                  ?.roles.cache.get(config.reference_role)
+              ? guild.roles.cache.get(config.reference_role)
               : 'Not Set' ?? 'Invalid'
           }`,
         ].join('\n'),
       );
     } else if (command === 'free_game') {
       const data = {} as FreeGameConfig;
-      const config = (await getFreeGameConfig(interaction.guildId)) ?? {};
+      const config = (await getFreeGameConfig(guild.id)) ?? {};
 
       const show_options = interaction.options.getChannel('show_options');
 
@@ -299,7 +287,7 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updateFreeGameConfig(interaction.guildId, data);
+      if (data) await updateFreeGameConfig(guild.id, data);
 
       if (show_options) {
         if (!config.channel) {

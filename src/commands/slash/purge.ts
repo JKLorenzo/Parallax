@@ -11,7 +11,7 @@ import Command from '../../structures/command.js';
 
 export default class Purge extends Command {
   constructor() {
-    super('global', {
+    super('guild', {
       name: 'purge',
       description: 'Removes a number of messages on the current channel.',
       type: 'CHAT_INPUT',
@@ -28,10 +28,6 @@ export default class Purge extends Command {
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {
-    if (!interaction.inGuild()) {
-      return interaction.reply('This is only available on a guild channel.');
-    }
-
     const channel = interaction.channel as TextChannel;
     const member = interaction.member as GuildMember;
     const message_count = interaction.options.getInteger('message_count', true);
