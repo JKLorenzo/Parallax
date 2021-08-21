@@ -10,10 +10,8 @@ import {
   GameData,
   GuildConfig,
   ImageData,
-  NSFWConfig,
   PlayConfig,
   RedditPostData,
-  StreamingConfig,
 } from '../utils/types.js';
 
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
@@ -312,36 +310,6 @@ export async function addGuildGameRole(role: Role): Promise<void> {
     .updateOne({ _id: hex_name }, { $set: { role_id: role.id } }, { upsert: true });
 }
 
-export async function getNSFWConfig(guildId: Snowflake): Promise<NSFWConfig | undefined> {
-  if (!_guildconfig.get(guildId)?.nsfw) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'nsfw' });
-
-    _guildconfig.set(guildId, {
-      nsfw: {
-        nsfw_channels: result?.nsfw_channels,
-        nsfw_role: result?.nsfw_role,
-      },
-    });
-  }
-
-  return _guildconfig.get(guildId)?.nsfw;
-}
-
-export async function updateNSFWConfig(guildId: Snowflake, data: NSFWConfig): Promise<void> {
-  if (Object.keys(data).length === 0) return;
-
-  const config = _guildconfig.get(guildId) ?? {};
-  if (!config.nsfw) config.nsfw = {};
-  if ('nsfw_channels' in data) config.nsfw.nsfw_channels = data.nsfw_channels;
-  if ('nsfw_role' in data) config.nsfw.nsfw_role = data.nsfw_role;
-  _guildconfig.set(guildId, config);
-
-  await mongoClient
-    .db(guildId)
-    .collection('config')
-    .updateOne({ _id: 'nsfw' }, { $set: config.nsfw }, { upsert: true });
-}
-
 export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | undefined> {
   if (!_guildconfig.get(guildId)?.play) {
     const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'play' });
@@ -374,37 +342,4 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
     .db(guildId)
     .collection('config')
     .updateOne({ _id: 'play' }, { $set: config.play }, { upsert: true });
-}
-
-export async function getStreamingConfig(guildId: Snowflake): Promise<StreamingConfig | undefined> {
-  if (!_guildconfig.get(guildId)?.streaming) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'streaming' });
-
-    _guildconfig.set(guildId, {
-      streaming: {
-        enabled: result?.enabled,
-        streaming_role: result?.streaming_role,
-      },
-    });
-  }
-
-  return _guildconfig.get(guildId)?.streaming;
-}
-
-export async function updateStreamingConfig(
-  guildId: Snowflake,
-  data: StreamingConfig,
-): Promise<void> {
-  if (Object.keys(data).length === 0) return;
-
-  const config = _guildconfig.get(guildId) ?? {};
-  if (!config.streaming) config.streaming = {};
-  if ('enabled' in data) config.streaming.enabled = data.enabled;
-  if ('streaming_role' in data) config.streaming.streaming_role = data.streaming_role;
-  _guildconfig.set(guildId, config);
-
-  await mongoClient
-    .db(guildId)
-    .collection('config')
-    .updateOne({ _id: 'streaming' }, { $set: config.streaming }, { upsert: true });
 }
