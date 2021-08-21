@@ -82,6 +82,7 @@ async function post(data: RedditPostData): Promise<string> {
         text: `Accumulated ${data.score} upvotes with ${data.upvote_ratio}% upvote ratio.`,
         iconURL: client.emojis.cache.find(e => e.name === 'reddit')?.url,
       },
+      timestamp: data.created,
     });
 
     let filter_instance = 0;
