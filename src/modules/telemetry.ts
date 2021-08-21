@@ -54,6 +54,10 @@ export async function initTelemetry(): Promise<void> {
   });
 }
 
+app.get('/', (req, res) => {
+  res.redirect('https://github.com/JKLorenzo/Quarantine-Gaming');
+});
+
 app.get('/status', (req, res) => {
   res.send(client.ws.ping ? 'online' : 'offline');
 });
