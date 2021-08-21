@@ -59,7 +59,7 @@ app.get('/status', (req, res) => {
 });
 
 app.get('/ping', (req, res) => {
-  res.send(client.ws.ping);
+  res.json({ ping: client.ws.ping });
 });
 
 export function logError(name: string, title: string, error: string): void {
