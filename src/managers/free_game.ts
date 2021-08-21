@@ -125,19 +125,19 @@ async function post(data: RedditPostData): Promise<string> {
     if (image?.bannerUrl) embed.setImage(image.bannerUrl);
 
     const searchables = `${data.url.toLowerCase()}-${data.selftext.toLowerCase()}`;
-    const mentionables = [] as ('steam' | 'epic' | 'gog' | 'ps' | 'xbox')[];
+    const platforms = [] as ('Steam' | 'Epic Games' | 'GOG' | 'PlayStation' | 'Xbox')[];
     if (
       hasAny(searchables, 'steampowered.com') ||
       (hasAny(searchables, 'humblebundle.com') && hasAny(filtered_title, 'steam'))
     ) {
-      mentionables.push('steam');
+      platforms.push('Steam');
     }
-    if (hasAny(searchables, 'epicgames.com')) mentionables.push('epic');
-    if (hasAny(searchables, 'gog.com')) mentionables.push('gog');
-    if (hasAny(searchables, 'playstation.com')) mentionables.push('ps');
-    if (hasAny(searchables, ['microsoft.com', 'xbox.com'])) mentionables.push('xbox');
+    if (hasAny(searchables, 'epicgames.com')) platforms.push('Epic Games');
+    if (hasAny(searchables, 'gog.com')) platforms.push('GOG');
+    if (hasAny(searchables, 'playstation.com')) platforms.push('PlayStation');
+    if (hasAny(searchables, ['microsoft.com', 'xbox.com'])) platforms.push('Xbox');
 
-    if (!mentionables.length) {
+    if (!platforms.length) {
       return "Uh-oh! This free game doesn't belong to any supported platforms.";
     }
 
@@ -159,7 +159,7 @@ async function post(data: RedditPostData): Promise<string> {
       const roles = [] as Role[];
       let color: Color | undefined;
 
-      if (mentionables.includes('steam') && config.steam_role) {
+      if (platforms.includes('Steam') && config.steam_role) {
         const role = guild.roles.cache.get(config.steam_role);
         if (role) {
           roles.push(role);
@@ -168,7 +168,7 @@ async function post(data: RedditPostData): Promise<string> {
           color = color ? color.mix(this_color) : this_color;
         }
       }
-      if (mentionables.includes('epic') && config.epic_role) {
+      if (platforms.includes('Epic Games') && config.epic_role) {
         const role = guild.roles.cache.get(config.epic_role);
         if (role) {
           roles.push(role);
@@ -177,7 +177,7 @@ async function post(data: RedditPostData): Promise<string> {
           color = color ? color.mix(this_color) : this_color;
         }
       }
-      if (mentionables.includes('gog') && config.gog_role) {
+      if (platforms.includes('GOG') && config.gog_role) {
         const role = guild.roles.cache.get(config.gog_role);
         if (role) {
           roles.push(role);
@@ -186,7 +186,7 @@ async function post(data: RedditPostData): Promise<string> {
           color = color ? color.mix(this_color) : this_color;
         }
       }
-      if (mentionables.includes('ps') && config.ps_role) {
+      if (platforms.includes('PlayStation') && config.ps_role) {
         const role = guild.roles.cache.get(config.ps_role);
         if (role) {
           roles.push(role);
@@ -195,7 +195,7 @@ async function post(data: RedditPostData): Promise<string> {
           color = color ? color.mix(this_color) : this_color;
         }
       }
-      if (mentionables.includes('xbox') && config.xbox_role) {
+      if (platforms.includes('Xbox') && config.xbox_role) {
         const role = guild.roles.cache.get(config.xbox_role);
         if (role) {
           roles.push(role);
@@ -210,7 +210,7 @@ async function post(data: RedditPostData): Promise<string> {
       embed.setAuthor(`${client.user?.username}: Free Game Updates`);
       embed.setFields([
         { name: 'Author', value: data.author, inline: true },
-        { name: 'Platforms', value: roles.map(r => r.name).join(', '), inline: true },
+        { name: 'Platforms', value: platforms.join(', '), inline: true },
       ]);
       embed.setColor(color!.rgbNumber());
 
