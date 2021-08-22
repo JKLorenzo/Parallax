@@ -97,10 +97,12 @@ export class Track implements TrackData {
     const wrappedMethods = {
       onStart() {
         wrappedMethods.onStart = noop;
-        interaction
-          .followUp(`Now playing ${info.videoDetails.title}`)
-          .then(reply => (msg = reply as Message))
-          .catch(console.warn);
+        if (!msg) {
+          interaction
+            .followUp(`Now playing: **${info.videoDetails.title}**`)
+            .then(reply => (msg = reply as Message))
+            .catch(console.warn);
+        }
       },
       onFinish() {
         wrappedMethods.onFinish = noop;
