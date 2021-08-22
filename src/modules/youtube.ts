@@ -1,7 +1,7 @@
 import youtubeSearch, { YouTubeSearchOptions, YouTubeSearchResults } from 'youtube-search';
 
 const options: YouTubeSearchOptions = {
-  key: process.env.GOOGLE_API,
+  key: process.env.GOOGLE_KEY,
   maxResults: 1,
 };
 
