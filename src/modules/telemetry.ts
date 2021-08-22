@@ -1,17 +1,12 @@
 import { WebhookClient } from 'discord.js';
-import express, { json } from 'express';
 import { getBotConfig } from './database.js';
-import { client } from '../main.js';
+import { app, client } from '../main.js';
 
 let webhook: WebhookClient | undefined;
-const port = process.env.PORT ?? 3000;
-const app = express().use(json());
 
 export async function initTelemetry(): Promise<void> {
   const telemetryUrl = await getBotConfig('TelemetryWebhookURL');
   if (telemetryUrl) webhook = new WebhookClient({ url: telemetryUrl });
-
-  app.listen(port);
 
   client.on('rateLimit', data => {
     webhook?.send({
@@ -48,23 +43,23 @@ export async function initTelemetry(): Promise<void> {
     });
   });
 
+  app.get('/', (req, res) => {
+    res.redirect('https://github.com/JKLorenzo/Quarantine-Gaming');
+  });
+
+  app.get('/status', (req, res) => {
+    res.send(client.ws.ping ? 'online' : 'offline');
+  });
+
+  app.get('/ping', (req, res) => {
+    res.json({ ping: client.ws.ping });
+  });
+
   await webhook?.send({
     username: 'Telemetry: Client',
     content: `Online on ${client.guilds.cache.size} servers.`,
   });
 }
-
-app.get('/', (req, res) => {
-  res.redirect('https://github.com/JKLorenzo/Quarantine-Gaming');
-});
-
-app.get('/status', (req, res) => {
-  res.send(client.ws.ping ? 'online' : 'offline');
-});
-
-app.get('/ping', (req, res) => {
-  res.json({ ping: client.ws.ping });
-});
 
 export function logError(name: string, title: string, error: string): void {
   console.error(error);
