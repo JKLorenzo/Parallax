@@ -6,6 +6,7 @@ import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
 import { initPlay } from './managers/play.js';
 import { connectDb } from './modules/database.js';
+import { initSpotify } from './modules/spotify.js';
 import { initTelemetry } from './modules/telemetry.js';
 
 export const app = express().use(json());
@@ -41,6 +42,7 @@ client.on('ready', async () => {
   initGame();
   await initPlay();
   await initFreeGame();
+  await initSpotify();
   console.log('Done');
 });
 
