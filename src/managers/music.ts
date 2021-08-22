@@ -11,6 +11,7 @@ import {
   VoiceConnectionDisconnectReason,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
+import { CommandInteraction } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 const { getInfo } = ytdl_core;
@@ -89,25 +90,21 @@ export class Track implements TrackData {
   }
 
   // Creates a Track from a video URL and lifecycle callback methods.
-  public static async from(
-    url: string,
-    methods: Pick<Track, 'onStart' | 'onFinish' | 'onError'>,
-  ): Promise<Track> {
+  public static async from(url: string, interaction: CommandInteraction): Promise<Track> {
     const info = await getInfo(url);
 
     // The methods are wrapped so that we can ensure that they are only called once.
     const wrappedMethods = {
       onStart() {
         wrappedMethods.onStart = noop;
-        methods.onStart();
+        interaction.followUp(`Now playing ${info.videoDetails.title}`).catch(console.warn);
       },
       onFinish() {
         wrappedMethods.onFinish = noop;
-        methods.onFinish();
       },
       onError(error: Error) {
         wrappedMethods.onError = noop;
-        methods.onError(error);
+        interaction.followUp(`Error: ${error.message}`).catch(console.warn);
       },
     };
 
