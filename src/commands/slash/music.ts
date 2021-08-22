@@ -181,14 +181,14 @@ export default class Music extends Command {
       } else {
         await interaction.reply('Not playing in this server!');
       }
-    } else if (interaction.commandName === 'resume') {
+    } else if (command === 'resume') {
       if (subscription) {
         subscription.audioPlayer.unpause();
         await interaction.reply('Unpaused!');
       } else {
         await interaction.reply('Not playing in this server!');
       }
-    } else if (interaction.commandName === 'leave') {
+    } else if (command === 'leave') {
       if (subscription) {
         subscription.voiceConnection.destroy();
         subscriptions.delete(guild.id);
