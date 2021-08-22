@@ -35,6 +35,9 @@ jobs:
         env:
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           HD_DB_URI: ${{secrets.DB_URI}}
+          HD_GOOGLE_KEY: ${{secrets.GOOGLE_KEY}}
           HD_NEW_RELIC_APP_NAME: 'quarantine-gaming'
           HD_NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
           HD_NEW_RELIC_NO_CONFIG_FILE: 'true'
+          HD_SPOTIFY_ID: ${{secrets.SPOTIFY_ID}}
+          HD_SPOTIFY_SECRET: ${{secrets.SPOTIFY_SECRET}}
