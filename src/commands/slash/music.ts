@@ -131,7 +131,7 @@ export default class Music extends Command {
         await interaction.followUp(`Enqueued **${track.title}**`);
       } catch (error) {
         console.warn(error);
-        await interaction.reply('Failed to play track, please try again later!');
+        await interaction.editReply('Failed to play track, please try again later!');
       }
     } else if (command === 'skip') {
       if (subscription) {
