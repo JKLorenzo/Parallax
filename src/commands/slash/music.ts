@@ -108,24 +108,7 @@ export default class Music extends Command {
       try {
         const enqueue = async (url: string): Promise<Track> => {
           // Attempt to create a Track from the user's video URL
-          const track = await Track.from(url, {
-            onStart() {
-              interaction
-                .followUp({ content: 'Now playing!', ephemeral: true })
-                .catch(console.warn);
-            },
-            onFinish() {
-              interaction
-                .followUp({ content: 'Now finished!', ephemeral: true })
-                .catch(console.warn);
-            },
-            onError(error) {
-              console.warn(error);
-              interaction
-                .followUp({ content: `Error: ${error.message}`, ephemeral: true })
-                .catch(console.warn);
-            },
-          });
+          const track = await Track.from(url, interaction);
           // Enqueue the track and reply a success message to the user
           subscription!.enqueue(track);
           return track;
@@ -143,7 +126,8 @@ export default class Music extends Command {
             if (data) enqueue(data.link);
           }
           await interaction.followUp(
-            `Enqueued ${playlist.tracks.items.length} songs from **${playlist.name}**`,
+            `Enqueued ${playlist.tracks.items.length} songs from ` +
+              `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
           );
         } else if (hasAny(song, 'spotify.com/track')) {
           const spotifyTrack = await getTrack(song);
@@ -193,14 +177,14 @@ export default class Music extends Command {
     } else if (command === 'pause') {
       if (subscription) {
         subscription.audioPlayer.pause();
-        await interaction.reply({ content: `Paused!`, ephemeral: true });
+        await interaction.reply('Paused!');
       } else {
         await interaction.reply('Not playing in this server!');
       }
     } else if (interaction.commandName === 'resume') {
       if (subscription) {
         subscription.audioPlayer.unpause();
-        await interaction.reply({ content: `Unpaused!`, ephemeral: true });
+        await interaction.reply('Unpaused!');
       } else {
         await interaction.reply('Not playing in this server!');
       }
@@ -208,7 +192,7 @@ export default class Music extends Command {
       if (subscription) {
         subscription.voiceConnection.destroy();
         subscriptions.delete(guild.id);
-        await interaction.reply({ content: `Left channel!`, ephemeral: true });
+        await interaction.reply('Left channel!');
       } else {
         await interaction.reply('Not playing in this server!');
       }
