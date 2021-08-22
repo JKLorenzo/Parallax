@@ -119,16 +119,16 @@ export default class Music extends Command {
           await interaction.followUp(`Enqueued **${track.title}**`);
         } else if (hasAny(song, 'spotify.com/playlist')) {
           const playlist = await getPlaylist(song);
+          await interaction.followUp(
+            `Enqueued ${playlist.tracks.items.length} songs from ` +
+              `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
+          );
           for (const item of playlist.tracks.items) {
             const data = await searchYouTube(
               `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
             );
             if (data) enqueue(data.link);
           }
-          await interaction.followUp(
-            `Enqueued ${playlist.tracks.items.length} songs from ` +
-              `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
-          );
         } else if (hasAny(song, 'spotify.com/track')) {
           const spotifyTrack = await getTrack(song);
           const data = await searchYouTube(
