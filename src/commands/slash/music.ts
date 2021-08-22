@@ -7,8 +7,10 @@ import {
 } from '@discordjs/voice';
 import { CommandInteraction, Guild, GuildMember, Snowflake } from 'discord.js';
 import { Track, MusicSubscription } from '../../managers/music.js';
+import { getPlaylist, getTrack } from '../../modules/spotify.js';
 import { searchYouTube } from '../../modules/youtube.js';
 import Command from '../../structures/command.js';
+import { hasAny } from '../../utils/functions.js';
 
 const subscriptions = new Map<Snowflake, MusicSubscription>();
 
@@ -72,14 +74,7 @@ export default class Music extends Command {
 
     if (command === 'play') {
       await interaction.deferReply();
-      // Extract the video URL from the command
-      let url = '';
       const song = interaction.options.getString('song', true).trim();
-      if (song.startsWith('http')) url = song;
-      if (!url) {
-        const data = await searchYouTube(song);
-        if (data) url = data.link;
-      }
 
       // If a connection to the guild doesn't already exist and the user is in a voice channel, join that channel
       // and create a subscription.
@@ -111,24 +106,57 @@ export default class Music extends Command {
       }
 
       try {
-        // Attempt to create a Track from the user's video URL
-        const track = await Track.from(url, {
-          onStart() {
-            interaction.followUp({ content: 'Now playing!', ephemeral: true }).catch(console.warn);
-          },
-          onFinish() {
-            interaction.followUp({ content: 'Now finished!', ephemeral: true }).catch(console.warn);
-          },
-          onError(error) {
-            console.warn(error);
-            interaction
-              .followUp({ content: `Error: ${error.message}`, ephemeral: true })
-              .catch(console.warn);
-          },
-        });
-        // Enqueue the track and reply a success message to the user
-        subscription.enqueue(track);
-        await interaction.followUp(`Enqueued **${track.title}**`);
+        const enqueue = async (url: string): Promise<Track> => {
+          // Attempt to create a Track from the user's video URL
+          const track = await Track.from(url, {
+            onStart() {
+              interaction
+                .followUp({ content: 'Now playing!', ephemeral: true })
+                .catch(console.warn);
+            },
+            onFinish() {
+              interaction
+                .followUp({ content: 'Now finished!', ephemeral: true })
+                .catch(console.warn);
+            },
+            onError(error) {
+              console.warn(error);
+              interaction
+                .followUp({ content: `Error: ${error.message}`, ephemeral: true })
+                .catch(console.warn);
+            },
+          });
+          // Enqueue the track and reply a success message to the user
+          subscription!.enqueue(track);
+          return track;
+        };
+
+        if (hasAny(song, 'youtube.com')) {
+          const track = await enqueue(song);
+          await interaction.followUp(`Enqueued **${track.title}**`);
+        } else if (hasAny(song, 'spotify.com/playlist')) {
+          const playlist = await getPlaylist(song);
+          for (const item of playlist.tracks.items) {
+            const data = await searchYouTube(
+              `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
+            );
+            if (data) enqueue(data.link);
+          }
+          await interaction.followUp(
+            `Enqueued ${playlist.tracks.items.length} songs from **${playlist.name}**`,
+          );
+        } else if (hasAny(song, 'spotify.com/track')) {
+          const spotifyTrack = await getTrack(song);
+          const data = await searchYouTube(
+            `${spotifyTrack.name} by ${spotifyTrack.artists.map(a => a.name).join(' ')}`,
+          );
+          if (data) {
+            const track = await enqueue(data.link);
+            await interaction.followUp(`Enqueued **${track.title}**`);
+          } else {
+            await interaction.editReply('Failed to play track, please try again later!');
+          }
+        }
       } catch (error) {
         console.warn(error);
         await interaction.editReply('Failed to play track, please try again later!');
