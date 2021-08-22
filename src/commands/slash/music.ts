@@ -7,6 +7,7 @@ import {
 } from '@discordjs/voice';
 import { CommandInteraction, Guild, GuildMember, Snowflake } from 'discord.js';
 import { Track, MusicSubscription } from '../../managers/music.js';
+import { searchYouTube } from '../../modules/youtube.js';
 import Command from '../../structures/command.js';
 
 const subscriptions = new Map<Snowflake, MusicSubscription>();
@@ -27,7 +28,7 @@ export default class Music extends Command {
             {
               name: 'song',
               type: 'STRING',
-              description: 'The URL of the song to play',
+              description: 'The name of the song or its URL',
               required: true,
             },
           ],
@@ -72,7 +73,13 @@ export default class Music extends Command {
     if (command === 'play') {
       await interaction.deferReply();
       // Extract the video URL from the command
-      const url = interaction.options.getString('song', true);
+      let url = '';
+      const song = interaction.options.getString('song', true).trim();
+      if (song.startsWith('http')) url = song;
+      if (!url) {
+        const data = await searchYouTube(song);
+        if (data) url = data.link;
+      }
 
       // If a connection to the guild doesn't already exist and the user is in a voice channel, join that channel
       // and create a subscription.
