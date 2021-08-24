@@ -47,15 +47,13 @@ export async function initInteraction(): Promise<void> {
     const promises = [] as Promise<Discord.ApplicationCommand>[];
 
     client.application?.commands.cache
-      .filter(command => !_commands.some(c => c.data.name === command.name && c.scope === 'global'))
-      .forEach(command => promises.push(command.delete()));
+      .filter(cmd => !_commands.some(c => c.data.name === cmd.name && c.scope === 'global'))
+      .forEach(cmd => promises.push(cmd.delete()));
 
     client.guilds.cache.forEach(guild =>
       guild.commands.cache
-        .filter(
-          command => !_commands.some(c => c.data.name === command.name && c.scope === 'guild'),
-        )
-        .forEach(command => promises.push(command.delete())),
+        .filter(cmd => !_commands.some(c => c.data.name === cmd.name && c.scope === 'guild'))
+        .forEach(cmd => promises.push(cmd.delete())),
     );
 
     const deleted_commands = await Promise.all(promises);
