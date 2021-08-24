@@ -128,17 +128,16 @@ export default class Game extends Command {
 
         const partitions = [] as Role[][];
         const game_roles = await getGuildGameRoles(guild.id);
-        const games = [
-          ...guild.roles.cache.filter(r => [...game_roles.values()].includes(r.id)).values(),
-        ];
-        const games_alphabetical = games.map(r => r.name.toLowerCase()).sort();
-        for (const game_name of games_alphabetical) {
+        const games = guild.roles.cache.filter(r => [...game_roles.values()].includes(r.id));
+        const games_alphabetical = games.sort(
+          (a, b) => a.name.toLowerCase().charCodeAt(0) - b.name.toLowerCase().charCodeAt(0),
+        );
+        for (const game of games_alphabetical.values()) {
           // Initialize the first and the next partition
           if (!partitions.length || partitions[partitions.length - 1].length > 14) {
             partitions.push([]);
           }
-          const this_role = games.find(r => r.name.toLowerCase() === game_name);
-          if (this_role) partitions[partitions.length - 1].push(this_role);
+          partitions[partitions.length - 1].push(game);
         }
 
         for (const partition of partitions) {
