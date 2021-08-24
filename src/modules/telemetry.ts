@@ -44,7 +44,7 @@ export async function initTelemetry(): Promise<void> {
   });
 
   app.get('/', (req, res) => {
-    res.redirect('https://github.com/JKLorenzo/Quarantine-Gaming');
+    res.redirect('https://github.com/JKLorenzo/Parallax');
   });
 
   app.get('/status', (req, res) => {

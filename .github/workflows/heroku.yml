@@ -23,12 +23,12 @@ jobs:
       - name: Deploy
         uses: akhileshns/heroku-deploy@v3.12.12
         with:
-          heroku_app_name: 'quarantine-gaming'
+          heroku_app_name: 'parallax-discord'
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           procfile: 'web: node ./dist/main.js'
           buildpack: 'https://github.com/heroku/heroku-buildpack-nodejs.git'
-          healthcheck: 'https://quarantine-gaming.herokuapp.com/status'
+          healthcheck: 'https://parallax-discord.herokuapp.com/status'
           checkstring: 'online'
           rollbackonhealthcheckfailed: true
           delay: 30
@@ -36,7 +36,7 @@ jobs:
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           HD_DB_URI: ${{secrets.DB_URI}}
           HD_GOOGLE_KEY: ${{secrets.GOOGLE_KEY}}
-          HD_NEW_RELIC_APP_NAME: 'quarantine-gaming'
+          HD_NEW_RELIC_APP_NAME: 'parallax-discord'
           HD_NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
           HD_NEW_RELIC_NO_CONFIG_FILE: 'true'
           HD_SPOTIFY_ID: ${{secrets.SPOTIFY_ID}}
