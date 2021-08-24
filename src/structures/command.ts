@@ -11,6 +11,7 @@ import {
 import _ from 'lodash';
 import { client } from '../main.js';
 import { getBotConfig } from '../modules/database.js';
+import { logMessage } from '../modules/telemetry.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
 export default abstract class Command {
@@ -77,7 +78,8 @@ export default abstract class Command {
       // Create
       if (!this_command) {
         this_command = await client.application?.commands.create(this.data);
-        console.log(
+        logMessage(
+          'Command',
           `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} created`,
         );
       }
@@ -85,7 +87,8 @@ export default abstract class Command {
       // Update data
       if (this_command && !this.isUpdated(this_command)) {
         await this_command.edit(this.data);
-        console.log(
+        logMessage(
+          'Command',
           `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} updated`,
         );
       }
@@ -103,7 +106,8 @@ export default abstract class Command {
           // Create
           if (!this_command) {
             this_command = await this_guild.commands.create(this.data);
-            console.log(
+            logMessage(
+              'Command',
               `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                 this.data.name
               } created on ${this_guild}`,
@@ -113,7 +117,8 @@ export default abstract class Command {
           // Update data
           if (this_command && !this.isUpdated(this_command)) {
             await this_command.edit(this.data);
-            console.log(
+            logMessage(
+              'Command',
               `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                 this.data.name
               } updated on ${this_guild}`,
@@ -127,7 +132,8 @@ export default abstract class Command {
               await this_command.permissions.set({
                 permissions: this.permissions ?? [],
               });
-              console.log(
+              logMessage(
+                'Command',
                 `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
                   this.data.name
                 } permissions updated on ${this_guild}`,
@@ -137,7 +143,8 @@ export default abstract class Command {
         } else if (this_command && hasFilter) {
           // Delete
           await this_command.delete();
-          console.log(
+          logMessage(
+            'Command',
             `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
               this.data.name
             } deleted on ${this_guild}`,

@@ -7,7 +7,7 @@ import Discord, {
   MessageComponentInteraction,
 } from 'discord.js';
 import { client } from '../main.js';
-import { logError } from '../modules/telemetry.js';
+import { logError, logMessage } from '../modules/telemetry.js';
 import Command from '../structures/command.js';
 import Component from '../structures/component.js';
 import { getFiles } from '../utils/functions.js';
@@ -59,9 +59,9 @@ export async function initInteraction(): Promise<void> {
     const deleted_commands = await Promise.all(promises);
     for (const command of deleted_commands) {
       if (command.guildId) {
-        console.log(`Guild Command ${command.name} deleted on ${command.guild}`);
+        logMessage('Interaction', `Guild Command ${command.name} deleted on ${command.guild}`);
       } else {
-        console.log(`Global Command ${command.name} deleted`);
+        logMessage('Interaction', `Global Command ${command.name} deleted`);
       }
     }
   } catch (error) {
