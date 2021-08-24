@@ -68,3 +68,11 @@ export function logError(name: string, title: string, error: string): void {
     content: `**${title}** - ${error}`,
   });
 }
+
+export function logMessage(name: string, message: string): void {
+  console.log(message);
+  webhook?.send({
+    username: `Telemetry: ${name}`,
+    content: message,
+  });
+}
