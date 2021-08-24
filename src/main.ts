@@ -1,4 +1,3 @@
-import 'newrelic';
 import { Client, Intents } from 'discord.js';
 import express, { json } from 'express';
 import { initFreeGame } from './managers/free_game.js';
