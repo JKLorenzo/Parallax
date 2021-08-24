@@ -134,7 +134,7 @@ export default class Game extends Command {
         const games_alphabetical = games.map(r => r.name.toLowerCase()).sort();
         for (const game_name of games_alphabetical) {
           // Initialize the first and the next partition
-          if (!partitions.length || partitions[partitions.length - 1].length > 24) {
+          if (!partitions.length || partitions[partitions.length - 1].length > 14) {
             partitions.push([]);
           }
           const this_role = games.find(r => r.name.toLowerCase() === game_name);
