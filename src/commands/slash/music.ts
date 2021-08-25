@@ -43,6 +43,11 @@ export default class Music extends Command {
           type: 'SUB_COMMAND',
         },
         {
+          name: 'stop',
+          description: 'Stops playing and clears the queue',
+          type: 'SUB_COMMAND',
+        },
+        {
           name: 'queue',
           description: 'See the music queue',
           type: 'SUB_COMMAND',
@@ -158,6 +163,13 @@ export default class Music extends Command {
         // will be loaded and played.
         subscription.audioPlayer.stop();
         await interaction.reply('Skipped song.');
+      } else {
+        await interaction.reply('Not playing in this server.');
+      }
+    } else if (command === 'stop') {
+      if (subscription) {
+        subscription.stop();
+        await interaction.reply('Stopped all songs.');
       } else {
         await interaction.reply('Not playing in this server.');
       }
