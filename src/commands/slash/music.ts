@@ -126,8 +126,8 @@ export default class Music extends Command {
             const playlist = await getPlaylist(song);
             for (const item of playlist.tracks.items) {
               await enqueue(
-                `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
-                `${item.track.name} - ${item.track.artists.map(a => a.name).join(', ')}`,
+                `${item.track.name} ${item.track.artists.map(a => a.name).join(' ')}`,
+                `${item.track.name} by ${item.track.artists.map(a => a.name).join(', ')}`,
                 item.track.album.images[0]?.url,
               );
             }
@@ -143,7 +143,7 @@ export default class Music extends Command {
             if (!data) return interaction.editReply('No match found, please try again.');
             await enqueue(
               data.link,
-              `${track.name} - ${track.artists.map(a => a.name).join(', ')}`,
+              `${track.name} by ${track.artists.map(a => a.name).join(', ')}`,
               data.thumbnails.default?.url,
             );
             await interaction.followUp(`Enqueued **${data.title}**`);
