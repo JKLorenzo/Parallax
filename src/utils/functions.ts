@@ -48,10 +48,15 @@ export function parseMention(mention: string): Snowflake {
 
 export function parseHTML(html: string): string {
   return html
+    .replaceAll('&quot;', '"')
     .replaceAll('&quot', '"')
+    .replaceAll('&apos;', "'")
     .replaceAll('&apos', "'")
+    .replaceAll('&amp;', '&')
     .replaceAll('&amp', '&')
+    .replaceAll('&lt;', '<')
     .replaceAll('&lt', '<')
+    .replaceAll('&gt;', '>')
     .replaceAll('&gt', '>');
 }
 
