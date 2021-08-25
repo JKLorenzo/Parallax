@@ -13,7 +13,6 @@ import {
 import { Message, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
-import { client } from '../main.js';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
@@ -52,7 +51,7 @@ export class Track implements TrackData {
           .send({
             embeds: [
               {
-                author: { name: `${client.user?.username}: Now Playing` },
+                author: { name: `Parallax Music Player: Now Playing` },
                 title: this.title,
                 thumbnail: { url: this.image },
                 color: 'GREEN',
@@ -71,7 +70,7 @@ export class Track implements TrackData {
           .edit({
             embeds: [
               {
-                author: { name: `${client.user?.username}: Previously Played` },
+                author: { name: `Parallax Music Player: Previously Played` },
                 title: this.title,
                 thumbnail: { url: this.image },
                 color: 'YELLOW',

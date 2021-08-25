@@ -357,7 +357,7 @@ export default class GuildConfig extends Command {
           files: [new MessageAttachment('./src/assets/gaming.gif')],
           embeds: [
             new MessageEmbed({
-              author: { name: `${client.user?.username}: Role Selection Pane` },
+              author: { name: `${guild.name}: Role Selection Pane` },
               title: 'Free Game Updates',
               description: [
                 `All notifications will be made available on ${free_game_channel} channel. ` +

@@ -208,7 +208,7 @@ async function post(data: RedditPostData): Promise<string> {
 
       if (!roles.length) continue;
 
-      embed.setAuthor(`${client.user?.username}: Free Game Updates`);
+      embed.setAuthor(`${guild.name}: Free Game Updates`);
       embed.setFields([
         { name: 'Author', value: data.author, inline: true },
         { name: 'Platforms', value: platforms.join(', '), inline: true },
