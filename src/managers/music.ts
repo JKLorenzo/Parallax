@@ -13,6 +13,7 @@ import {
 import { Message, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
+import { client } from '../main.js';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
@@ -51,7 +52,7 @@ export class Track implements TrackData {
           .send({
             embeds: [
               {
-                author: { name: 'Now Playing' },
+                author: { name: `${client.user?.username}: Now Playing` },
                 title: this.title,
                 thumbnail: { url: this.image },
                 color: 'GREEN',
@@ -70,7 +71,7 @@ export class Track implements TrackData {
           .edit({
             embeds: [
               {
-                author: { name: 'Previously Played' },
+                author: { name: `${client.user?.username}: Previously Played` },
                 title: this.title,
                 thumbnail: { url: this.image },
                 color: 'YELLOW',
@@ -100,14 +101,18 @@ export class Track implements TrackData {
       const data = await searchYouTube(this.query);
       if (!data) throw new Error('No track found.');
       url = data.link;
-      this.title = data.title;
+      if (!this.title) this.title = data.title;
+      if (!this.image) this.image = data.thumbnails.default?.url;
     }
 
     if (!this.title || !this.image) {
       const info = await getInfo(url);
-      if (!this.title) this.title = parseHTML(info.videoDetails.title);
+      if (!info) throw new Error('No track found.');
+      if (!this.title) this.title = info.videoDetails.title;
       if (!this.image) this.image = info.thumbnail_url;
     }
+
+    this.title = parseHTML(this.title);
 
     const process = ytdl(
       url,
