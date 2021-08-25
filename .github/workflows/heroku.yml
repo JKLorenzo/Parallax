@@ -28,10 +28,6 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           procfile: 'web: node ./dist/main.js'
           buildpack: 'https://github.com/heroku/heroku-buildpack-nodejs.git'
-          healthcheck: 'https://parallax-discord.herokuapp.com/status'
-          checkstring: 'online'
-          rollbackonhealthcheckfailed: true
-          delay: 30
         env:
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           HD_DB_URI: ${{secrets.DB_URI}}

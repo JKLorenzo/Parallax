@@ -1,6 +1,6 @@
 import { WebhookClient } from 'discord.js';
 import { getBotConfig } from './database.js';
-import { app, client } from '../main.js';
+import { client } from '../main.js';
 
 let webhook: WebhookClient | undefined;
 
@@ -41,18 +41,6 @@ export async function initTelemetry(): Promise<void> {
       username: 'Telemetry: Client',
       content: `Left \`${guild.name}\` server. Joined on \`${guild.joinedAt}\`.`,
     });
-  });
-
-  app.get('/', (req, res) => {
-    res.redirect('https://github.com/JKLorenzo/Parallax');
-  });
-
-  app.get('/status', (req, res) => {
-    res.send(client.ws.ping ? 'online' : 'offline');
-  });
-
-  app.get('/ping', (req, res) => {
-    res.json({ ping: client.ws.ping });
   });
 
   await webhook?.send({

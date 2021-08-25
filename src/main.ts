@@ -1,5 +1,4 @@
 import { Client, Intents } from 'discord.js';
-import express, { json } from 'express';
 import { initFreeGame } from './managers/free_game.js';
 import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
@@ -7,8 +6,6 @@ import { initPlay } from './managers/play.js';
 import { connectDb } from './modules/database.js';
 import { initSpotify } from './modules/spotify.js';
 import { initTelemetry } from './modules/telemetry.js';
-
-export const app = express().use(json());
 
 export const client = new Client({
   allowedMentions: {
@@ -34,7 +31,5 @@ client.on('ready', async () => {
   await initSpotify();
   console.log('Done');
 });
-
-app.listen(process.env.PORT ?? 3000);
 
 client.login(process.env.BOT_TOKEN!);
