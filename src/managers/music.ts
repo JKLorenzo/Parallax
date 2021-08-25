@@ -168,7 +168,7 @@ export class MusicSubscription {
         /*
 					Once destroyed, stop the subscription
 				*/
-        this.stop();
+        this.stop(true);
       } else if (
         !this.readyLock &&
         (newState.status === VoiceConnectionStatus.Connecting ||
@@ -220,10 +220,10 @@ export class MusicSubscription {
     this.processQueue();
   }
 
-  stop(): void {
-    this.queueLock = true;
+  stop(force?: boolean): void {
+    if (force) this.queueLock = true;
     this.queue = [];
-    this.audioPlayer.stop(true);
+    this.audioPlayer.stop(force);
   }
 
   private async processQueue(): Promise<void> {
