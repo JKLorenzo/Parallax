@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises';
 import {
   CommandInteraction,
   GuildMember,
@@ -8,6 +7,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import Command from '../../structures/command.js';
+import { sleep } from '../../utils/functions.js';
 
 export default class Purge extends Command {
   constructor() {
@@ -68,7 +68,7 @@ export default class Purge extends Command {
         });
       }
       retries--;
-      if (retries > 0 && deleted_count < message_count) await setTimeout(5000);
+      if (retries > 0 && deleted_count < message_count) await sleep(5000);
     } while (retries > 0 && deleted_count < message_count);
 
     const elapsedTime = (Date.now() - interaction.createdTimestamp) / 1000;

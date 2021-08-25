@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises';
 import {
   AudioPlayer,
   AudioPlayerStatus,
@@ -15,7 +14,7 @@ import { CommandInteraction, Message } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { searchYouTube } from '../modules/youtube.js';
-import { hasAny } from '../utils/functions.js';
+import { hasAny, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -56,9 +55,9 @@ export class Track implements TrackData {
       this.onFinish = noop;
       if (message && message.editable) {
         message.edit(`**Finished playing **${this.title}**`).catch(console.warn);
-        setTimeout(5000, () => {
+        setTimeout(() => {
           if (message && message.deletable) message.delete().catch(console.warn);
-        });
+        }, 5000);
       }
     };
 
@@ -157,7 +156,7 @@ export class MusicSubscription {
           /*
 						The disconnect in this case is recoverable, and we also have <5 repeated attempts so we will reconnect.
 					*/
-          await setTimeout((this.voiceConnection.rejoinAttempts + 1) * 5_000);
+          await sleep((this.voiceConnection.rejoinAttempts + 1) * 5_000);
           this.voiceConnection.rejoin();
         } else {
           /*

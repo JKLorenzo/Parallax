@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises';
 import {
   ApplicationCommandNonOptionsData,
   ApplicationCommandOptionChoice,
@@ -201,10 +200,10 @@ export default class Game extends Command {
       components: getComponent('game_invite'),
     });
 
-    setTimeout(1800000, () => {
+    setTimeout(() => {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       if (invite_message) invite_message.delete().catch(() => {});
-    });
+    }, 1800000);
 
     await interaction.editReply(
       `Got it! [This bracket](${invite_message.url}) is now available on the ${invite_channel} channel.`,
