@@ -89,8 +89,8 @@ export default class Music extends Command {
         subscription = new MusicSubscription(
           joinVoiceChannel({
             channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
+            guildId: guild.id,
+            adapterCreator: guild.voiceAdapterCreator,
           }),
         );
         subscription.voiceConnection.on('error', console.warn);
