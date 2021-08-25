@@ -14,69 +14,100 @@ import {
 import { CommandInteraction, Message } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
+import { searchYouTube } from '../modules/youtube';
+import { hasAny } from '../utils/functions';
 const { getInfo } = ytdl_core;
 
-/**
- * This is the data required to create a Track object
- */
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
+
 export interface TrackData {
-  url: string;
-  title: string;
+  query: string;
+  title?: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = () => {};
-
-/**
- * A Track represents information about a YouTube video (in this context) that can be added to a queue.
- * It contains the title and URL of the video, as well as functions onStart, onFinish, onError, that act
- * as callbacks that are triggered at certain points during the track's lifecycle.
- *
- * Rather than creating an AudioResource for each video immediately and then keeping those in a queue,
- * we use tracks as they don't pre-emptively load the videos. Instead, once a Track is taken from the
- * queue, it is converted into an AudioResource just in time for playback.
- */
 export class Track implements TrackData {
-  public readonly url: string;
-  public readonly title: string;
-  public readonly onStart: () => void;
-  public readonly onFinish: () => void;
-  public readonly onError: (error: Error) => void;
+  query: string;
+  title?: string;
+  onStart: () => void;
+  onFinish: () => void;
+  onError: (error: Error) => void;
 
-  private constructor({ url, title, onStart, onFinish, onError }: TrackData) {
-    this.url = url;
+  constructor(interaction: CommandInteraction, query: string, title?: string) {
+    this.query = query;
     this.title = title;
-    this.onStart = onStart;
-    this.onFinish = onFinish;
-    this.onError = onError;
+
+    let message: Message | undefined;
+
+    this.onStart = () => {
+      this.onStart = noop;
+      if (!message) {
+        interaction
+          .followUp(`Now playing **${this.title}**`)
+          .then(reply => (message = reply as Message))
+          .catch(console.warn);
+      }
+    };
+
+    this.onFinish = () => {
+      this.onFinish = noop;
+      if (message && message.editable) {
+        message.edit(`**Finished playing **${this.title}**`).catch(console.warn);
+        setTimeout(5000, () => {
+          if (message && message.deletable) message.delete().catch(console.warn);
+        });
+      }
+    };
+
+    this.onError = error => {
+      this.onError = noop;
+      if (message && message.deletable) message.delete().catch(console.warn);
+      interaction.followUp(`Error: ${error.message}`).catch(console.warn);
+    };
   }
 
-  // Creates an AudioResource from this Track.
-  public createAudioResource(): Promise<AudioResource<Track>> {
+  async createAudioResource(): Promise<AudioResource<Track>> {
+    let url: string;
+    if (hasAny(this.query, 'http')) {
+      if (!hasAny(this.query, 'youtube.com')) throw new Error('Unsupported URL.');
+      url = this.query;
+    } else {
+      const data = await searchYouTube(this.query);
+      if (!data) throw new Error('No track found.');
+      url = data.link;
+      this.title = data.title;
+    }
+
+    if (!this.title) {
+      const info = await getInfo(url);
+      if (!info) throw new Error('No track details found.');
+      this.title = info.videoDetails.title;
+    }
+
+    const process = ytdl(
+      url,
+      {
+        o: '-',
+        q: '',
+        f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+        r: '100K',
+      },
+      { stdio: ['ignore', 'pipe', 'ignore'] },
+    );
+
     return new Promise((resolve, reject) => {
-      const process = ytdl(
-        this.url,
-        {
-          o: '-',
-          q: '',
-          f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-          r: '100K',
-        },
-        { stdio: ['ignore', 'pipe', 'ignore'] },
-      );
-      if (!process.stdout) {
-        reject(new Error('No stdout'));
-        return;
-      }
+      if (!process.stdout) return reject(new Error('No stdout'));
+
       const stream = process.stdout;
       const onError = (error: Error) => {
         if (!process.killed) process.kill();
         stream.resume();
         reject(error);
       };
+
       process
         .once('spawn', () => {
           demuxProbe(stream)
@@ -88,53 +119,16 @@ export class Track implements TrackData {
         .catch(onError);
     });
   }
-
-  // Creates a Track from a video URL and lifecycle callback methods.
-  public static async from(url: string, interaction: CommandInteraction): Promise<Track> {
-    const info = await getInfo(url);
-    let msg: Message | undefined;
-    // The methods are wrapped so that we can ensure that they are only called once.
-    const wrappedMethods = {
-      onStart() {
-        wrappedMethods.onStart = noop;
-        if (!msg) {
-          interaction
-            .followUp(`Now playing: **${info.videoDetails.title}**`)
-            .then(reply => (msg = reply as Message))
-            .catch(console.warn);
-        }
-      },
-      onFinish() {
-        wrappedMethods.onFinish = noop;
-        if (msg && msg.deletable) msg.delete();
-      },
-      onError(error: Error) {
-        wrappedMethods.onError = noop;
-        if (msg && msg.deletable) msg.delete();
-        interaction.followUp(`Error: ${error.message}`).catch(console.warn);
-      },
-    };
-
-    return new Track({
-      title: info.videoDetails.title,
-      url,
-      ...wrappedMethods,
-    });
-  }
 }
 
-/**
- * A MusicSubscription exists for each active VoiceConnection. Each subscription has its own audio player and queue,
- * and it also attaches logic to the audio player and voice connection for error handling and reconnection logic.
- */
 export class MusicSubscription {
-  public readonly voiceConnection: VoiceConnection;
-  public readonly audioPlayer: AudioPlayer;
-  public queue: Track[];
-  public queueLock = false;
-  public readyLock = false;
+  readonly voiceConnection: VoiceConnection;
+  readonly audioPlayer: AudioPlayer;
+  queue: Track[];
+  queueLock = false;
+  readyLock = false;
 
-  public constructor(voiceConnection: VoiceConnection) {
+  constructor(voiceConnection: VoiceConnection) {
     this.voiceConnection = voiceConnection;
     this.audioPlayer = createAudioPlayer();
     this.queue = [];
@@ -222,22 +216,17 @@ export class MusicSubscription {
     voiceConnection.subscribe(this.audioPlayer);
   }
 
-  // Adds a new Track to the queue.
-  public enqueue(track: Track): void {
+  enqueue(track: Track): void {
     this.queue.push(track);
     this.processQueue();
   }
 
-  // Stops audio playback and empties the queue
-  public stop(): void {
+  stop(): void {
     this.queueLock = true;
     this.queue = [];
     this.audioPlayer.stop(true);
   }
 
-  /**
-   * Attempts to play a Track from the queue
-   */
   private async processQueue(): Promise<void> {
     // If the queue is locked (already being processed), is empty, or the audio player is already playing something, return
     if (

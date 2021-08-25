@@ -6,6 +6,7 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { CommandInteraction, Guild, GuildMember, Snowflake } from 'discord.js';
+import { getInfo } from 'ytdl-core';
 import { Track, MusicSubscription } from '../../managers/music.js';
 import { getPlaylist, getTrack } from '../../modules/spotify.js';
 import { searchYouTube } from '../../modules/youtube.js';
@@ -106,9 +107,9 @@ export default class Music extends Command {
       }
 
       try {
-        const enqueue = async (url: string): Promise<Track> => {
+        const enqueue = async (query: string, title?: string): Promise<Track> => {
           // Attempt to create a Track from the user's video URL
-          const track = await Track.from(url, interaction);
+          const track = await new Track(interaction, query, title);
           // Enqueue the track and reply a success message to the user
           subscription!.enqueue(track);
           return track;
@@ -116,33 +117,34 @@ export default class Music extends Command {
 
         if (hasAny(song, 'http')) {
           if (hasAny(song, 'youtube.com')) {
-            const track = await enqueue(song);
+            const info = await getInfo(song);
+            const track = await enqueue(song, info?.videoDetails.title);
             await interaction.followUp(`Enqueued **${track.title}**`);
           } else if (hasAny(song, 'spotify.com/playlist')) {
             const playlist = await getPlaylist(song);
-            await interaction.followUp(
-              `Enqueued ${playlist.tracks.items.length} songs from ` +
-                `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
-            );
             for (const item of playlist.tracks.items) {
-              const data = await searchYouTube(
+              await enqueue(
                 `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
               );
-              if (data) enqueue(data.link);
             }
+            await interaction.followUp(
+              `Enqueued ${playlist.tracks.items.length} songs from ` +
+                `**${playlist.name}** playlist by **${playlist.owner.display_name}**.`,
+            );
           } else if (hasAny(song, 'spotify.com/track')) {
             const spotifyTrack = await getTrack(song);
             const data = await searchYouTube(
               `${spotifyTrack.name} by ${spotifyTrack.artists.map(a => a.name).join(' ')}`,
             );
             if (!data) return interaction.editReply('No match found, please try again.');
-            const track = await enqueue(data.link);
-            await interaction.followUp(`Enqueued **${track.title}**`);
+            await enqueue(data.link, data.title);
+            await interaction.followUp(`Enqueued **${data.title}**`);
           }
         } else {
           const data = await searchYouTube(song);
           if (!data) return interaction.editReply('No match found, please try again.');
-          enqueue(data.link);
+          await enqueue(data.link, data.title);
+          await interaction.followUp(`Enqueued **${data.title}**`);
         }
       } catch (error) {
         console.warn(error);
