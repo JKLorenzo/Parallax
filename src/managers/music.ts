@@ -88,8 +88,8 @@ export class Track implements TrackData {
 
     this.onError = error => {
       this.onError = noop;
+      console.warn(error);
       if (message && message.deletable) message.delete().catch(console.warn);
-      if (channel) channel.send(`Error: ${error.message}`).catch(console.warn);
     };
   }
 
@@ -108,7 +108,7 @@ export class Track implements TrackData {
 
     if (!this.title || !this.image) {
       const info = await getInfo(url);
-      if (!info) throw new Error('No track found.');
+      if (!info) throw new Error('No track info found.');
       if (!this.title) this.title = info.videoDetails.title;
       if (!this.image) this.image = info.thumbnail_url;
     }
