@@ -6,12 +6,13 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { CommandInteraction, Guild, GuildMember, Snowflake } from 'discord.js';
-import { getInfo } from 'ytdl-core';
+import ytdl_core from 'ytdl-core';
 import { Track, MusicSubscription } from '../../managers/music.js';
 import { getPlaylist, getTrack } from '../../modules/spotify.js';
 import { searchYouTube } from '../../modules/youtube.js';
 import Command from '../../structures/command.js';
 import { hasAny } from '../../utils/functions.js';
+const { getInfo } = ytdl_core;
 
 const subscriptions = new Map<Snowflake, MusicSubscription>();
 
