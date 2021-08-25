@@ -10,11 +10,11 @@ import {
   VoiceConnectionDisconnectReason,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
-import { CommandInteraction, Message } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { searchYouTube } from '../modules/youtube.js';
-import { hasAny, sleep } from '../utils/functions.js';
+import { hasAny, parseHTML, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -23,6 +23,7 @@ const noop = () => {};
 export interface TrackData {
   query: string;
   title?: string;
+  image?: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
@@ -31,22 +32,33 @@ export interface TrackData {
 export class Track implements TrackData {
   query: string;
   title?: string;
+  image?: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
 
-  constructor(interaction: CommandInteraction, query: string, title?: string) {
+  constructor(channel: TextChannel, query: string, title?: string, image?: string) {
     this.query = query;
     this.title = title;
+    this.image = image;
 
     let message: Message | undefined;
 
     this.onStart = () => {
       this.onStart = noop;
-      if (!message) {
-        interaction
-          .followUp(`Now playing **${this.title}**`)
-          .then(reply => (message = reply as Message))
+      if (channel && !message) {
+        channel
+          .send({
+            embeds: [
+              {
+                author: { name: 'Now Playing' },
+                title: this.title,
+                thumbnail: { url: this.image },
+                color: 'GREEN',
+              },
+            ],
+          })
+          .then(msg => (message = msg))
           .catch(console.warn);
       }
     };
@@ -54,17 +66,28 @@ export class Track implements TrackData {
     this.onFinish = () => {
       this.onFinish = noop;
       if (message && message.editable) {
-        message.edit(`**Finished playing **${this.title}**`).catch(console.warn);
+        message
+          .edit({
+            embeds: [
+              {
+                author: { name: 'Previously Played' },
+                title: this.title,
+                thumbnail: { url: this.image },
+                color: 'YELLOW',
+              },
+            ],
+          })
+          .catch(console.warn);
         setTimeout(() => {
           if (message && message.deletable) message.delete().catch(console.warn);
-        }, 5000);
+        }, 10000);
       }
     };
 
     this.onError = error => {
       this.onError = noop;
       if (message && message.deletable) message.delete().catch(console.warn);
-      interaction.followUp(`Error: ${error.message}`).catch(console.warn);
+      if (channel) channel.send(`Error: ${error.message}`).catch(console.warn);
     };
   }
 
@@ -80,10 +103,10 @@ export class Track implements TrackData {
       this.title = data.title;
     }
 
-    if (!this.title) {
+    if (!this.title || !this.image) {
       const info = await getInfo(url);
-      if (!info) throw new Error('No track details found.');
-      this.title = info.videoDetails.title;
+      if (!this.title) this.title = parseHTML(info.videoDetails.title);
+      if (!this.image) this.image = info.thumbnail_url;
     }
 
     const process = ytdl(
@@ -215,9 +238,11 @@ export class MusicSubscription {
     voiceConnection.subscribe(this.audioPlayer);
   }
 
-  enqueue(track: Track): void {
+  enqueue(channel: TextChannel, query: string, title?: string, image?: string): Track {
+    const track = new Track(channel, query, title, image);
     this.queue.push(track);
     this.processQueue();
+    return track;
   }
 
   stop(force?: boolean): void {
