@@ -92,7 +92,7 @@ export default class Music extends Command {
 
       // If there is no subscription, tell the user they need to join a channel.
       if (!subscription) {
-        return interaction.followUp('Join a voice channel and then try that again!');
+        return interaction.followUp('Join a voice channel and then try that again.');
       }
 
       // Make sure the connection is ready before processing the user's request
@@ -101,7 +101,7 @@ export default class Music extends Command {
       } catch (error) {
         console.warn(error);
         return interaction.followUp(
-          'Failed to join voice channel within 20 seconds, please try again later!',
+          'Failed to join voice channel within 20 seconds, please try again later.',
         );
       }
 
@@ -114,36 +114,39 @@ export default class Music extends Command {
           return track;
         };
 
-        if (hasAny(song, 'youtube.com')) {
-          const track = await enqueue(song);
-          await interaction.followUp(`Enqueued **${track.title}**`);
-        } else if (hasAny(song, 'spotify.com/playlist')) {
-          const playlist = await getPlaylist(song);
-          await interaction.followUp(
-            `Enqueued ${playlist.tracks.items.length} songs from ` +
-              `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
-          );
-          for (const item of playlist.tracks.items) {
-            const data = await searchYouTube(
-              `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
+        if (hasAny(song, 'http')) {
+          if (hasAny(song, 'youtube.com')) {
+            const track = await enqueue(song);
+            await interaction.followUp(`Enqueued **${track.title}**`);
+          } else if (hasAny(song, 'spotify.com/playlist')) {
+            const playlist = await getPlaylist(song);
+            await interaction.followUp(
+              `Enqueued ${playlist.tracks.items.length} songs from ` +
+                `**${playlist.name}** playlist by ${playlist.owner.display_name}`,
             );
-            if (data) enqueue(data.link);
-          }
-        } else if (hasAny(song, 'spotify.com/track')) {
-          const spotifyTrack = await getTrack(song);
-          const data = await searchYouTube(
-            `${spotifyTrack.name} by ${spotifyTrack.artists.map(a => a.name).join(' ')}`,
-          );
-          if (data) {
+            for (const item of playlist.tracks.items) {
+              const data = await searchYouTube(
+                `${item.track.name} by ${item.track.artists.map(a => a.name).join(' ')}`,
+              );
+              if (data) enqueue(data.link);
+            }
+          } else if (hasAny(song, 'spotify.com/track')) {
+            const spotifyTrack = await getTrack(song);
+            const data = await searchYouTube(
+              `${spotifyTrack.name} by ${spotifyTrack.artists.map(a => a.name).join(' ')}`,
+            );
+            if (!data) return interaction.editReply('No match found, please try again.');
             const track = await enqueue(data.link);
             await interaction.followUp(`Enqueued **${track.title}**`);
-          } else {
-            await interaction.editReply('Failed to play track, please try again later!');
           }
+        } else {
+          const data = await searchYouTube(song);
+          if (!data) return interaction.editReply('No match found, please try again.');
+          enqueue(data.link);
         }
       } catch (error) {
         console.warn(error);
-        await interaction.editReply('Failed to play track, please try again later!');
+        await interaction.editReply('Failed to play track, please try again later.');
       }
     } else if (command === 'skip') {
       if (subscription) {
@@ -151,9 +154,9 @@ export default class Music extends Command {
         // listener defined in music/subscription.ts, transitions into the Idle state mean the next track from the queue
         // will be loaded and played.
         subscription.audioPlayer.stop();
-        await interaction.reply('Skipped song!');
+        await interaction.reply('Skipped song.');
       } else {
-        await interaction.reply('Not playing in this server!');
+        await interaction.reply('Not playing in this server.');
       }
     } else if (command === 'queue') {
       // Print out the current queue, including up to the next 5 tracks to be played.
@@ -172,29 +175,29 @@ export default class Music extends Command {
 
         await interaction.reply(`${current}\n\n${queue}`);
       } else {
-        await interaction.reply('Not playing in this server!');
+        await interaction.reply('Not playing in this server.');
       }
     } else if (command === 'pause') {
       if (subscription) {
         subscription.audioPlayer.pause();
-        await interaction.reply('Paused!');
+        await interaction.reply('Paused.');
       } else {
-        await interaction.reply('Not playing in this server!');
+        await interaction.reply('Not playing in this server.');
       }
     } else if (command === 'resume') {
       if (subscription) {
         subscription.audioPlayer.unpause();
-        await interaction.reply('Unpaused!');
+        await interaction.reply('Unpaused.');
       } else {
-        await interaction.reply('Not playing in this server!');
+        await interaction.reply('Not playing in this server.');
       }
     } else if (command === 'leave') {
       if (subscription) {
         subscription.voiceConnection.destroy();
         subscriptions.delete(guild.id);
-        await interaction.reply('Left channel!');
+        await interaction.reply('Left channel.');
       } else {
-        await interaction.reply('Not playing in this server!');
+        await interaction.reply('Not playing in this server.');
       }
     }
   }
