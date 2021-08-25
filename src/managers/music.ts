@@ -51,8 +51,9 @@ export class Track implements TrackData {
           .send({
             embeds: [
               {
-                author: { name: `Parallax Music Player: Now Playing` },
-                title: this.title,
+                author: { name: 'Parallax Music Player' },
+                title: 'Now Playing',
+                description: `**${this.title}**`,
                 thumbnail: { url: this.image },
                 color: 'GREEN',
               },
@@ -70,8 +71,9 @@ export class Track implements TrackData {
           .edit({
             embeds: [
               {
-                author: { name: `Parallax Music Player: Previously Played` },
-                title: this.title,
+                author: { name: 'Parallax Music Player' },
+                title: 'Previously Played',
+                description: `**${this.title}**`,
                 thumbnail: { url: this.image },
                 color: 'YELLOW',
               },
