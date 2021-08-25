@@ -14,8 +14,8 @@ import {
 import { CommandInteraction, Message } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
-import { searchYouTube } from '../modules/youtube';
-import { hasAny } from '../utils/functions';
+import { searchYouTube } from '../modules/youtube.js';
+import { hasAny } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
