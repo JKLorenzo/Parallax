@@ -12,7 +12,12 @@ export const client = new Client({
     parse: ['everyone', 'roles', 'users'],
     repliedUser: true,
   },
-  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_PRESENCES],
+  intents: [
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MEMBERS,
+    Intents.FLAGS.GUILD_PRESENCES,
+    Intents.FLAGS.GUILD_VOICE_STATES,
+  ],
   presence: {
     status: 'online',
     afk: false,
