@@ -43,7 +43,7 @@
     "g-i-s": "^2.1.6",
     "libsodium-wrappers": "^0.7.9",
     "lodash": "^4.17.21",
-    "mongodb": "^4.1.0",
+    "mongodb": "^4.1.1",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
     "probe-image-size": "^7.2.1",
