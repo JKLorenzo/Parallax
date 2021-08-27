@@ -11,7 +11,13 @@ export async function initTelemetry(): Promise<void> {
   client.on('rateLimit', data => {
     webhook?.send({
       username: 'Telemetry: Client RateLimit',
-      content: `${data.method} \`${data.route}\``,
+      content: [
+        `At: ${data.path}`,
+        `Limit: ${data.limit}`,
+        `Timeout: ${data.timeout}`,
+        `Global: ${data.global}`,
+        `On: ${data.method} ${data.route}`,
+      ].join('\n'),
     });
   });
 
