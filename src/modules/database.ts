@@ -1,5 +1,6 @@
 import { Role, Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
+import { logError } from './telemetry.js';
 import { hexToUtf, utfToHex } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
 import {
@@ -77,10 +78,16 @@ export async function getExpiredUserGames(): Promise<Map<string, string[]>> {
 
     if (result.length === 0) continue;
 
-    expired.set(
-      collection.collectionName,
-      result.map(r => hexToUtf(r._id)),
-    );
+    try {
+      await collection.deleteMany({ type: 'game', last_updated: { $lte: expire_time } });
+
+      expired.set(
+        collection.collectionName,
+        result.map(r => hexToUtf(r._id)),
+      );
+    } catch (error) {
+      logError('Database', 'Clear User Expired Games', error);
+    }
   }
   return expired;
 }
