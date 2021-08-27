@@ -63,7 +63,7 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
     );
 }
 
-export async function getExpiredUserGames(): Promise<Map<string, string[]>> {
+export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
   const collections = await mongoClient.db('users').collections();
   const expired = new Map<string, string[]>();
   for (const collection of collections) {

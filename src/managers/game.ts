@@ -5,7 +5,7 @@ import { client } from '../main.js';
 import {
   addGuildGameRole,
   getBotConfig,
-  getExpiredUserGames,
+  getUserExpiredGames,
   getGame,
   getGameConfig,
   getGuildGameRoles,
@@ -23,7 +23,7 @@ const _screeningLimiter = new Limiter(1800000);
 export function initGame(): void {
   cron.schedule('0 * * * *', async () => {
     try {
-      const expired = await getExpiredUserGames();
+      const expired = await getUserExpiredGames();
       for (const [userId, game_names] of expired) {
         for (const guild of client.guilds.cache.values()) {
           const member = guild.members.cache.get(userId);
