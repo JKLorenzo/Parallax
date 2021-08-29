@@ -52,12 +52,12 @@ export function parseHTML(html: string): string {
     .replaceAll('&quot', '"')
     .replaceAll('&apos;', "'")
     .replaceAll('&apos', "'")
-    .replaceAll('&amp;', '&')
-    .replaceAll('&amp', '&')
     .replaceAll('&lt;', '<')
     .replaceAll('&lt', '<')
     .replaceAll('&gt;', '>')
-    .replaceAll('&gt', '>');
+    .replaceAll('&gt', '>')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&amp', '&');
 }
 
 export async function fetchImage(name: string): Promise<ImageData | undefined> {
