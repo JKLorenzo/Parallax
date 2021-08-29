@@ -54,7 +54,7 @@ export async function initTelemetry(): Promise<void> {
   });
 }
 
-export function logError(name: string, title: string, error: string): void {
+export function logError(name: string, title: string, error: unknown): void {
   console.error(error);
   webhook?.send({
     username: `Telemetry: ${name}`,
