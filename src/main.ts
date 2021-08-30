@@ -19,7 +19,7 @@ export const client = new Client({
     Intents.FLAGS.GUILD_VOICE_STATES,
   ],
   presence: {
-    status: 'online',
+    status: 'invisible',
     afk: false,
   },
 });
