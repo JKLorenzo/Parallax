@@ -5,16 +5,20 @@ import {
   joinVoiceChannel,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
-import { CommandInteraction, Guild, GuildMember, Snowflake, TextChannel } from 'discord.js';
+import { CommandInteraction, Guild, GuildMember, TextChannel } from 'discord.js';
 import ytdl_core from 'ytdl-core';
-import { Track, MusicSubscription } from '../../managers/music.js';
+import {
+  Track,
+  MusicSubscription,
+  getSubscription,
+  setSubscription,
+  deleteSubscription,
+} from '../../managers/music.js';
 import { getPlaylist, getTrack } from '../../modules/spotify.js';
 import { searchYouTube } from '../../modules/youtube.js';
 import Command from '../../structures/command.js';
 import { hasAny } from '../../utils/functions.js';
 const { getInfo } = ytdl_core;
-
-const subscriptions = new Map<Snowflake, MusicSubscription>();
 
 export default class Music extends Command {
   constructor() {
@@ -77,7 +81,7 @@ export default class Music extends Command {
     const member = interaction.member as GuildMember;
     const channel = member.voice.channel;
 
-    let subscription = subscriptions.get(guild.id);
+    let subscription = getSubscription(guild.id);
 
     if (command === 'play') {
       await interaction.deferReply();
@@ -94,7 +98,7 @@ export default class Music extends Command {
           }),
         );
         subscription.voiceConnection.on('error', console.warn);
-        subscriptions.set(guild.id, subscription);
+        setSubscription(guild.id, subscription);
       }
 
       // If there is no subscription, tell the user they need to join a channel.
@@ -211,7 +215,7 @@ export default class Music extends Command {
     } else if (command === 'leave') {
       if (subscription) {
         subscription.voiceConnection.destroy();
-        subscriptions.delete(guild.id);
+        deleteSubscription(guild.id);
         await interaction.reply('Left channel.');
       } else {
         await interaction.reply('Not playing in this server.');

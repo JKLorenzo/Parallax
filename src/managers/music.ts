@@ -10,7 +10,7 @@ import {
   VoiceConnectionDisconnectReason,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
-import { Message, TextChannel } from 'discord.js';
+import { Message, Snowflake, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { searchYouTube } from '../modules/youtube.js';
@@ -20,13 +20,27 @@ const { getInfo } = ytdl_core;
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
-export interface TrackData {
+const _subscriptions = new Map<Snowflake, MusicSubscription>();
+
+interface TrackData {
   query: string;
   title?: string;
   image?: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
+}
+
+export function getSubscription(guild_id: Snowflake): MusicSubscription | undefined {
+  return _subscriptions.get(guild_id);
+}
+
+export function setSubscription(guild_id: Snowflake, subscription: MusicSubscription): void {
+  _subscriptions.set(guild_id, subscription);
+}
+
+export function deleteSubscription(guild_id: Snowflake): void {
+  _subscriptions.delete(guild_id);
 }
 
 export class Track implements TrackData {
