@@ -48,11 +48,11 @@ export function parseMention(mention: string): Snowflake {
 
 export function parseHTML(html: string): string {
   return html
-    .replaceAll(/&quot;|&quot/g, '"')
-    .replaceAll(/&apos;|&apos/g, "'")
-    .replaceAll(/&lt;|&lt/g, '<')
-    .replaceAll(/&gt;|&gt/g, '>')
-    .replaceAll(/&amp;|&amp/g, '&');
+    .replace(/&quot;|&quot/g, '"')
+    .replace(/&apos;|&apos/g, "'")
+    .replace(/&lt;|&lt/g, '<')
+    .replace(/&gt;|&gt/g, '>')
+    .replace(/&amp;|&amp/g, '&');
 }
 
 export async function fetchImage(name: string): Promise<ImageData | undefined> {
