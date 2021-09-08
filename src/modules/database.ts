@@ -20,7 +20,7 @@ const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
 const _botconfig = new Map<string, string>();
 const _guildconfig = new Map<Snowflake, GuildConfig>();
 
-const _games = new Map<string, GameData>();
+const _games = new Map<string, GameData | undefined>();
 const _images = new Map<string, ImageData>();
 const _freegames = new Map<string, RedditPostData>();
 
@@ -118,14 +118,17 @@ export async function updateImage(data: ImageData): Promise<void> {
 
 export async function getGame(name: string): Promise<GameData | undefined> {
   const id = utfToHex(name);
-  if (!_games.get(id)) {
+  if (!_games.has(id)) {
     const result = await mongoClient.db('global').collection('games').findOne({ _id: id });
-    if (result) {
-      _games.set(id, {
-        name: result.name,
-        status: result.status,
-      });
-    }
+    _games.set(
+      id,
+      result && 'name' in result && 'status' in result
+        ? {
+            name: result.name,
+            status: result.status,
+          }
+        : undefined,
+    );
   }
   return _games.get(id);
 }
