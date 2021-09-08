@@ -131,7 +131,11 @@ export default class Game extends Command {
       })
       .forEach(member => {
         if (member.roles.cache.some(r => r.name.startsWith(play_prefix))) {
-          if (member.roles.cache.some(r => r.name === `${play_prefix}${game_role.name}`)) {
+          if (
+            member.roles.cache.some(
+              r => r.name === game_role.name.replace(game_prefix, play_prefix),
+            )
+          ) {
             ingame.push(member);
           } else {
             inothergame.push(member);
