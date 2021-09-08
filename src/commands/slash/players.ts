@@ -30,12 +30,8 @@ export default class Game extends Command {
   }
 
   registerPartitionAsSubcommand(partition: Role[], iteration = 0): void {
-    const start = partition[0].name
-      .substring(game_prefix.length, game_prefix.length + 1)
-      .toLowerCase();
-    const end = partition[partition.length - 1].name
-      .substring(game_prefix.length, game_prefix.length + 1)
-      .toLowerCase();
+    const start = partition[0].name.toLowerCase().charAt(game_prefix.length);
+    const end = partition[partition.length - 1].name.toLowerCase().charAt(game_prefix.length);
     const this_name = `${start}_to_${end}${iteration ? `_${iteration}` : ''}`;
     if (this._playersoptions.map(option => option.name).includes(this_name)) {
       this.registerPartitionAsSubcommand(partition, ++iteration);
