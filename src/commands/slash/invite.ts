@@ -12,9 +12,9 @@ import _ from 'lodash';
 import cron from 'node-cron';
 import { client } from '../../main.js';
 import { getComponent } from '../../managers/interaction.js';
-import { getGameConfig, getGuildGameRoles } from '../../modules/database.js';
+import { getGame, getGameConfig } from '../../modules/database.js';
 import Command from '../../structures/command.js';
-import { fetchImage, hexToUtf } from '../../utils/functions.js';
+import { fetchImage } from '../../utils/functions.js';
 
 export default class Game extends Command {
   private _inviteoptions = [] as ApplicationCommandSubCommandData[];
@@ -89,8 +89,11 @@ export default class Game extends Command {
         this._inviteoptions = [];
 
         const partitions = [] as Role[][];
-        const game_roles = await getGuildGameRoles(guild.id);
-        const games = guild.roles.cache.filter(r => [...game_roles.values()].includes(r.id));
+        const games = [] as Role[];
+        for (const role of guild.roles.cache.values()) {
+          const game = await getGame(role.name);
+          if (game) games.push(role);
+        }
         const games_alphabetical = games.sort(
           (a, b) => a.name.toLowerCase().charCodeAt(0) - b.name.toLowerCase().charCodeAt(0),
         );
@@ -152,16 +155,7 @@ export default class Game extends Command {
     const game_role = interaction.guild?.roles.cache.get(game_id);
     if (!game_role) return interaction.editReply('This game is no longer valid.');
 
-    const games = await getGuildGameRoles(guild.id);
-    let game_name = '';
-    for (const [hex_name, role_id] of games) {
-      if (role_id === game_id) {
-        game_name = hexToUtf(hex_name);
-        break;
-      }
-    }
-
-    const image = game_name ? await fetchImage(game_name) : undefined;
+    const image = await fetchImage(game_role.name);
     const embed = new MessageEmbed({
       author: { name: `${interaction.guild}: Game Invites` },
       title: game_role.name,

@@ -3,18 +3,16 @@ import cron from 'node-cron';
 import { getComponent } from './interaction.js';
 import { client } from '../main.js';
 import {
-  addGuildGameRole,
   getBotConfig,
   getUserExpiredGames,
   getGame,
   getGameConfig,
-  getGuildGameRoles,
   updateGame,
   updateUserGame,
 } from '../modules/database.js';
 import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js';
 import { logError } from '../modules/telemetry.js';
-import { fetchImage, utfToHex } from '../utils/functions.js';
+import { fetchImage } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
 import { ActivityData } from '../utils/types.js';
 
@@ -27,12 +25,9 @@ export function initGame(): void {
       for (const [userId, game_names] of expired) {
         for (const guild of client.guilds.cache.values()) {
           const member = guild.members.cache.get(userId);
-          const games = await getGuildGameRoles(guild.id);
           const game_roles = [];
           for (const game_name of game_names) {
-            let game_role;
-            const role_id = games.get(game_name);
-            if (role_id) game_role = guild.roles.cache.get(role_id);
+            const game_role = guild.roles.cache.find(r => r.name === game_name);
             if (game_role) game_roles.push(game_role);
           }
           if (member && game_roles) await removeRole(member, game_roles);
@@ -54,7 +49,6 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
     if (!guild || !member || member.user.bot) return;
     const config = await getGameConfig(guild.id);
 
-    const games = await getGuildGameRoles(guild.id);
     const _old = new Collection<string, ActivityData>();
     const _new = new Collection<string, ActivityData>();
 
@@ -84,9 +78,7 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
       } else {
         if (!config || !config.enabled) return;
 
-        let game_role;
-        const role_id = games.get(utfToHex(game_name));
-        if (role_id) game_role = guild.roles.cache.get(role_id);
+        let game_role = guild.roles.cache.find(r => r.name === game_name);
 
         if (game_data.status === 'approved' && status === 'new') {
           if (!game_role) {
@@ -105,7 +97,6 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
             });
           }
           if (game_role) {
-            await addGuildGameRole(game_role);
             if (!member.roles.cache.has(game_role.id)) await addRole(member, game_role);
             await updateUserGame(member.id, game_role.name);
           }

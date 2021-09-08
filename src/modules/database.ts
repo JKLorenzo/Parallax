@@ -1,4 +1,4 @@
-import { Role, Snowflake } from 'discord.js';
+import { Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
 import { logError } from './telemetry.js';
 import { hexToUtf, utfToHex } from '../utils/functions.js';
@@ -23,8 +23,6 @@ const _guildconfig = new Map<Snowflake, GuildConfig>();
 const _games = new Map<string, GameData>();
 const _images = new Map<string, ImageData>();
 const _freegames = new Map<string, RedditPostData>();
-
-const _gameroles = new Map<string, Map<string, Snowflake>>();
 
 const _limiter = new Limiter(1800000);
 
@@ -294,27 +292,6 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
     .db(guildId)
     .collection('config')
     .updateOne({ _id: 'game' }, { $set: config.game }, { upsert: true });
-}
-
-export async function getGuildGameRoles(guildId: Snowflake): Promise<Map<string, Snowflake>> {
-  if (!_gameroles.get(guildId)) {
-    const result = await mongoClient.db(guildId).collection('game_roles').find().toArray();
-    _gameroles.set(guildId, new Map(result.map(r => [r._id, r.role_id])));
-  }
-  return _gameroles.get(guildId) ?? new Map();
-}
-
-export async function addGuildGameRole(role: Role): Promise<void> {
-  const guildId = role.guild.id;
-  const games = await getGuildGameRoles(guildId);
-  const hex_name = utfToHex(role.name);
-
-  _gameroles.set(guildId, games.set(hex_name, role.id));
-
-  await mongoClient
-    .db(guildId)
-    .collection('game_roles')
-    .updateOne({ _id: hex_name }, { $set: { role_id: role.id } }, { upsert: true });
 }
 
 export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | undefined> {
