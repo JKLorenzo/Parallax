@@ -19,6 +19,8 @@ import { ActivityData } from '../utils/types.js';
 
 const _screeningLimiter = new Limiter(1800000);
 
+export const game_prefix = '🔰';
+
 export function initGame(): void {
   cron.schedule('0 * * * *', async () => {
     try {
@@ -28,7 +30,7 @@ export function initGame(): void {
           const member = guild.members.cache.get(userId);
           const game_roles = [];
           for (const game_name of game_names) {
-            const game_role = guild.roles.cache.find(r => r.name === game_name);
+            const game_role = guild.roles.cache.find(r => r.name === `${game_prefix}${game_name}`);
             if (game_role) game_roles.push(game_role);
           }
           if (member && game_roles) await removeRole(member, game_roles);
@@ -37,15 +39,21 @@ export function initGame(): void {
 
       for (const guild of client.guilds.cache.values()) {
         for (const member of guild.members.cache.values()) {
-          const usergames = await getUserGames(member.id);
+          const game_roles = [
+            ...member.roles.cache.filter(r => r.name.startsWith(game_prefix)).values(),
+          ];
+          const user_games = await getUserGames(member.id);
           const expired_roles = [] as Role[];
-          for (const role of member.roles.cache.values()) {
-            const game = await getGame(role.name);
-            if (!game) continue;
-            if (usergames.includes(role.name)) continue;
-            expired_roles.push(role);
+          for (const game_role of game_roles) {
+            const game = await getGame(game_role.name.replace(game_prefix, ''));
+            if (!game || user_games.includes(game_role.name)) continue;
+            expired_roles.push(game_role);
           }
           if (expired_roles.length) await removeRole(member, expired_roles);
+        }
+        for (const role of guild.roles.cache.filter(r => r.name.startsWith(game_prefix)).values()) {
+          if (role.members.size > 0) continue;
+          await deleteRole(role);
         }
       }
     } catch (error) {
@@ -87,18 +95,18 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
 
     const diff = _old.difference(_new);
     for (const [game_name, { activity, status }] of diff) {
-      const game_data = await getGame(game_name);
+      const game_data = await getGame(game_name.replace(game_prefix, ''));
       if (!game_data) {
         await screenGame(game_name, activity);
       } else {
         if (!config || !config.enabled) return;
 
-        let game_role = guild.roles.cache.find(r => r.name === game_name);
+        let game_role = guild.roles.cache.find(r => r.name === `${game_prefix}${game_name}`);
 
         if (game_data.status === 'approved' && status === 'new') {
           if (!game_role) {
             game_role = await createRole(guild, {
-              name: game_name,
+              name: `${game_prefix}${game_name}`,
               mentionable: config.mentionable,
               color: config.reference_role
                 ? guild.roles.cache.get(config.reference_role)?.color

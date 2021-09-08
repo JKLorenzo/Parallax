@@ -10,6 +10,7 @@ import {
 import _ from 'lodash';
 import cron from 'node-cron';
 import { client } from '../../main.js';
+import { game_prefix } from '../../managers/game.js';
 import { play_prefix } from '../../managers/play.js';
 import { getGame } from '../../modules/database.js';
 import Command from '../../structures/command.js';
@@ -65,8 +66,11 @@ export default class Game extends Command {
 
         const partitions = [] as Role[][];
         const games = [] as Role[];
-        for (const role of guild.roles.cache.values()) {
-          const game = await getGame(role.name);
+        const game_roles = [
+          ...guild.roles.cache.filter(r => r.name.startsWith(game_prefix)).values(),
+        ];
+        for (const role of game_roles) {
+          const game = await getGame(role.name.replace(game_prefix, ''));
           if (game) games.push(role);
         }
         const games_alphabetical = games.sort(
