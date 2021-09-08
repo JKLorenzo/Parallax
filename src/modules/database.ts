@@ -23,6 +23,7 @@ const _guildconfig = new Map<Snowflake, GuildConfig>();
 const _games = new Map<string, GameData | undefined>();
 const _images = new Map<string, ImageData>();
 const _freegames = new Map<string, RedditPostData>();
+const _usergames = new Map<string, string[]>();
 
 const _limiter = new Limiter(1800000);
 
@@ -46,10 +47,31 @@ export async function setBotConfig(key: BotConfigKeys, value: string): Promise<v
     .updateOne({ _id: key }, { $set: { value: value } }, { upsert: true });
 }
 
+export async function getUserGames(userId: Snowflake): Promise<string[]> {
+  const games = _usergames.get(userId) ?? [];
+  if (!_limiter.limit(`${userId}-getusergames`)) {
+    const result = await mongoClient
+      .db('users')
+      .collection(userId)
+      .find({ type: 'game' })
+      .toArray();
+    for (const data of result) {
+      const game_name = hexToUtf(data._id);
+      if (games.includes(game_name)) continue;
+      games.push(game_name);
+    }
+    _usergames.set(userId, games);
+  }
+  return games;
+}
+
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
   const hex_name = utfToHex(game_name);
 
   if (_limiter.limit(`${userId}-${hex_name}`)) return;
+
+  const games = _usergames.get(userId) ?? [];
+  if (!games.includes(game_name)) _usergames.set(userId, [...games, game_name]);
 
   await mongoClient
     .db('users')
@@ -77,12 +99,17 @@ export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
     if (result.length === 0) continue;
 
     try {
-      await collection.deleteMany({ type: 'game', last_updated: { $lte: expire_time } });
+      await collection.deleteMany({ _id: { $in: result.map(r => r._id) }, type: 'game' });
 
-      expired.set(
+      const expired_games = result.map(r => hexToUtf(r._id));
+      const games = _usergames.get(collection.collectionName) ?? [];
+
+      _usergames.set(
         collection.collectionName,
-        result.map(r => hexToUtf(r._id)),
+        games.filter(g => !expired_games.includes(g)),
       );
+
+      expired.set(collection.collectionName, expired_games);
     } catch (error) {
       logError('Database', 'Clear User Expired Games', error);
     }
