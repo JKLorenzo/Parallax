@@ -99,6 +99,21 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
           if (game_role) {
             if (!member.roles.cache.has(game_role.id)) await addRole(member, game_role);
             await updateUserGame(member.id, game_role.name);
+            // Update role using reference role
+            const reference_role = config.reference_role
+              ? guild.roles.cache.get(config.reference_role)
+              : undefined;
+            if (reference_role) {
+              if (reference_role.mentionable !== game_role.mentionable) {
+                await game_role.setMentionable(reference_role.mentionable);
+              }
+              if (reference_role.color !== game_role.color) {
+                await game_role.setColor(reference_role.color);
+              }
+              if (!reference_role.permissions.equals(game_role.permissions)) {
+                await game_role.setPermissions(reference_role.permissions);
+              }
+            }
           }
         } else if (game_data.status === 'denied') {
           if (game_role) await deleteRole(game_role);

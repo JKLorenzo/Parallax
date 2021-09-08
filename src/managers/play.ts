@@ -89,10 +89,22 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
 
         if (status === 'new') {
           if (play_role) {
-            const position = config.reference_role
-              ? guild.roles.cache.get(config.reference_role)?.position
+            // Update role using reference role
+            const reference_role = config.reference_role
+              ? guild.roles.cache.get(config.reference_role)
               : undefined;
-            if (position) await play_role.setPosition(position - 1);
+            if (reference_role) {
+              if (reference_role.mentionable !== play_role.mentionable) {
+                await play_role.setMentionable(reference_role.mentionable);
+              }
+              if (reference_role.color !== play_role.color) {
+                await play_role.setColor(reference_role.color);
+              }
+              if (!reference_role.permissions.equals(play_role.permissions)) {
+                await play_role.setPermissions(reference_role.permissions);
+              }
+              await play_role.setPosition(reference_role.position - 1);
+            }
           } else {
             play_role = await createRole(guild, {
               name: play_name,
