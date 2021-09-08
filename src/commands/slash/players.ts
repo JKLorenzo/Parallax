@@ -152,10 +152,10 @@ export default class Game extends Command {
         }
       });
 
-    const image = await fetchImage(game_role.name);
+    const image = await fetchImage(game_role.name.replace(game_prefix, ''));
     const embed = new MessageEmbed({
-      author: { name: `${interaction.guild?.name}: List of Players` },
-      title: game_role.name,
+      author: { name: `${guild.name}: List of Players` },
+      title: game_role.name.replace(game_prefix, ''),
       description: 'All players who played this game for the last 7 days are as follows:',
       footer: {
         text: `This game is being played by a total of ${game_role.members.size} players.`,

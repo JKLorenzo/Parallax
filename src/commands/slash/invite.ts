@@ -144,7 +144,7 @@ export default class Game extends Command {
     if (!config || !config.enabled || !config.invite_channel) {
       return interaction.editReply('This command is currently disabled or is not set up.');
     }
-    const invite_channel = interaction.guild?.channels.cache.get(config.invite_channel);
+    const invite_channel = guild.channels.cache.get(config.invite_channel);
     if (!invite_channel || invite_channel.isThread() || !invite_channel.isText()) {
       return interaction.editReply('The invites channel does not exist or is invalid.');
     }
@@ -160,13 +160,13 @@ export default class Game extends Command {
       }
     }
 
-    const game_role = interaction.guild?.roles.cache.get(game_id);
+    const game_role = guild.roles.cache.get(game_id);
     if (!game_role) return interaction.editReply('This game is no longer valid.');
 
-    const image = await fetchImage(game_role.name);
+    const image = await fetchImage(game_role.name.replace(game_prefix, ''));
     const embed = new MessageEmbed({
-      author: { name: `${interaction.guild}: Game Invites` },
-      title: game_role.name,
+      author: { name: `${guild}: Game Invites` },
+      title: game_role.name.replace(game_prefix, ''),
       description:
         description ??
         `${interaction.user} is looking for ${
