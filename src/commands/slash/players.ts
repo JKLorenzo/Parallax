@@ -46,7 +46,7 @@ export default class Game extends Command {
             description: 'Select the game you want to check.',
             type: 'STRING',
             choices: partition.map(role => ({
-              name: role.name,
+              name: role.name.replace(game_prefix, ''),
               value: role.id,
             })),
             required: true,
