@@ -1,4 +1,4 @@
-import { Activity, Collection, MessageEmbed, Presence, TextChannel } from 'discord.js';
+import { Activity, Collection, MessageEmbed, Presence, Role, TextChannel } from 'discord.js';
 import cron from 'node-cron';
 import { getComponent } from './interaction.js';
 import { client } from '../main.js';
@@ -9,6 +9,7 @@ import {
   getGameConfig,
   updateGame,
   updateUserGame,
+  getUserGames,
 } from '../modules/database.js';
 import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js';
 import { logError } from '../modules/telemetry.js';
@@ -31,6 +32,20 @@ export function initGame(): void {
             if (game_role) game_roles.push(game_role);
           }
           if (member && game_roles) await removeRole(member, game_roles);
+        }
+      }
+
+      for (const guild of client.guilds.cache.values()) {
+        for (const member of guild.members.cache.values()) {
+          const usergames = await getUserGames(member.id);
+          const expired_roles = [] as Role[];
+          for (const role of member.roles.cache.values()) {
+            const game = await getGame(role.name);
+            if (!game) continue;
+            if (usergames.includes(role.name)) continue;
+            expired_roles.push(role);
+          }
+          if (expired_roles.length) await removeRole(member, expired_roles);
         }
       }
     } catch (error) {
