@@ -5,7 +5,6 @@ import { hexToUtf, utfToHex } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
 import {
   BotConfigKeys,
-  DedicatedConfig,
   FreeGameConfig,
   GameConfig,
   GameData,
@@ -207,43 +206,6 @@ export async function getFreeGame(url: string): Promise<RedditPostData | undefin
 export async function pushFreeGame(data: RedditPostData): Promise<void> {
   _freegames.set(data.url, data);
   await mongoClient.db('global').collection('free_games').insertOne(data);
-}
-
-export async function getDedicatedConfig(guildId: Snowflake): Promise<DedicatedConfig | undefined> {
-  if (!_guildconfig.get(guildId)?.dedicated) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'dedicated' });
-
-    _guildconfig.set(guildId, {
-      dedicated: {
-        hoisted: result?.hoisted,
-        reference_role: result?.reference_role,
-        text_category: result?.text_category,
-        voice_category: result?.voice_category,
-      },
-    });
-  }
-
-  return _guildconfig.get(guildId)?.dedicated;
-}
-
-export async function updateDedicatedConfig(
-  guildId: Snowflake,
-  data: DedicatedConfig,
-): Promise<void> {
-  if (Object.keys(data).length === 0) return;
-
-  const config = _guildconfig.get(guildId) ?? {};
-  if (!config.dedicated) config.dedicated = {};
-  if ('hoisted' in data) config.dedicated.hoisted = data.hoisted;
-  if ('reference_role' in data) config.dedicated.reference_role = data.reference_role;
-  if ('text_category' in data) config.dedicated.text_category = data.text_category;
-  if ('voice_category' in data) config.dedicated.voice_category = data.voice_category;
-  _guildconfig.set(guildId, config);
-
-  await mongoClient
-    .db(guildId)
-    .collection('config')
-    .updateOne({ _id: 'dedicated' }, { $set: config.dedicated }, { upsert: true });
 }
 
 export async function getFreeGameConfig(guildId: Snowflake): Promise<FreeGameConfig | undefined> {

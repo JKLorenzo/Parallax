@@ -22,19 +22,9 @@ export type GuildCommandOptions = {
 };
 
 export type GuildConfig = {
-  dedicated?: DedicatedConfig;
   free_game?: FreeGameConfig;
   game?: GameConfig;
-  nsfw?: NSFWConfig;
   play?: PlayConfig;
-  streaming?: StreamingConfig;
-};
-
-export type DedicatedConfig = {
-  hoisted?: boolean;
-  text_category?: Snowflake;
-  voice_category?: Snowflake;
-  reference_role?: Snowflake;
 };
 
 export type FreeGameConfig = {
@@ -54,21 +44,11 @@ export type GameConfig = {
   reference_role?: Snowflake;
 };
 
-export type NSFWConfig = {
-  nsfw_channels?: Snowflake[];
-  nsfw_role?: Snowflake;
-};
-
 export type PlayConfig = {
   enabled?: boolean;
   hoisted?: boolean;
   mentionable?: boolean;
   reference_role?: Snowflake;
-};
-
-export type StreamingConfig = {
-  enabled?: boolean;
-  streaming_role?: Snowflake;
 };
 
 export type GameData = {
