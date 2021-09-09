@@ -166,7 +166,7 @@ export default class Game extends Command {
       description:
         description ??
         `${interaction.user} is looking for ${
-          player_count ? `${player_count} other` : ''
+          player_count ? `${player_count - 1} other` : ''
         } ${game_role} players.`,
       fields: [
         {
