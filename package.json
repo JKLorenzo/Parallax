@@ -33,8 +33,6 @@
   },
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
-    "@discordjs/opus": "^0.6.0",
-    "@discordjs/voice": "^0.6.0",
     "color": "^4.0.1",
     "common-tags": "^1.8.0",
     "discord-api-types": "^0.23.1",
@@ -46,11 +44,7 @@
     "mongodb": "^4.1.1",
     "node-cron": "^3.0.0",
     "node-fetch": "^3.0.0",
-    "probe-image-size": "^7.2.1",
-    "spotify-web-api-node": "^5.0.2",
-    "youtube-dl-exec": "^1.2.5",
-    "youtube-search": "^1.1.6",
-    "ytdl-core": "^4.9.1"
+    "probe-image-size": "^7.2.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^13.1.0",
@@ -61,7 +55,6 @@
     "@types/node-cron": "^2.0.4",
     "@types/node-fetch": "^2.5.12",
     "@types/probe-image-size": "^7.0.1",
-    "@types/spotify-web-api-node": "^5.0.3",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
     "eslint": "^7.32.0",
