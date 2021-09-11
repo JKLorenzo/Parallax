@@ -53,10 +53,10 @@
     "@types/common-tags": "^1.8.1",
     "@types/lodash": "^4.14.172",
     "@types/node-cron": "^2.0.4",
-    "@types/node-fetch": "^2.5.12",
+    "@types/node-fetch": "^3.0.3",
     "@types/probe-image-size": "^7.0.1",
-    "@typescript-eslint/eslint-plugin": "^4.30.0",
-    "@typescript-eslint/parser": "^4.30.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.0",
+    "@typescript-eslint/parser": "^4.31.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.24.2",
@@ -64,7 +64,7 @@
     "husky": "^7.0.2",
     "is-ci": "^3.0.0",
     "lint-staged": "^11.1.2",
-    "prettier": "^2.3.2",
+    "prettier": "^2.4.0",
     "typescript": "^4.4.2"
   }
 }
