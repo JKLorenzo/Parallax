@@ -11,7 +11,7 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { Message, Snowflake, TextChannel } from 'discord.js';
-import ytdl, { getInfo } from 'ytdl-core';
+import ytdl from 'ytdl-core';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
 
@@ -119,7 +119,7 @@ export class Track implements TrackData {
     }
 
     if (!this.title || !this.image) {
-      const info = await getInfo(url);
+      const info = await ytdl.getInfo(url);
       if (!info) throw new Error('No track info found.');
       if (!this.title) this.title = info.videoDetails.title;
       if (!this.image) this.image = info.thumbnail_url;
