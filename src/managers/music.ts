@@ -11,9 +11,11 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { Message, Snowflake, TextChannel } from 'discord.js';
-import ytdl from 'ytdl-core';
+import { raw as ytdl } from 'youtube-dl-exec';
+import ytdl_core from 'ytdl-core';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
+const { getInfo } = ytdl_core;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -119,7 +121,7 @@ export class Track implements TrackData {
     }
 
     if (!this.title || !this.image) {
-      const info = await ytdl.getInfo(url);
+      const info = await getInfo(url);
       if (!info) throw new Error('No track info found.');
       if (!this.title) this.title = info.videoDetails.title;
       if (!this.image) this.image = info.thumbnail_url;
@@ -127,17 +129,35 @@ export class Track implements TrackData {
 
     this.title = parseHTML(this.title);
 
+    const process = ytdl(
+      url,
+      {
+        o: '-',
+        q: '',
+        f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+        r: '100K',
+      },
+      { stdio: ['ignore', 'pipe', 'ignore'] },
+    );
+
     return new Promise((resolve, reject) => {
-      const stream = ytdl(url, { filter: 'audioonly' });
+      if (!process.stdout) return reject(new Error('No stdout'));
+
+      const stream = process.stdout;
       const onError = (error: Error) => {
+        if (!process.killed) process.kill();
         stream.resume();
         reject(error);
       };
 
-      demuxProbe(stream)
-        .then(probe =>
-          resolve(createAudioResource(probe.stream, { metadata: this, inputType: probe.type })),
-        )
+      process
+        .once('spawn', () => {
+          demuxProbe(stream)
+            .then(probe =>
+              resolve(createAudioResource(probe.stream, { metadata: this, inputType: probe.type })),
+            )
+            .catch(onError);
+        })
         .catch(onError);
     });
   }
