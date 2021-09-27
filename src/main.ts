@@ -19,7 +19,13 @@ export const client = new Client({
     Intents.FLAGS.GUILD_VOICE_STATES,
   ],
   presence: {
-    status: 'invisible',
+    activities: [
+      {
+        name: '/',
+        type: 'LISTENING',
+      },
+    ],
+    status: 'online',
     afk: false,
   },
 });
