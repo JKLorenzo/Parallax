@@ -21,7 +21,7 @@ export const client = new Client({
   presence: {
     activities: [
       {
-        name: 'Chang Chang',
+        name: '/',
         type: 'LISTENING',
       },
     ],
