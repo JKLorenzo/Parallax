@@ -6,13 +6,23 @@ import {
   createAudioResource,
   demuxProbe,
   entersState,
+  joinVoiceChannel,
   VoiceConnection,
   VoiceConnectionDisconnectReason,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
-import { Message, Snowflake, TextChannel } from 'discord.js';
+import {
+  CommandInteraction,
+  Guild,
+  GuildMember,
+  Message,
+  MessageComponentInteraction,
+  Snowflake,
+  TextChannel,
+} from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
+import { getPlaylist, getTrack } from '../modules/spotify.js';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
@@ -296,5 +306,185 @@ export class MusicSubscription {
       this.queueLock = false;
       return this.processQueue();
     }
+  }
+}
+
+export async function musicPlay(interaction: CommandInteraction): Promise<unknown> {
+  await interaction.deferReply();
+
+  const song = interaction.options.getString('song', true).trim();
+  const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  let subscription = getSubscription(guild.id);
+
+  if (!subscription && channel) {
+    subscription = new MusicSubscription(
+      joinVoiceChannel({
+        channelId: channel.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      }),
+    );
+    subscription.voiceConnection.on('error', console.warn);
+    setSubscription(guild.id, subscription);
+  }
+
+  // If there is no subscription, tell the user they need to join a channel.
+  if (!subscription) {
+    return interaction.followUp('Join a voice channel and then try that again.');
+  }
+
+  // Make sure the connection is ready before processing the user's request
+  try {
+    await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
+  } catch (error) {
+    console.warn(error);
+    return interaction.followUp(
+      'Failed to join voice channel within 20 seconds, please try again later.',
+    );
+  }
+
+  try {
+    const enqueue = (query: string, title?: string, image?: string): Track =>
+      subscription!.enqueue(interaction.channel as TextChannel, query, title, image);
+
+    if (hasAny(song, 'http')) {
+      if (hasAny(song, 'youtube.com')) {
+        const info = await getInfo(song);
+        if (!info) return interaction.editReply('No match found, please try again.');
+        await enqueue(song, info.videoDetails.title, info.thumbnail_url);
+        await interaction.followUp(`Enqueued **${info.videoDetails.title}**`);
+      } else if (hasAny(song, 'spotify.com/playlist')) {
+        const playlist = await getPlaylist(song);
+        for (const item of playlist.tracks.items) {
+          await enqueue(
+            `${item.track.name} ${item.track.artists.map(a => a.name).join(' ')}`,
+            `${item.track.name} by ${item.track.artists.map(a => a.name).join(', ')}`,
+            item.track.album.images[0]?.url,
+          );
+        }
+        await interaction.followUp(
+          `Enqueued ${playlist.tracks.items.length} songs from ` +
+            `**${playlist.name}** playlist by **${playlist.owner.display_name}**.`,
+        );
+      } else if (hasAny(song, 'spotify.com/track')) {
+        const track = await getTrack(song);
+        const data = await searchYouTube(
+          `${track.name} by ${track.artists.map(a => a.name).join(' ')}`,
+        );
+        if (!data) return interaction.editReply('No match found, please try again.');
+        await enqueue(
+          data.link,
+          `${track.name} by ${track.artists.map(a => a.name).join(', ')}`,
+          data.thumbnails.default?.url,
+        );
+        await interaction.followUp(`Enqueued **${data.title}**`);
+      }
+    } else {
+      const data = await searchYouTube(song);
+      if (!data) return interaction.editReply('No match found, please try again.');
+      await enqueue(data.link, data.title, data.thumbnails.default?.url);
+      await interaction.followUp(`Enqueued **${data.title}**`);
+    }
+  } catch (error) {
+    console.warn(error);
+    await interaction.editReply('Failed to play track, please try again later.');
+  }
+}
+
+export async function musicSkip(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    subscription.audioPlayer.stop();
+    await interaction.reply('Skipped song.');
+  } else {
+    await interaction.reply('Not playing in this server.');
+  }
+}
+
+export async function musicStop(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    subscription.stop();
+    await interaction.reply('Stopped all songs.');
+  } else {
+    await interaction.reply('Not playing in this server.');
+  }
+}
+
+export async function musicQueue(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    const current =
+      subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
+        ? `Nothing is currently playing!`
+        : `Playing **${
+            (subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title
+          }**`;
+
+    const queue = subscription.queue
+      .slice(0, 5)
+      .map((track, index) => `${index + 1}) ${track.title}`)
+      .join('\n');
+
+    await interaction.reply(`${current}\n\n${queue}`);
+  } else {
+    await interaction.reply('Not playing in this server.');
+  }
+}
+
+export async function musicPause(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    subscription.audioPlayer.pause();
+    await interaction.reply('Paused.');
+  } else {
+    await interaction.reply('Not playing in this server.');
+  }
+}
+
+export async function musicResume(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    subscription.audioPlayer.unpause();
+    await interaction.reply('Unpaused.');
+  } else {
+    await interaction.reply('Not playing in this server.');
+  }
+}
+
+export async function musicLeave(
+  interaction: CommandInteraction | MessageComponentInteraction,
+): Promise<void> {
+  const guild = interaction.guild as Guild;
+  const subscription = getSubscription(guild.id);
+
+  if (subscription) {
+    subscription.voiceConnection.destroy();
+    deleteSubscription(guild.id);
+    await interaction.reply('Left channel.');
+  } else {
+    await interaction.reply('Not playing in this server.');
   }
 }
