@@ -72,13 +72,15 @@ export class Track implements TrackData {
     this.onStart = () => {
       this.onStart = noop;
       if (channel && !message) {
+        const nextTrack = getSubscription(channel.guildId)?.queue.at(0);
+
         channel
           .send({
             embeds: [
               {
-                author: { name: 'Parallax Music Player' },
-                title: 'Now Playing',
-                description: `**${this.title}**`,
+                author: { name: 'Parallax Music Player: Now Playing' },
+                title: this.title,
+                description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
                 thumbnail: { url: this.image },
                 color: 'GREEN',
               },
@@ -96,13 +98,9 @@ export class Track implements TrackData {
         message
           .edit({
             embeds: [
-              {
-                author: { name: 'Parallax Music Player' },
-                title: 'Previously Played',
-                description: `**${this.title}**`,
-                thumbnail: { url: this.image },
-                color: 'YELLOW',
-              },
+              message.embeds[0]
+                .setAuthor('Parallax Music Player: Previously Played')
+                .setColor('YELLOW'),
             ],
             components: [],
           })
@@ -434,16 +432,16 @@ export async function musicQueue(
     const current =
       subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
         ? `Nothing is currently playing!`
-        : `Playing **${
+        : `**Now Playing:**\n${
             (subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title
-          }**`;
+          }`;
 
     const queue = subscription.queue
       .slice(0, 5)
       .map((track, index) => `${index + 1}) ${track.title}`)
       .join('\n');
 
-    await interaction.reply(`${current}\n\n${queue}`);
+    await interaction.reply(`${current}\n\n**On Queue: ${subscription.queue.length}**\n${queue}`);
   } else {
     await interaction.reply('Not playing in this server.');
   }
