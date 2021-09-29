@@ -22,6 +22,7 @@ import {
 } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
+import { getComponent } from './interaction.js';
 import { getPlaylist, getTrack } from '../modules/spotify.js';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
@@ -82,6 +83,7 @@ export class Track implements TrackData {
                 color: 'GREEN',
               },
             ],
+            components: getComponent('music'),
           })
           .then(msg => (message = msg))
           .catch(console.warn);
@@ -102,6 +104,7 @@ export class Track implements TrackData {
                 color: 'YELLOW',
               },
             ],
+            components: [],
           })
           .catch(console.warn);
         setTimeout(() => {
