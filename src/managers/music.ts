@@ -23,6 +23,7 @@ import {
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { getComponent } from './interaction.js';
+import { client } from '../main.js';
 import { getPlaylist, getTrack } from '../modules/spotify.js';
 import { searchYouTube } from '../modules/youtube.js';
 import { hasAny, parseHTML, sleep } from '../utils/functions.js';
@@ -81,6 +82,10 @@ export class Track implements TrackData {
                 author: { name: 'Parallax Music Player: Now Playing' },
                 title: this.title,
                 description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
+                footer: {
+                  text: 'Powered by YouTube Music and Spotify',
+                  iconURL: client.emojis.cache.find(e => e.name === 'youtube')?.url,
+                },
                 thumbnail: { url: this.image },
                 color: 'GREEN',
               },
