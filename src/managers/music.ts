@@ -20,6 +20,7 @@ import {
   Snowflake,
   TextChannel,
 } from 'discord.js';
+import fetch from 'node-fetch';
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { getComponent } from './interaction.js';
@@ -425,8 +426,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         );
         await interaction.followUp(`Enqueued **${data.title}**`);
       } else if (hasAny(song, 'soundcloud')) {
-        if (hasAny(song, '/sets/')) {
-          const playlist = await getSoundCloudPlaylist(song);
+        const response = await fetch(song);
+        if (hasAny(response.url, '/sets/')) {
+          const playlist = await getSoundCloudPlaylist(response.url);
           if (!playlist) return interaction.editReply('No match found, please try again.');
           for (const item of playlist.tracks) {
             await enqueue(item.url, `${item.title} by ${item.author.name}`, item.thumbnail);
@@ -436,9 +438,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
               `**${playlist.title}** playlist by **${playlist.author.name}**.`,
           );
         } else {
-          const data = await getSoundCloudTrack(song);
+          const data = await getSoundCloudTrack(response.url);
           if (!data) return interaction.editReply('No match found, please try again.');
-          await enqueue(song, `${data.title} by ${data.author.name}`, data.thumbnail);
+          await enqueue(response.url, `${data.title} by ${data.author.name}`, data.thumbnail);
           await interaction.followUp(`Enqueued **${data.title}**`);
         }
       } else {
