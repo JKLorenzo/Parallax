@@ -317,9 +317,14 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
   const guild = interaction.guild as Guild;
   const member = interaction.member as GuildMember;
   const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   let subscription = getSubscription(guild.id);
 
-  if (!subscription && channel) {
+  if (subscription && subscription.queue.length > 0 && current_voice_channel?.id !== channel?.id) {
+    return interaction.followUp("I'm currently playing on another channel.");
+  }
+
+  if (channel && (!subscription || subscription.queue.length === 0)) {
     subscription = new MusicSubscription(
       joinVoiceChannel({
         channelId: channel.id,
@@ -396,9 +401,19 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
 export async function musicSkip(
   interaction: CommandInteraction | MessageComponentInteraction,
-): Promise<void> {
+): Promise<unknown> {
   const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
+
+  if (subscription && current_voice_channel?.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.audioPlayer.stop();
@@ -419,9 +434,19 @@ export async function musicSkip(
 
 export async function musicStop(
   interaction: CommandInteraction | MessageComponentInteraction,
-): Promise<void> {
+): Promise<unknown> {
   const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
+
+  if (subscription && current_voice_channel?.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.stop();
@@ -473,9 +498,19 @@ export async function musicQueue(
 
 export async function musicPause(
   interaction: CommandInteraction | MessageComponentInteraction,
-): Promise<void> {
+): Promise<unknown> {
   const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
+
+  if (subscription && current_voice_channel?.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.audioPlayer.pause();
@@ -496,9 +531,19 @@ export async function musicPause(
 
 export async function musicResume(
   interaction: CommandInteraction | MessageComponentInteraction,
-): Promise<void> {
+): Promise<unknown> {
   const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
+
+  if (subscription && current_voice_channel?.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.audioPlayer.unpause();
@@ -519,9 +564,19 @@ export async function musicResume(
 
 export async function musicLeave(
   interaction: CommandInteraction | MessageComponentInteraction,
-): Promise<void> {
+): Promise<unknown> {
   const guild = interaction.guild as Guild;
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
+
+  if (subscription && current_voice_channel?.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.voiceConnection.destroy();
