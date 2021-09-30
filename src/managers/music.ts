@@ -23,10 +23,10 @@ import {
 import { raw as ytdl } from 'youtube-dl-exec';
 import ytdl_core from 'ytdl-core';
 import { getComponent } from './interaction.js';
-import { client } from '../main.js';
+import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import { getPlaylist, getTrack } from '../modules/spotify.js';
 import { searchYouTube } from '../modules/youtube.js';
-import { hasAny, parseHTML, sleep } from '../utils/functions.js';
+import { hasAll, hasAny, parseHTML, sleep } from '../utils/functions.js';
 const { getInfo } = ytdl_core;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -83,8 +83,7 @@ export class Track implements TrackData {
                 title: this.title,
                 description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
                 footer: {
-                  text: 'Powered by YouTube Music and Spotify',
-                  iconURL: client.emojis.cache.find(e => e.name === 'youtube')?.url,
+                  text: 'Powered by YouTube Music, SoundCloud, and Spotify',
                 },
                 thumbnail: { url: this.image },
                 color: 'GREEN',
@@ -124,58 +123,87 @@ export class Track implements TrackData {
   }
 
   async createAudioResource(): Promise<AudioResource<Track>> {
-    let url: string;
-    if (hasAny(this.query, 'http')) {
-      if (!hasAny(this.query, 'youtube.com')) throw new Error('Unsupported URL.');
-      url = this.query;
-    } else {
-      const data = await searchYouTube(this.query);
-      if (!data) throw new Error('No track found.');
-      url = data.link;
-      if (!this.title) this.title = data.title;
-      if (!this.image) this.image = data.thumbnails.default?.url;
-    }
+    if (!hasAny(this.query, 'http') || hasAny(this.query, 'youtube.com')) {
+      let url;
+      if (hasAny(this.query, 'http')) {
+        url = this.query;
+      } else {
+        const data = await searchYouTube(this.query);
+        if (!data) throw new Error('No track found.');
+        url = data.link;
+        if (!this.title) this.title = data.title;
+        if (!this.image) this.image = data.thumbnails.default?.url;
+      }
 
-    if (!this.title || !this.image) {
-      const info = await getInfo(url);
-      if (!info) throw new Error('No track info found.');
-      if (!this.title) this.title = info.videoDetails.title;
-      if (!this.image) this.image = info.thumbnail_url;
-    }
+      if (!this.title || !this.image) {
+        const info = await getInfo(url);
+        if (!info) throw new Error('No track info found.');
+        if (!this.title) this.title = info.videoDetails.title;
+        if (!this.image) this.image = info.thumbnail_url;
+      }
 
-    this.title = parseHTML(this.title);
+      this.title = parseHTML(this.title);
 
-    const process = ytdl(
-      url,
-      {
-        o: '-',
-        q: '',
-        f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-        r: '100K',
-      },
-      { stdio: ['ignore', 'pipe', 'ignore'] },
-    );
+      const process = ytdl(
+        url,
+        {
+          o: '-',
+          q: '',
+          f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+          r: '100K',
+        },
+        { stdio: ['ignore', 'pipe', 'ignore'] },
+      );
 
-    return new Promise((resolve, reject) => {
-      if (!process.stdout) return reject(new Error('No stdout'));
+      return new Promise((resolve, reject) => {
+        if (!process.stdout) return reject(new Error('No stdout'));
 
-      const stream = process.stdout;
-      const onError = (error: Error) => {
-        if (!process.killed) process.kill();
-        stream.resume();
-        reject(error);
-      };
+        const stream = process.stdout;
+        const onError = (error: Error) => {
+          if (!process.killed) process.kill();
+          stream.resume();
+          reject(error);
+        };
 
-      process
-        .once('spawn', () => {
+        process
+          .once('spawn', () => {
+            demuxProbe(stream)
+              .then(probe =>
+                resolve(
+                  createAudioResource(probe.stream, { metadata: this, inputType: probe.type }),
+                ),
+              )
+              .catch(onError);
+          })
+          .catch(onError);
+      });
+    } else if (hasAll(this.query, ['http', 'soundcloud'])) {
+      const song = await getSoundCloudTrack(this.query);
+      if (!song) throw new Error('Track not found.');
+
+      if (!this.title) this.title = song.title;
+      if (!this.image) this.image = song.thumbnail;
+
+      this.title = parseHTML(this.title);
+
+      return new Promise((resolve, reject) => {
+        song.downloadProgressive().then(stream => {
+          const onError = (error: Error) => {
+            if (!stream.destroyed) stream.destroy();
+            stream.resume();
+            reject(error);
+          };
+
           demuxProbe(stream)
             .then(probe =>
               resolve(createAudioResource(probe.stream, { metadata: this, inputType: probe.type })),
             )
             .catch(onError);
-        })
-        .catch(onError);
-    });
+        });
+      });
+    } else {
+      throw new Error('Unsupported Format');
+    }
   }
 }
 
@@ -329,7 +357,12 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     return interaction.followUp("I'm currently playing on another channel.");
   }
 
-  if (channel && (!subscription || subscription.queue.length === 0)) {
+  if (
+    channel &&
+    (!subscription ||
+      (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle &&
+        subscription.queue.length === 0))
+  ) {
     subscription = new MusicSubscription(
       joinVoiceChannel({
         channelId: channel.id,
@@ -391,6 +424,25 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
           data.thumbnails.default?.url,
         );
         await interaction.followUp(`Enqueued **${data.title}**`);
+      } else if (hasAny(song, 'soundcloud')) {
+        if (hasAny(song, '/sets/')) {
+          const playlist = await getSoundCloudPlaylist(song);
+          if (!playlist) return interaction.editReply('No match found, please try again.');
+          for (const item of playlist.tracks) {
+            await enqueue(item.url, `${item.title} by ${item.author.name}`, item.thumbnail);
+          }
+          await interaction.followUp(
+            `Enqueued ${playlist.trackCount} songs from ` +
+              `**${playlist.title}** playlist by **${playlist.author.name}**.`,
+          );
+        } else {
+          const data = await getSoundCloudTrack(song);
+          if (!data) return interaction.editReply('No match found, please try again.');
+          await enqueue(song, `${data.title} by ${data.author.name}`, data.thumbnail);
+          await interaction.followUp(`Enqueued **${data.title}**`);
+        }
+      } else {
+        await interaction.editReply('This link is currently not supported.');
       }
     } else {
       const data = await searchYouTube(song);

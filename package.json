@@ -47,6 +47,7 @@
     "node-cron": "^3.0.0",
     "node-fetch": "^3.0.0",
     "probe-image-size": "^7.2.1",
+    "soundcloud-scraper": "^5.0.2",
     "spotify-web-api-node": "^5.0.2",
     "youtube-dl-exec": "^1.2.13",
     "youtube-search": "^1.1.6",
