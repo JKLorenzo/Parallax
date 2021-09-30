@@ -86,11 +86,11 @@ export class Track implements TrackData {
                 title: this.title,
                 description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
                 footer: {
-                  text: `Active on ${voice_channel} | Region: ${
+                  text: `Voice Channel: ${voice_channel ? voice_channel.name : ''} | Region: ${
                     voice_channel?.rtcRegion
                       ?.split(' ')
                       .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
-                  }`,
+                  } | Bitrate: ${voice_channel?.bitrate}`,
                 },
                 thumbnail: { url: this.image },
                 color: 'GREEN',
