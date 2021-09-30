@@ -74,7 +74,9 @@ export class Track implements TrackData {
     this.onStart = () => {
       this.onStart = noop;
       if (channel && !message) {
-        const nextTrack = getSubscription(channel.guildId)?.queue.at(0);
+        const voice_channel = channel.guild.me?.voice.channel;
+        const subscription = getSubscription(channel.guildId);
+        const nextTrack = subscription?.queue.at(0);
 
         channel
           .send({
@@ -84,7 +86,11 @@ export class Track implements TrackData {
                 title: this.title,
                 description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
                 footer: {
-                  text: 'Powered by YouTube Music, SoundCloud, and Spotify',
+                  text: `Active on ${voice_channel} | Region: ${
+                    voice_channel?.rtcRegion
+                      ?.split(' ')
+                      .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
+                  }`,
                 },
                 thumbnail: { url: this.image },
                 color: 'GREEN',
