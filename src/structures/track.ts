@@ -1,12 +1,10 @@
 import { AudioResource, createAudioResource, demuxProbe } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
-import ytdl_core from 'ytdl-core';
-const { getInfo } = ytdl_core;
 import { getComponent } from '../managers/interaction.js';
 import { getSubscription } from '../managers/music.js';
 import { getSoundCloudTrack } from '../modules/soundcloud.js';
-import { searchYouTube } from '../modules/youtube.js';
+import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import { hasAll, hasAny, parseHTML } from '../utils/functions.js';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -105,7 +103,7 @@ export default class Track {
       }
 
       if (!this.title || !this.image) {
-        const info = await getInfo(url);
+        const info = await getYouTubeInfo(url);
         if (!info) throw new Error('No track info found.');
 
         const title = parseHTML(info.videoDetails.title).trim();

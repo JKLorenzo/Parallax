@@ -14,14 +14,12 @@ import {
   TextChannel,
 } from 'discord.js';
 import fetch from 'node-fetch';
-import ytdl_core from 'ytdl-core';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
-import { getPlaylist, getTrack } from '../modules/spotify.js';
-import { searchYouTube } from '../modules/youtube.js';
+import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
+import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
 import { hasAny, parseHTML } from '../utils/functions.js';
-const { getInfo } = ytdl_core;
 
 const _subscriptions = new Map<Snowflake, Subscription>();
 
@@ -87,7 +85,7 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
     if (hasAny(song, 'http')) {
       if (hasAny(song, 'youtube.com')) {
-        const info = await getInfo(song);
+        const info = await getYouTubeInfo(song);
         if (!info) return interaction.editReply('Track not found.');
 
         const title = parseHTML(info.videoDetails.title).trim();
@@ -97,7 +95,8 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
       } else if (hasAny(song, 'spotify.com')) {
         if (hasAny(song, '/playlist')) {
-          const playlist = await getPlaylist(song);
+          const playlist = await getSpotifyPlaylist(song);
+          if (!playlist) return interaction.editReply('Playlist not found.');
 
           for (const item of playlist.tracks.items) {
             const title = parseHTML(item.track.name).trim();
@@ -118,7 +117,8 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
               `**${title}** playlist${author ? ` by **${author}**` : ''}.`,
           );
         } else if (hasAny(song, '/track')) {
-          const track = await getTrack(song);
+          const track = await getSpotifyTrack(song);
+          if (!track) return interaction.editReply('Track not found.');
 
           const title = parseHTML(track.name).trim();
           const author = parseHTML(track.artists.map(a => a.name).join(', ')).trim();
