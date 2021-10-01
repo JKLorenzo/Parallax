@@ -1,7 +1,8 @@
 import { AudioResource, createAudioResource, demuxProbe } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
 import { raw as ytdl } from 'youtube-dl-exec';
-import { getInfo } from 'ytdl-core';
+import ytdl_core from 'ytdl-core';
+const { getInfo } = ytdl_core;
 import { getComponent } from '../managers/interaction.js';
 import { getSubscription } from '../managers/music.js';
 import { getSoundCloudTrack } from '../modules/soundcloud.js';
