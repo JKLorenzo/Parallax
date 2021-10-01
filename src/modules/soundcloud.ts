@@ -1,5 +1,5 @@
 import { Client, Playlist, SearchResult, Song } from 'soundcloud-scraper';
-import { getStringSimilarity, parseHTML } from '../utils/functions';
+import { getStringSimilarity, parseHTML } from '../utils/functions.js';
 
 const soundcloud = new Client();
 
