@@ -329,6 +329,7 @@ export class MusicSubscription {
     if (options?.skipCount) {
       if (options?.skipCount > 1) {
         skipped = this.queue.splice(0, options?.skipCount - 1).length;
+        skipped += this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
       }
     } else {
       this.queue = [];
@@ -536,6 +537,7 @@ export async function musicSkip(
   if (interaction instanceof CommandInteraction) {
     const count = interaction.options.getInteger('count', false) ?? 1;
     const skipped = subscription.stop({ skipCount: count });
+
     await interaction.reply({
       content: `Skipped ${skipped} ${skipped > 1 ? 'songs' : 'song'}.`,
       ephemeral: true,
