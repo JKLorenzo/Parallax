@@ -262,7 +262,7 @@ export class MusicSubscription {
         /*
 					Once destroyed, stop the subscription
 				*/
-        this.stop(true);
+        this.stop({ force: true });
       } else if (
         !this.readyLock &&
         (newState.status === VoiceConnectionStatus.Connecting ||
@@ -316,10 +316,18 @@ export class MusicSubscription {
     return track;
   }
 
-  stop(force?: boolean): void {
-    if (force) this.queueLock = true;
-    this.queue = [];
-    this.audioPlayer.stop(force);
+  stop(options?: { skipCount?: number; force?: boolean }): number {
+    let skipped = 0;
+    if (options?.force) this.queueLock = true;
+    if (options?.skipCount) {
+      if (options?.skipCount > 1) {
+        skipped = this.queue.splice(0, options?.skipCount - 1).length;
+      }
+    } else {
+      this.queue = [];
+    }
+    this.audioPlayer.stop(options?.force);
+    return skipped;
   }
 
   private async processQueue(): Promise<void> {
@@ -480,21 +488,28 @@ export async function musicSkip(
     });
   }
 
-  if (subscription) {
-    subscription.audioPlayer.stop();
+  if (!subscription) {
     if (interaction instanceof CommandInteraction) {
-      await interaction.reply({
-        content: 'Skipped song.',
+      return interaction.reply({
+        content: 'Not playing in this server.',
         ephemeral: true,
       });
+    } else {
+      return interaction.deferUpdate();
     }
-  } else if (interaction instanceof CommandInteraction) {
+  }
+
+  if (interaction instanceof CommandInteraction) {
+    const count = interaction.options.getInteger('count', false) ?? 1;
+    const skipped = subscription.stop({ skipCount: count });
     await interaction.reply({
-      content: 'Not playing in this server.',
+      content: `Skipped ${skipped} ${skipped > 1 ? 'songs' : 'song'}.`,
       ephemeral: true,
     });
+  } else {
+    subscription.stop({ skipCount: 1 });
+    await interaction.deferUpdate();
   }
-  if (interaction instanceof MessageComponentInteraction) await interaction.deferUpdate();
 }
 
 export async function musicStop(
@@ -513,21 +528,26 @@ export async function musicStop(
     });
   }
 
-  if (subscription) {
-    subscription.stop();
+  if (!subscription) {
     if (interaction instanceof CommandInteraction) {
-      await interaction.reply({
-        content: 'Stopped all songs.',
+      return interaction.reply({
+        content: 'Not playing in this server.',
         ephemeral: true,
       });
+    } else {
+      return interaction.deferUpdate();
     }
-  } else if (interaction instanceof CommandInteraction) {
+  }
+
+  subscription.stop({ force: true });
+  if (interaction instanceof CommandInteraction) {
     await interaction.reply({
-      content: 'Not playing in this server.',
+      content: 'Stopped all songs.',
       ephemeral: true,
     });
+  } else {
+    await interaction.deferUpdate();
   }
-  if (interaction instanceof MessageComponentInteraction) await interaction.deferUpdate();
 }
 
 export async function musicQueue(
@@ -536,29 +556,33 @@ export async function musicQueue(
   const guild = interaction.guild as Guild;
   const subscription = getSubscription(guild.id);
 
-  if (subscription) {
-    const current =
-      subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
-        ? `Nothing is currently playing!`
-        : `**Now Playing:**\n${
-            (subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title
-          }`;
-
-    const queue = subscription.queue
-      .slice(0, 5)
-      .map((track, index) => `${index + 1}) ${track.title}`)
-      .join('\n');
-
-    await interaction.reply({
-      content: `${current}\n\n**On Queue: ${subscription.queue.length}**\n${queue}`,
-      ephemeral: true,
-    });
-  } else {
-    await interaction.reply({
-      content: 'Not playing in this server.',
-      ephemeral: true,
-    });
+  if (!subscription) {
+    if (interaction instanceof CommandInteraction) {
+      return interaction.reply({
+        content: 'Not playing in this server.',
+        ephemeral: true,
+      });
+    } else {
+      return interaction.deferUpdate();
+    }
   }
+
+  const current =
+    subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
+      ? `Nothing is currently playing!`
+      : `**Now Playing:**\n${
+          (subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title
+        }`;
+
+  const queue = subscription.queue
+    .slice(0, 10)
+    .map((track, index) => `${index + 1}) ${track.title}`)
+    .join('\n');
+
+  await interaction.reply({
+    content: `${current}\n\n**On Queue: ${subscription.queue.length}**\n${queue}`,
+    ephemeral: true,
+  });
 }
 
 export async function musicPause(
@@ -577,21 +601,26 @@ export async function musicPause(
     });
   }
 
-  if (subscription) {
-    subscription.audioPlayer.pause();
+  if (!subscription) {
     if (interaction instanceof CommandInteraction) {
-      await interaction.reply({
-        content: 'Paused.',
+      return interaction.reply({
+        content: 'Not playing in this server.',
         ephemeral: true,
       });
+    } else {
+      return interaction.deferUpdate();
     }
-  } else if (interaction instanceof CommandInteraction) {
+  }
+
+  subscription.audioPlayer.pause();
+  if (interaction instanceof CommandInteraction) {
     await interaction.reply({
-      content: 'Not playing in this server.',
+      content: 'Paused.',
       ephemeral: true,
     });
+  } else {
+    await interaction.deferUpdate();
   }
-  if (interaction instanceof MessageComponentInteraction) await interaction.deferUpdate();
 }
 
 export async function musicResume(
@@ -610,21 +639,26 @@ export async function musicResume(
     });
   }
 
-  if (subscription) {
-    subscription.audioPlayer.unpause();
+  if (!subscription) {
     if (interaction instanceof CommandInteraction) {
-      await interaction.reply({
-        content: 'Unpaused.',
+      return interaction.reply({
+        content: 'Not playing in this server.',
         ephemeral: true,
       });
+    } else {
+      return interaction.deferUpdate();
     }
-  } else if (interaction instanceof CommandInteraction) {
+  }
+
+  subscription.audioPlayer.unpause();
+  if (interaction instanceof CommandInteraction) {
     await interaction.reply({
-      content: 'Not playing in this server.',
+      content: 'Unpaused.',
       ephemeral: true,
     });
+  } else {
+    await interaction.deferUpdate();
   }
-  if (interaction instanceof MessageComponentInteraction) await interaction.deferUpdate();
 }
 
 export async function musicLeave(
@@ -636,24 +670,33 @@ export async function musicLeave(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (subscription && current_voice_channel?.id !== channel?.id) {
+  if (subscription && current_voice_channel && current_voice_channel?.id !== channel?.id) {
     return interaction.reply({
       content: "You must be on the same channel where I'm currently active to perform this action.",
       ephemeral: true,
     });
   }
 
+  if (!subscription && !current_voice_channel) {
+    if (interaction instanceof CommandInteraction) {
+      return interaction.reply({
+        content: 'Not playing in this server.',
+        ephemeral: true,
+      });
+    } else {
+      return interaction.deferUpdate();
+    }
+  }
+
   if (subscription) {
     subscription.voiceConnection.destroy();
     deleteSubscription(guild.id);
-    await interaction.reply({
-      content: 'Left your channel.',
-      ephemeral: true,
-    });
   } else {
-    await interaction.reply({
-      content: 'Not playing in this server.',
-      ephemeral: true,
-    });
+    guild.me?.voice.disconnect();
   }
+
+  await interaction.reply({
+    content: 'Disconnected from the channel.',
+    ephemeral: true,
+  });
 }

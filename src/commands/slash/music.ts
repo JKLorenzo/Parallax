@@ -35,6 +35,14 @@ export default class Music extends Command {
           name: 'skip',
           description: 'Skip to the next song in the queue',
           type: 'SUB_COMMAND',
+          options: [
+            {
+              name: 'count',
+              type: 'INTEGER',
+              description: 'The number of songs to skip. Defaults to 1.',
+              required: false,
+            },
+          ],
         },
         {
           name: 'stop',
@@ -74,6 +82,13 @@ export default class Music extends Command {
         break;
       }
       case 'skip': {
+        const count = interaction.options.getInteger('count', false);
+        if (typeof count === 'number' && count < 1) {
+          return interaction.reply({
+            content: 'You must provide a number that is greater than or equal to 1.',
+            ephemeral: true,
+          });
+        }
         await musicSkip(interaction);
         break;
       }
