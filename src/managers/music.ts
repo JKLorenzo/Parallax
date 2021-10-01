@@ -137,19 +137,25 @@ export class Track implements TrackData {
       } else {
         const data = await searchYouTube(this.query);
         if (!data) throw new Error('No track found.');
+
+        const title = parseHTML(data.title).trim();
+        const author = parseHTML(data.channelTitle).trim();
+
         url = data.link;
-        if (!this.title) this.title = data.title;
+        if (!this.title) this.title = `${title} by ${author}`;
         if (!this.image) this.image = data.thumbnails.default?.url;
       }
 
       if (!this.title || !this.image) {
         const info = await getInfo(url);
         if (!info) throw new Error('No track info found.');
-        if (!this.title) this.title = info.videoDetails.title;
+
+        const title = parseHTML(info.videoDetails.title).trim();
+        const author = parseHTML(info.videoDetails.ownerChannelName).trim();
+
+        if (!this.title) this.title = `${title} by ${author}`;
         if (!this.image) this.image = info.thumbnail_url;
       }
-
-      this.title = parseHTML(this.title);
 
       const process = ytdl(
         url,
@@ -188,10 +194,11 @@ export class Track implements TrackData {
       const song = await getSoundCloudTrack(this.query);
       if (!song) throw new Error('Track not found.');
 
-      if (!this.title) this.title = song.title;
-      if (!this.image) this.image = song.thumbnail;
+      const title = parseHTML(song.title).trim();
+      const author = parseHTML(song.author.name).trim();
 
-      this.title = parseHTML(this.title);
+      if (!this.title) this.title = `${title} by ${author}`;
+      if (!this.image) this.image = song.thumbnail;
 
       return new Promise((resolve, reject) => {
         song.downloadProgressive().then(stream => {
@@ -411,51 +418,74 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     if (hasAny(song, 'http')) {
       if (hasAny(song, 'youtube.com')) {
         const info = await getInfo(song);
-        if (!info) return interaction.editReply('No match found, please try again.');
-        await enqueue(song, info.videoDetails.title, info.thumbnail_url);
-        await interaction.followUp(`Enqueued **${info.videoDetails.title}**`);
-      } else if (hasAny(song, 'spotify.com/playlist')) {
-        const playlist = await getPlaylist(song);
-        for (const item of playlist.tracks.items) {
-          await enqueue(
-            `${item.track.name} ${item.track.artists.map(a => a.name).join(' ')}`,
-            `${item.track.name} by ${item.track.artists.map(a => a.name).join(', ')}`,
-            item.track.album.images[0]?.url,
+        if (!info) return interaction.editReply('Track not found.');
+
+        const title = parseHTML(info.videoDetails.title).trim();
+        const author = parseHTML(info.videoDetails.author.name).trim();
+
+        await enqueue(song, `${title} by ${author}`, info.thumbnail_url);
+        await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
+      } else if (hasAny(song, 'spotify.com')) {
+        if (hasAny(song, '/playlist')) {
+          const playlist = await getPlaylist(song);
+
+          for (const item of playlist.tracks.items) {
+            const title = parseHTML(item.track.name).trim();
+            const author = parseHTML(item.track.artists.map(a => a.name).join(', ')).trim();
+
+            await enqueue(
+              `${title} ${author}`,
+              `${title} by ${author}`,
+              item.track.album.images[0]?.url,
+            );
+          }
+
+          const title = parseHTML(playlist.name).trim();
+          const author = parseHTML(playlist.owner.display_name ?? '').trim();
+
+          await interaction.followUp(
+            `Enqueued ${playlist.tracks.items.length} songs from ` +
+              `**${title}** playlist${author ? ` by **${author}**` : ''}.`,
           );
+        } else if (hasAny(song, '/track')) {
+          const track = await getTrack(song);
+
+          const title = parseHTML(track.name).trim();
+          const author = parseHTML(track.artists.map(a => a.name).join(', ')).trim();
+
+          await enqueue(`${title} ${author}`, `${title} by ${author}`, track.album.images[0]?.url);
+          await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
+        } else {
+          return interaction.editReply('This link is currently not supported.');
         }
-        await interaction.followUp(
-          `Enqueued ${playlist.tracks.items.length} songs from ` +
-            `**${playlist.name}** playlist by **${playlist.owner.display_name}**.`,
-        );
-      } else if (hasAny(song, 'spotify.com/track')) {
-        const track = await getTrack(song);
-        const data = await searchYouTube(
-          `${track.name} by ${track.artists.map(a => a.name).join(' ')}`,
-        );
-        if (!data) return interaction.editReply('No match found, please try again.');
-        await enqueue(
-          data.link,
-          `${track.name} by ${track.artists.map(a => a.name).join(', ')}`,
-          data.thumbnails.default?.url,
-        );
-        await interaction.followUp(`Enqueued **${data.title}**`);
       } else if (hasAny(song, 'soundcloud')) {
         const response = await fetch(song);
         if (hasAny(response.url, '/sets/')) {
           const playlist = await getSoundCloudPlaylist(response.url);
           if (!playlist) return interaction.editReply('No match found, please try again.');
+
           for (const item of playlist.tracks) {
-            await enqueue(item.url, `${item.title} by ${item.author.name}`, item.thumbnail);
+            const title = parseHTML(item.title).trim();
+            const author = parseHTML(item.author.name).trim();
+
+            await enqueue(item.url, `${title} by ${author}`, item.thumbnail);
           }
+
+          const title = parseHTML(playlist.title).trim();
+          const author = parseHTML(playlist.author.name).trim();
+
           await interaction.followUp(
-            `Enqueued ${playlist.trackCount} songs from ` +
-              `**${playlist.title}** playlist by **${playlist.author.name}**.`,
+            `Enqueued ${playlist.trackCount} songs from **${title}** playlist by **${author}**.`,
           );
         } else {
           const data = await getSoundCloudTrack(response.url);
           if (!data) return interaction.editReply('No match found, please try again.');
-          await enqueue(response.url, `${data.title} by ${data.author.name}`, data.thumbnail);
-          await interaction.followUp(`Enqueued **${data.title}**`);
+
+          const title = parseHTML(data.title).trim();
+          const author = parseHTML(data.author.name).trim();
+
+          await enqueue(response.url, `${title} by ${author}`, data.thumbnail);
+          await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
         }
       } else {
         await interaction.editReply('This link is currently not supported.');
@@ -463,8 +493,12 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     } else {
       const data = await searchYouTube(song);
       if (!data) return interaction.editReply('No match found, please try again.');
-      await enqueue(data.link, data.title, data.thumbnails.default?.url);
-      await interaction.followUp(`Enqueued **${data.title}**`);
+
+      const title = parseHTML(data.title).trim();
+      const author = parseHTML(data.channelTitle).trim();
+
+      await enqueue(data.link, `${title} by ${author}`, data.thumbnails.default?.url);
+      await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
     }
   } catch (error) {
     console.warn(error);
