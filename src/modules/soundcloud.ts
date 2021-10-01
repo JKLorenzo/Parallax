@@ -1,4 +1,5 @@
 import { Client, Playlist, SearchResult, Song } from 'soundcloud-scraper';
+import { getStringSimilarity, parseHTML } from '../utils/functions';
 
 const soundcloud = new Client();
 
@@ -35,14 +36,27 @@ export async function getSoundCloudPlaylist(url: string): Promise<Playlist | und
 }
 
 export async function searchSoundCloud(term: string): Promise<SearchResult | undefined> {
-  const id = term.toLowerCase().trim();
+  const id = term.toLowerCase().replaceAll('soundcloud', '').trim();
 
   const cached = _searchCache.get(id);
   if (cached) return cached;
 
-  const data = await soundcloud.search(term, 'track');
+  const results = await soundcloud.search(id, 'track');
 
-  const result = data[0];
+  let data: {
+    similarity: number;
+    result?: SearchResult;
+  } = { similarity: -1 };
+
+  for (const result of results) {
+    const title = parseHTML(result.name).trim();
+    const author = parseHTML(result.artist).trim();
+
+    const similarity = getStringSimilarity(id, `${title} ${author}`.trim().toLowerCase());
+    if (similarity > data.similarity) data = { similarity, result };
+  }
+
+  const result = data.result;
   if (result) _searchCache.set(id, result);
 
   return result;
