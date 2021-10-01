@@ -14,7 +14,11 @@ import {
   TextChannel,
 } from 'discord.js';
 import fetch from 'node-fetch';
-import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
+import {
+  getSoundCloudPlaylist,
+  getSoundCloudTrack,
+  searchSoundCloud,
+} from '../modules/soundcloud.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
 import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import Subscription from '../structures/subscription.js';
@@ -160,6 +164,15 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       } else {
         await interaction.editReply('This link is currently not supported.');
       }
+    } else if (hasAny(song.toLowerCase(), 'soundcloud')) {
+      const data = await searchSoundCloud(song);
+      if (!data) return interaction.editReply('No match found, please try again.');
+
+      const title = parseHTML(data.name).trim();
+      const author = parseHTML(data.artist).trim();
+
+      await enqueue(data.url, `${title} by ${author}`);
+      await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
     } else {
       const data = await searchYouTube(song);
       if (!data) return interaction.editReply('No match found, please try again.');
