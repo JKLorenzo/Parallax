@@ -119,3 +119,35 @@ export function searchImage(name: string, options: ImageOptions): Promise<string
     });
   });
 }
+
+export function getStringSimilarity(str1: string, str2: string): number {
+  let longer = str1;
+  let shorter = str2;
+
+  if (str1.length < str2.length) {
+    longer = str2;
+    shorter = str1;
+  }
+
+  if (longer.length === 0 || shorter.length === 0) return 0;
+
+  const temp = [];
+  for (let i = 0; i <= longer.length; i++) {
+    let lastValue = i;
+    for (let j = 0; j <= shorter.length; j++) {
+      if (i === 0) {
+        temp[j] = j;
+      } else if (j > 0) {
+        let newValue = temp[j - 1];
+        if (longer.charAt(i - 1) !== shorter.charAt(j - 1)) {
+          newValue = Math.min(Math.min(newValue, lastValue), temp[j]) + 1;
+        }
+        temp[j - 1] = lastValue;
+        lastValue = newValue;
+      }
+    }
+    if (i > 0) temp[shorter.length] = lastValue;
+  }
+
+  return 100 * ((longer.length - temp[shorter.length]) / longer.length);
+}
