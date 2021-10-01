@@ -1,5 +1,8 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 
+const _trackCache = new Map<string, SpotifyApi.SingleTrackResponse>();
+const _playlistCache = new Map<string, SpotifyApi.SinglePlaylistResponse>();
+
 const spotify = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_ID,
   clientSecret: process.env.SPOTIFY_SECRET,
@@ -16,14 +19,34 @@ export async function initSpotify(): Promise<void> {
   }
 }
 
-export async function getPlaylist(url: string): Promise<SpotifyApi.SinglePlaylistResponse> {
-  const playlistId = url.split('playlist/')[1].split('?si=')[0];
-  const playlist = await spotify.getPlaylist(playlistId);
-  return playlist.body;
+export async function getSpotifyTrack(
+  url: string,
+): Promise<SpotifyApi.SingleTrackResponse | undefined> {
+  const trackId = url.split('track/')[1].split('?si=')[0].trim();
+
+  const cached = _trackCache.get(trackId);
+  if (cached) return cached;
+
+  const track = await spotify.getTrack(trackId);
+
+  const data = track.body;
+  if (data) _trackCache.set(trackId, data);
+
+  return data;
 }
 
-export async function getTrack(url: string): Promise<SpotifyApi.SingleTrackResponse> {
-  const trackId = url.split('track/')[1].split('?si=')[0];
-  const track = await spotify.getTrack(trackId);
-  return track.body;
+export async function getSpotifyPlaylist(
+  url: string,
+): Promise<SpotifyApi.SinglePlaylistResponse | undefined> {
+  const playlistId = url.split('playlist/')[1].split('?si=')[0].trim();
+
+  const cached = _playlistCache.get(playlistId);
+  if (cached) return cached;
+
+  const playlist = await spotify.getPlaylist(playlistId);
+
+  const data = playlist.body;
+  if (data) _playlistCache.set(playlistId, data);
+
+  return data;
 }
