@@ -21,8 +21,8 @@ const _screeningLimiter = new Limiter(1800000);
 
 export const game_prefix = '🔰';
 
-export function initGame(): void {
-  cron.schedule('0 * * * *', async () => {
+export async function initGame(): Promise<void> {
+  const clearExpired = async () => {
     try {
       const expired = await getUserExpiredGames();
       for (const [userId, game_names] of expired) {
@@ -59,7 +59,11 @@ export function initGame(): void {
     } catch (error) {
       logError('Game Manager', 'Clear Expired', error);
     }
-  });
+  };
+
+  cron.schedule('0 * * * *', clearExpired);
+
+  await clearExpired();
 
   client.on('presenceUpdate', processPresence);
 }
