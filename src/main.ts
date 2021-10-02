@@ -35,12 +35,11 @@ client.on('ready', async () => {
   await connectDb();
   await initTelemetry();
   await initInteraction();
-  console.log('Initialized');
-  initGame();
+  await initGame();
   await initPlay();
   await initFreeGame();
   await initSpotify();
-  console.log('Done');
+  console.log('Initialized');
 });
 
 client.login(process.env.BOT_TOKEN!);
