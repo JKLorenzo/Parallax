@@ -353,6 +353,12 @@ export default class GuildConfig extends Command {
           }
         }
 
+        if (role_descriptions.length === 0) {
+          return interaction.editReply(
+            'At least one configured platform is required to perform this action.',
+          );
+        }
+
         await (show_options as TextChannel).send({
           files: [new MessageAttachment('./src/assets/gaming.gif')],
           embeds: [
