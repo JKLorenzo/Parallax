@@ -8,7 +8,7 @@ const spotify = new SpotifyWebApi({
   clientSecret: process.env.SPOTIFY_SECRET,
 });
 
-export async function initSpotify(): Promise<void> {
+async function initSpotify(): Promise<void> {
   try {
     const data = await spotify.clientCredentialsGrant();
     spotify.setAccessToken(data.body.access_token);
@@ -18,6 +18,8 @@ export async function initSpotify(): Promise<void> {
     setTimeout(initSpotify, 5000);
   }
 }
+
+await initSpotify();
 
 export async function getSpotifyTrack(
   url: string,
