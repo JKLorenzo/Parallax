@@ -1,8 +1,10 @@
 import {
   AudioPlayerStatus,
   AudioResource,
+  createAudioPlayer,
   entersState,
   joinVoiceChannel,
+  NoSubscriberBehavior,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import {
@@ -14,11 +16,13 @@ import {
   TextChannel,
 } from 'discord.js';
 import fetch from 'node-fetch';
+import { client } from '../main.js';
 import {
   getSoundCloudPlaylist,
   getSoundCloudTrack,
   searchSoundCloud,
 } from '../modules/soundcloud.js';
+import { synthesize } from '../modules/speech.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
 import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import Subscription from '../structures/subscription.js';
@@ -26,6 +30,61 @@ import Track from '../structures/track.js';
 import { hasAny, parseHTML } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
+
+export async function initMusic(): Promise<void> {
+  const resource = await synthesize(
+    'All queued music was removed due to a bot restart. I will now disconnect from this channel.',
+  );
+
+  if (resource) {
+    const player = createAudioPlayer({
+      behaviors: {
+        noSubscriber: NoSubscriberBehavior.Play,
+      },
+    });
+
+    const active_guilds = client.guilds.cache.filter(guild => {
+      const member = guild.me;
+      if (!member) return false;
+      if (!member.voice.channelId) return false;
+      return true;
+    });
+
+    for (const guild of active_guilds.values()) {
+      const channelId = guild.me?.voice.channelId;
+      if (!channelId) continue;
+
+      const connection = joinVoiceChannel({
+        channelId: channelId,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
+
+      try {
+        await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
+      } catch (error) {
+        connection.destroy();
+      }
+
+      connection.subscribe(player);
+    }
+
+    player.play(resource);
+
+    player.on('stateChange', (oldState, newState) => {
+      if (
+        oldState.status === AudioPlayerStatus.Playing &&
+        newState.status === AudioPlayerStatus.Idle
+      ) {
+        for (const guild of active_guilds.values()) {
+          guild.me?.voice.disconnect();
+        }
+        player.removeAllListeners();
+        console.log('Playback has stopped');
+      }
+    });
+  }
+}
 
 export function getSubscription(guild_id: Snowflake): Subscription | undefined {
   return _subscriptions.get(guild_id);
