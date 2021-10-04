@@ -14,6 +14,7 @@ import {
   MessageComponentInteraction,
   Snowflake,
   TextChannel,
+  VoiceState,
 } from 'discord.js';
 import fetch from 'node-fetch';
 import { client } from '../main.js';
@@ -84,6 +85,21 @@ export async function initMusic(): Promise<void> {
       }
     });
   }
+
+  client.on('voiceStateUpdate', processVoiceStateUpdate);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
+  const me = oldState.guild.me;
+  if (!me) return;
+
+  const channel = me.voice.channel;
+  if (!channel) return;
+
+  if (channel.members.filter(m => !m.user.bot).size > 0) return;
+
+  await me.voice.disconnect();
 }
 
 export function getSubscription(guild_id: Snowflake): Subscription | undefined {
