@@ -82,7 +82,15 @@ export default class Track {
     this.onError = error => {
       this.onError = noop;
       console.warn(error);
-      if (message && message.deletable) message.delete().catch(console.warn);
+      if (message) {
+        message.edit(
+          `Failed to play ${this.title ?? this.query} due to an error.\n\`\`\`\n${error}\n\`\`\``,
+        );
+      } else {
+        channel.send(
+          `Failed to play ${this.title ?? this.query} due to an error.\n\`\`\`\n${error}\n\`\`\``,
+        );
+      }
     };
   }
 
