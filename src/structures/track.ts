@@ -1,12 +1,13 @@
 import { AudioResource, createAudioResource, demuxProbe } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
-import { raw as ytdl } from 'youtube-dl-exec';
+import { create } from 'youtube-dl-exec';
 import { getComponent } from '../managers/interaction.js';
 import { getSubscription } from '../managers/music.js';
 import { getSoundCloudTrack } from '../modules/soundcloud.js';
 import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import { hasAll, hasAny, parseHTML } from '../utils/functions.js';
 
+const { raw: ytdl } = create();
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
