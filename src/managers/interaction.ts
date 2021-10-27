@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import Discord, {
+  BaseMessageComponentOptions,
   Collection,
   CommandInteraction,
   MessageActionRowOptions,
@@ -77,7 +78,9 @@ export async function initInteraction(): Promise<void> {
   });
 }
 
-export function getComponent(name: string): MessageActionRowOptions[] | undefined {
+export function getComponent(
+  name: string,
+): (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[] | undefined {
   return _components.get(name)?.options;
 }
 

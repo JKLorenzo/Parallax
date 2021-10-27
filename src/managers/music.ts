@@ -2,6 +2,7 @@ import {
   AudioPlayerStatus,
   AudioResource,
   createAudioPlayer,
+  DiscordGatewayAdapterCreator,
   entersState,
   joinVoiceChannel,
   NoSubscriberBehavior,
@@ -58,7 +59,7 @@ export async function initMusic(): Promise<void> {
       const connection = joinVoiceChannel({
         channelId: channelId,
         guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
+        adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
       });
 
       try {
@@ -138,7 +139,7 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       joinVoiceChannel({
         channelId: channel.id,
         guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
+        adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
       }),
     );
     subscription.voiceConnection.on('error', console.warn);

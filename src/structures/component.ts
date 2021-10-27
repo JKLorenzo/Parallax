@@ -1,4 +1,5 @@
 import {
+  BaseMessageComponentOptions,
   MessageActionRow,
   MessageActionRowComponent,
   MessageActionRowOptions,
@@ -7,12 +8,12 @@ import {
 
 type ComponentData = {
   name: string;
-  options: MessageActionRowOptions[];
+  options: (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[];
 };
 
 export default abstract class Component {
   private _name: string;
-  private _options: MessageActionRowOptions[];
+  private _options: (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[];
 
   constructor(data: ComponentData) {
     this._name = data.name;
@@ -25,7 +26,7 @@ export default abstract class Component {
     return this._name;
   }
 
-  get options(): MessageActionRowOptions[] {
+  get options(): (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[] {
     return this._options.map(
       action_row =>
         new MessageActionRow({
