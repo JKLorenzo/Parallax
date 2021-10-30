@@ -1,10 +1,9 @@
 import {
-  ApplicationCommand,
   ApplicationCommandData,
-  ApplicationCommandOptionData,
   ApplicationCommandPermissionData,
   ClientApplication,
   CommandInteraction,
+  ContextMenuInteraction,
   Guild,
   Snowflake,
 } from 'discord.js';
@@ -48,7 +47,7 @@ export default abstract class Command {
           name: data.name,
           description: data.description,
           defaultPermission: data.defaultPermission,
-          options: this._transformOptions(data.options),
+          options: data.options,
         };
         break;
       default:
@@ -85,7 +84,7 @@ export default abstract class Command {
       }
 
       // Update data
-      if (this_command && !this.isUpdated(this_command)) {
+      if (this_command && !this_command.equals(this.data)) {
         await this_command.edit(this.data);
         logMessage(
           'Command',
@@ -115,7 +114,7 @@ export default abstract class Command {
           }
 
           // Update data
-          if (this_command && !this.isUpdated(this_command)) {
+          if (this_command && !this_command.equals(this.data)) {
             await this_command.edit(this.data);
             logMessage(
               'Command',
@@ -154,7 +153,7 @@ export default abstract class Command {
     }
   }
 
-  abstract exec(interaction: CommandInteraction): Promise<unknown>;
+  abstract exec(interaction: CommandInteraction | ContextMenuInteraction): Promise<unknown>;
 
   get data(): ApplicationCommandData {
     return _.cloneDeep(this._data);
@@ -194,37 +193,5 @@ export default abstract class Command {
     }
 
     return permissions.length ? permissions : undefined;
-  }
-
-  isUpdated(data: ApplicationCommand): boolean {
-    if (this.data.defaultPermission !== data.defaultPermission) return false;
-    if (this.data.type === 'CHAT_INPUT' && data.type === 'CHAT_INPUT') {
-      if (this.data.description !== data.description) return false;
-      if (JSON.stringify(this.data.options) !== JSON.stringify(data.options)) return false;
-    }
-    return true;
-  }
-
-  private _transformOptions(
-    options?: ApplicationCommandOptionData[],
-  ): ApplicationCommandOptionData[] {
-    if (!options || !Array.isArray(options)) return [];
-    return options.map(option => ({
-      type: option.type,
-      name: option.name,
-      description: option.description,
-      required:
-        option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP'
-          ? option.required
-          : option.required ?? false,
-      choices:
-        option.type === 'STRING' || option.type === 'NUMBER' || option.type === 'INTEGER'
-          ? option.choices
-          : undefined,
-      options:
-        (option.type === 'SUB_COMMAND' || option.type === 'SUB_COMMAND_GROUP') && option.options
-          ? this._transformOptions(option.options)
-          : undefined,
-    })) as ApplicationCommandOptionData[];
   }
 }
