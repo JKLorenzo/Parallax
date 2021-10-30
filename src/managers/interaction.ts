@@ -4,6 +4,7 @@ import Discord, {
   BaseMessageComponentOptions,
   Collection,
   CommandInteraction,
+  ContextMenuInteraction,
   MessageActionRowOptions,
   MessageComponentInteraction,
 } from 'discord.js';
@@ -84,7 +85,9 @@ export function getComponent(
   return _components.get(name)?.options;
 }
 
-async function processCommand(interaction: CommandInteraction): Promise<void> {
+async function processCommand(
+  interaction: CommandInteraction | ContextMenuInteraction,
+): Promise<void> {
   const this_command = _commands.get(interaction.commandName);
   if (!this_command) return;
   try {
