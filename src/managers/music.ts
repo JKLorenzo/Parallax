@@ -18,38 +18,32 @@ import {
   VoiceState,
 } from 'discord.js';
 import fetch from 'node-fetch';
+import playdl from 'play-dl';
 import { client } from '../main.js';
-import {
-  getSoundCloudPlaylist,
-  getSoundCloudTrack,
-  searchSoundCloud,
-} from '../modules/soundcloud.js';
+import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import { synthesize } from '../modules/speech.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
-import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
-import { hasAny, parseHTML } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
 
 export async function initMusic(): Promise<void> {
-  const resource = await synthesize(
-    'All queued music was removed due to a bot restart. I will now disconnect from this channel.',
-  );
+  const active_guilds = client.guilds.cache.filter(guild => {
+    const member = guild.me;
+    if (!member) return false;
+    if (!member.voice.channelId) return false;
+    return true;
+  });
 
-  if (resource) {
+  if (active_guilds.size > 0) {
+    const resource = await synthesize(
+      'All queued music was removed due to a bot restart. I will now disconnect from this channel.',
+    );
     const player = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Play,
       },
-    });
-
-    const active_guilds = client.guilds.cache.filter(guild => {
-      const member = guild.me;
-      if (!member) return false;
-      if (!member.voice.channelId) return false;
-      return true;
     });
 
     for (const guild of active_guilds.values()) {
@@ -86,6 +80,12 @@ export async function initMusic(): Promise<void> {
       }
     });
   }
+
+  playdl.setToken({
+    soundcloud: {
+      client_id: process.env.SOUNDCLOUD_ID!,
+    },
+  });
 
   client.on('voiceStateUpdate', processVoiceStateUpdate);
 }
@@ -163,105 +163,138 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     const enqueue = (query: string, title?: string, image?: string): Track =>
       subscription!.enqueue(interaction.channel as TextChannel, query, title, image);
 
-    if (hasAny(song, 'http')) {
-      if (hasAny(song, 'youtube.com')) {
-        const info = await getYouTubeInfo(song);
-        if (!info) return interaction.editReply('Track not found.');
+    let type = await playdl.validate(song);
+    if (type === 'search') {
+      const results = await playdl.search(song, { limit: 1 });
+      if (results.length === 0) return interaction.editReply('No match found.');
 
-        const title = parseHTML(info.videoDetails.title).trim();
-        const author = parseHTML(info.videoDetails.author.name).trim();
+      const result = results[0] as playdl.YouTube;
+      const video_info = await playdl.video_info(result.url!);
 
-        await enqueue(song, `${title} by ${author}`, info.thumbnail_url);
-        await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
-      } else if (hasAny(song, 'spotify.com')) {
-        if (hasAny(song, '/playlist')) {
-          const playlist = await getSpotifyPlaylist(song);
-          if (!playlist) return interaction.editReply('Playlist not found.');
+      enqueue(
+        video_info.video_details.url,
+        video_info.video_details.title,
+        video_info.video_details.thumbnail?.url,
+      );
 
-          for (const item of playlist.tracks.items) {
-            const title = parseHTML(item.track.name).trim();
-            const author = parseHTML(item.track.artists.map(a => a.name).join(', ')).trim();
-
-            await enqueue(
-              `${title} ${author}`,
-              `${title} by ${author}`,
-              item.track.album.images[0]?.url,
-            );
-          }
-
-          const title = parseHTML(playlist.name).trim();
-          const author = parseHTML(playlist.owner.display_name ?? '').trim();
-
-          await interaction.followUp(
-            `Enqueued ${playlist.tracks.items.length} songs from ` +
-              `**${title}** playlist${author ? ` by **${author}**` : ''}.`,
-          );
-        } else if (hasAny(song, '/track')) {
-          const track = await getSpotifyTrack(song);
-          if (!track) return interaction.editReply('Track not found.');
-
-          const title = parseHTML(track.name).trim();
-          const author = parseHTML(track.artists.map(a => a.name).join(', ')).trim();
-
-          await enqueue(`${title} ${author}`, `${title} by ${author}`, track.album.images[0]?.url);
-          await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
-        } else {
-          return interaction.editReply('This link is currently not supported.');
-        }
-      } else if (hasAny(song, 'soundcloud')) {
-        const response = await fetch(song);
-        if (hasAny(response.url, '/sets/')) {
-          const playlist = await getSoundCloudPlaylist(response.url);
-          if (!playlist) return interaction.editReply('No match found, please try again.');
-
-          for (const item of playlist.tracks) {
-            const title = parseHTML(item.title).trim();
-            const author = parseHTML(item.author.name).trim();
-
-            await enqueue(item.url, `${title} by ${author}`, item.thumbnail);
-          }
-
-          const title = parseHTML(playlist.title).trim();
-          const author = parseHTML(playlist.author.name).trim();
-
-          await interaction.followUp(
-            `Enqueued ${playlist.trackCount} songs from **${title}** playlist by **${author}**.`,
-          );
-        } else {
-          const data = await getSoundCloudTrack(response.url);
-          if (!data) return interaction.editReply('No match found, please try again.');
-
-          const title = parseHTML(data.title).trim();
-          const author = parseHTML(data.author.name).trim();
-
-          await enqueue(response.url, `${title} by ${author}`, data.thumbnail);
-          await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
-        }
-      } else {
-        await interaction.editReply('This link is currently not supported.');
-      }
-    } else if (hasAny(song.toLowerCase(), 'soundcloud')) {
-      const data = await searchSoundCloud(song);
-      if (!data) return interaction.editReply('No match found, please try again.');
-
-      const title = parseHTML(data.name).trim();
-      const author = parseHTML(data.artist).trim();
-
-      await enqueue(data.url, `${title} by ${author}`);
-      await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
+      await interaction.editReply(
+        `Enqueued **${video_info.video_details.title}** by **${video_info.video_details.channel?.name}**.`,
+      );
     } else {
-      const data = await searchYouTube(song);
-      if (!data) return interaction.editReply('No match found, please try again.');
+      // Handle shortened urls
+      const redirect = await fetch(song);
+      const url = redirect.url;
+      type = await playdl.validate(redirect.url);
 
-      const title = parseHTML(data.title).trim();
-      const author = parseHTML(data.channelTitle).trim();
+      if (type === 'yt_video') {
+        const video_info = await playdl.video_info(url);
 
-      await enqueue(data.link, `${title} by ${author}`, data.thumbnails.default?.url);
-      await interaction.followUp(`Enqueued **${title}** by **${author}**.`);
+        enqueue(url, video_info.video_details.title, video_info.video_details.thumbnail?.url);
+
+        await interaction.editReply(
+          `Enqueued **${video_info.video_details.title}** by **${video_info.video_details.channel?.name}**.`,
+        );
+      } else if (type === 'yt_playlist') {
+        const playlist_info = await playdl.playlist_info(url);
+        await playlist_info.fetch();
+
+        for (let page = 1; page <= playlist_info.total_pages; page++) {
+          const video_infos = await playlist_info.page(page);
+          for (const video_info of video_infos) {
+            enqueue(video_info.url, video_info.title, video_info.thumbnail?.url);
+          }
+        }
+
+        await interaction.editReply(
+          `Enqueued ${playlist_info.total_videos} songs from **${playlist_info.title}** playlist ` +
+            `by **${playlist_info.channel?.name}**.`,
+        );
+      } else if (type === 'sp_track') {
+        const spotify_info = await getSpotifyTrack(url);
+        if (!spotify_info) return interaction.editReply('Spotify track not found.');
+
+        const artists = spotify_info.artists.map(a => a.name).join(', ');
+        const results = await playdl.search(`${spotify_info.name} by ${artists}`, { limit: 1 });
+        if (results.length === 0) return interaction.editReply(`Unable to play this track.`);
+
+        const result = results[0] as playdl.YouTube;
+        const video_info = await playdl.video_info(result.url!);
+
+        enqueue(
+          video_info.video_details.url,
+          `${spotify_info.name} by {artists}`,
+          spotify_info.album.images[0].url,
+        );
+
+        await interaction.editReply(`Enqueued **${spotify_info.name}** by **${artists}**.`);
+      } else if (type === 'sp_playlist') {
+        const spotify_playlist = await getSpotifyPlaylist(url);
+        if (!spotify_playlist) return interaction.editReply('Spotify playlist not found.');
+
+        await interaction.editReply(
+          `Queueing ${spotify_playlist.tracks.total} songs from **${spotify_playlist.name}** playlist ` +
+            `by **${spotify_playlist.owner.display_name}**.`,
+        );
+
+        let queued = 0;
+        for (const spotify_info of spotify_playlist.tracks.items) {
+          const name = spotify_info.track.name;
+          const artists = spotify_info.track.artists.map(a => a.name).join(', ');
+
+          const results = await playdl.search(`${name} by ${artists}`, { limit: 1 });
+          if (results.length === 0) continue;
+
+          const result = results[0] as playdl.YouTube;
+          const video_info = await playdl.video_info(result.url!);
+
+          enqueue(
+            video_info.video_details.url,
+            `${name} by ${artists}`,
+            spotify_info.track.album.images[0].url,
+          );
+
+          queued++;
+        }
+
+        await interaction.editReply(
+          `Enqueued ${queued} songs from **${spotify_playlist.name}** playlist ` +
+            `by **${spotify_playlist.owner.display_name}**.`,
+        );
+      } else if (type === 'so_track') {
+        const soundcloud_info = await getSoundCloudTrack(url);
+        if (!soundcloud_info) return interaction.editReply('SoundCloud track not found.');
+
+        enqueue(
+          soundcloud_info.url,
+          `${soundcloud_info.title} by ${soundcloud_info.author.name}`,
+          soundcloud_info.thumbnail,
+        );
+
+        await interaction.editReply(
+          `Enqueued **${soundcloud_info.title}** by **${soundcloud_info.author.name}**.`,
+        );
+      } else if (type === 'so_playlist') {
+        const soundcloud_playlist = await getSoundCloudPlaylist(url);
+        if (!soundcloud_playlist) return interaction.editReply('SoundCloud playlist not found.');
+
+        for (const video_info of soundcloud_playlist.tracks) {
+          enqueue(
+            video_info.url,
+            `${video_info.title} by ${video_info.author.name}`,
+            video_info.thumbnail,
+          );
+        }
+
+        await interaction.editReply(
+          `Enqueued ${soundcloud_playlist.trackCount} songs from **${soundcloud_playlist.title}** playlist ` +
+            `by **${soundcloud_playlist.author.name}**.`,
+        );
+      } else {
+        await interaction.editReply('This URL is currently not supported.');
+      }
     }
   } catch (error) {
-    console.warn(error);
-    await interaction.editReply('Failed to play track, please try again later.');
+    await interaction.editReply(`Failed to play track due to an error.\n\`\`\`${error}\`\`\``);
   }
 }
 

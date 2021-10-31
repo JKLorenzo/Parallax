@@ -1,13 +1,9 @@
-import { AudioResource, createAudioResource, demuxProbe } from '@discordjs/voice';
+import { AudioResource, createAudioResource } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
-import { create } from 'youtube-dl-exec';
+import playdl from 'play-dl';
 import { getComponent } from '../managers/interaction.js';
 import { getSubscription } from '../managers/music.js';
-import { getSoundCloudTrack } from '../modules/soundcloud.js';
-import { getYouTubeInfo, searchYouTube } from '../modules/youtube.js';
-import { hasAll, hasAny, parseHTML } from '../utils/functions.js';
 
-const { raw: ytdl } = create();
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
@@ -95,93 +91,11 @@ export default class Track {
   }
 
   async createAudioResource(): Promise<AudioResource<Track>> {
-    if (!hasAny(this.query, 'http') || hasAny(this.query, 'youtube.com')) {
-      let url;
-      if (hasAny(this.query, 'http')) {
-        url = this.query;
-      } else {
-        const data = await searchYouTube(this.query);
-        if (!data) throw new Error('No track found.');
-
-        const title = parseHTML(data.title).trim();
-        const author = parseHTML(data.channelTitle).trim();
-
-        url = data.link;
-        if (!this.title) this.title = `${title} by ${author}`;
-        if (!this.image) this.image = data.thumbnails.default?.url;
-      }
-
-      if (!this.title || !this.image) {
-        const info = await getYouTubeInfo(url);
-        if (!info) throw new Error('No track info found.');
-
-        const title = parseHTML(info.videoDetails.title).trim();
-        const author = parseHTML(info.videoDetails.ownerChannelName).trim();
-
-        if (!this.title) this.title = `${title} by ${author}`;
-        if (!this.image) this.image = info.thumbnail_url;
-      }
-
-      const process = ytdl(
-        url,
-        {
-          o: '-',
-          q: '',
-          f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-          r: '100K',
-        },
-        { stdio: ['ignore', 'pipe', 'ignore'] },
-      );
-
-      return new Promise((resolve, reject) => {
-        if (!process.stdout) return reject(new Error('No stdout'));
-
-        const stream = process.stdout;
-        const onError = (error: Error) => {
-          if (!process.killed) process.kill();
-          stream.resume();
-          reject(error);
-        };
-
-        process
-          .once('spawn', () => {
-            demuxProbe(stream)
-              .then(probe =>
-                resolve(
-                  createAudioResource(probe.stream, { metadata: this, inputType: probe.type }),
-                ),
-              )
-              .catch(onError);
-          })
-          .catch(onError);
-      });
-    } else if (hasAll(this.query, ['http', 'soundcloud'])) {
-      const song = await getSoundCloudTrack(this.query);
-      if (!song) throw new Error('Track not found.');
-
-      const title = parseHTML(song.title).trim();
-      const author = parseHTML(song.author.name).trim();
-
-      if (!this.title) this.title = `${title} by ${author}`;
-      if (!this.image) this.image = song.thumbnail;
-
-      return new Promise((resolve, reject) => {
-        song.downloadProgressive().then(stream => {
-          const onError = (error: Error) => {
-            if (!stream.destroyed) stream.destroy();
-            stream.resume();
-            reject(error);
-          };
-
-          demuxProbe(stream)
-            .then(probe =>
-              resolve(createAudioResource(probe.stream, { metadata: this, inputType: probe.type })),
-            )
-            .catch(onError);
-        });
-      });
-    } else {
-      throw new Error('Unsupported Format');
-    }
+    const stream = await playdl.stream(this.query);
+    const resource = createAudioResource(stream.stream, {
+      metadata: this,
+      inputType: stream.type,
+    });
+    return resource;
   }
 }
