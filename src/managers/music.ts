@@ -222,7 +222,7 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
         enqueue(
           video_info.video_details.url,
-          `${spotify_info.name} by {artists}`,
+          `${spotify_info.name} by ${artists}`,
           spotify_info.album.images[0].url,
         );
 
