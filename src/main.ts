@@ -4,8 +4,12 @@ import { initGame } from './managers/game.js';
 import { initInteraction } from './managers/interaction.js';
 import { initMusic } from './managers/music.js';
 import { initPlay } from './managers/play.js';
-import { connectDb } from './modules/database.js';
+import { initDatabase, getBotConfig } from './modules/database.js';
 import { initTelemetry } from './modules/telemetry.js';
+
+await initDatabase();
+
+export const ownerId = (await getBotConfig('BotOwnerId'))!;
 
 export const client = new Client({
   allowedMentions: {
@@ -32,7 +36,6 @@ export const client = new Client({
 
 client.on('ready', async () => {
   console.log('Online');
-  await connectDb();
   await initTelemetry();
   await initInteraction();
   await initMusic();
