@@ -12,7 +12,7 @@ import cron from 'node-cron';
 import { client } from '../../main.js';
 import { game_prefix } from '../../managers/game.js';
 import { play_prefix } from '../../managers/play.js';
-import { getGame } from '../../modules/database.js';
+import { getGame, getGameConfig } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { fetchImage } from '../../utils/functions.js';
 
@@ -20,13 +20,23 @@ export default class Game extends Command {
   private _playersoptions = [] as ApplicationCommandSubCommandData[];
 
   constructor() {
-    super('guild', {
-      name: 'players',
-      description: 'Show the list of players of a game.',
-      type: 'CHAT_INPUT',
-      defaultPermission: true,
-      options: [],
-    });
+    super(
+      'guild',
+      {
+        name: 'players',
+        description: 'Show the list of players of a game.',
+        type: 'CHAT_INPUT',
+        defaultPermission: true,
+        options: [],
+      },
+      {
+        guilds: async guild => {
+          const config = await getGameConfig(guild.id);
+          if (config?.enabled) return true;
+          return false;
+        },
+      },
+    );
   }
 
   registerPartitionAsSubcommand(partition: Role[], iteration = 0): void {

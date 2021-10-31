@@ -1,11 +1,9 @@
 import {
   CommandInteraction,
   Guild,
-  GuildMember,
   MessageAttachment,
   MessageButton,
   MessageEmbed,
-  Permissions,
   TextChannel,
 } from 'discord.js';
 import { client } from '../../main.js';
@@ -28,7 +26,7 @@ export default class GuildConfig extends Command {
       name: 'guildconfig',
       description: 'Gets or updates the configuration of this server.',
       type: 'CHAT_INPUT',
-      defaultPermission: true,
+      defaultPermission: false,
       options: [
         {
           name: 'game',
@@ -136,16 +134,8 @@ export default class GuildConfig extends Command {
   }
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
-    const member = interaction.member as GuildMember;
     const command = interaction.options.getSubcommand();
     const guild = client.guilds.cache.get(interaction.guildId!) as Guild;
-
-    // Block members without manage server permissions
-    if (!member.permissions.has(Permissions.FLAGS.MANAGE_GUILD)) {
-      return interaction.reply(
-        'You need to have the `Manage Server` permission to use this command.',
-      );
-    }
 
     await interaction.deferReply();
 

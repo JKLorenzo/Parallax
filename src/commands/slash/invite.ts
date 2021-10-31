@@ -21,13 +21,23 @@ export default class Game extends Command {
   private _inviteoptions = [] as ApplicationCommandSubCommandData[];
 
   constructor() {
-    super('guild', {
-      name: 'invite',
-      description: 'Invite other members to play a game.',
-      type: 'CHAT_INPUT',
-      defaultPermission: true,
-      options: [],
-    });
+    super(
+      'guild',
+      {
+        name: 'invite',
+        description: 'Invite other members to play a game.',
+        type: 'CHAT_INPUT',
+        defaultPermission: true,
+        options: [],
+      },
+      {
+        guilds: async guild => {
+          const config = await getGameConfig(guild.id);
+          if (config?.enabled) return true;
+          return false;
+        },
+      },
+    );
   }
 
   registerPartitionAsSubcommand(partition: Role[], iteration = 0): void {

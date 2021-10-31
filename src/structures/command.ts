@@ -5,18 +5,15 @@ import {
   CommandInteraction,
   ContextMenuInteraction,
   Guild,
-  Snowflake,
 } from 'discord.js';
 import _ from 'lodash';
-import { client } from '../main.js';
-import { getBotConfig } from '../modules/database.js';
+import { client, ownerId } from '../main.js';
 import { logMessage } from '../modules/telemetry.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
 export default abstract class Command {
   private _scope: 'guild' | 'global';
   private _data: ApplicationCommandData;
-  private _ownerId?: Snowflake;
   private _options?: GuildCommandOptions;
 
   constructor(
@@ -92,8 +89,6 @@ export default abstract class Command {
         );
       }
     } else {
-      this._ownerId ??= await getBotConfig('BotOwnerId');
-
       for (const this_guild of context) {
         await this_guild.commands.fetch();
         const hasFilter = typeof this._options?.guilds === 'function';
@@ -177,9 +172,7 @@ export default abstract class Command {
       );
     }
 
-    if (this._ownerId) {
-      permissions.push({ id: this._ownerId, permission: true, type: 'USER' });
-    }
+    permissions.push({ id: ownerId, permission: true, type: 'USER' });
 
     if (this._options?.permissions?.users?.allow) {
       this._options.permissions.users.allow.forEach(id =>
