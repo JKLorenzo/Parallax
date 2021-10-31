@@ -26,7 +26,7 @@ const _usergames = new Map<string, string[]>();
 
 const _limiter = new Limiter(1800000);
 
-export async function connectDb(): Promise<void> {
+export async function initDatabase(): Promise<void> {
   await mongoClient.connect();
 }
 
