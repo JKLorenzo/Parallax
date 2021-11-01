@@ -92,20 +92,18 @@ export async function initMusic(): Promise<void> {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
-  const me = oldState.member?.user.id;
-  if (!me || me !== client.user?.id) return;
+  const bot_channel = oldState.guild.me?.voice.channel;
+  const member_channel = oldState.member?.voice.channel;
 
-  const channel = oldState.member.voice.channel;
-  if (!channel) return;
-
-  if (channel.members.filter(m => !m.user.bot).size > 0) return;
+  if (!bot_channel || !member_channel || bot_channel.id !== member_channel.id) return;
+  if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
 
   const subscription = getSubscription(oldState.guild.id);
   if (subscription) {
     subscription.voiceConnection.destroy();
     deleteSubscription(oldState.guild.id);
   }
-  await oldState.member.voice.disconnect();
+  await oldState.guild.me?.voice.disconnect();
 }
 
 export function getSubscription(guild_id: Snowflake): Subscription | undefined {
@@ -353,14 +351,7 @@ export async function musicStop(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (subscription && current_voice_channel?.id !== channel?.id) {
-    return interaction.reply({
-      content: "You must be on the same channel where I'm currently active to perform this action.",
-      ephemeral: true,
-    });
-  }
-
-  if (!subscription) {
+  if (!current_voice_channel || !subscription) {
     if (interaction instanceof CommandInteraction) {
       return interaction.reply({
         content: 'Not playing in this server.',
@@ -371,10 +362,17 @@ export async function musicStop(
     }
   }
 
+  if (current_voice_channel.id !== channel?.id) {
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
+  }
+
   subscription.stop({ force: true });
   if (interaction instanceof CommandInteraction) {
     await interaction.reply({
-      content: 'Stopped all songs.',
+      content: 'Playback stopped and all queued music are cleared.',
       ephemeral: true,
     });
   } else {
