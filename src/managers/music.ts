@@ -92,15 +92,20 @@ export async function initMusic(): Promise<void> {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
-  const me = oldState.guild.me;
-  if (!me) return;
+  const me = oldState.member?.user.id;
+  if (!me || me !== client.user?.id) return;
 
-  const channel = me.voice.channel;
+  const channel = oldState.member.voice.channel;
   if (!channel) return;
 
   if (channel.members.filter(m => !m.user.bot).size > 0) return;
 
-  await me.voice.disconnect();
+  const subscription = getSubscription(oldState.guild.id);
+  if (subscription) {
+    subscription.voiceConnection.destroy();
+    deleteSubscription(oldState.guild.id);
+  }
+  await oldState.member.voice.disconnect();
 }
 
 export function getSubscription(guild_id: Snowflake): Subscription | undefined {
