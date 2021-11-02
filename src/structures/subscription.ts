@@ -82,11 +82,16 @@ export default class Subscription {
     voiceConnection.subscribe(this.audioPlayer);
   }
 
-  enqueue(channel: TextChannel, query: string, title?: string, image?: string): Track {
+  async enqueue(
+    channel: TextChannel,
+    query: string,
+    title?: string,
+    image?: string,
+  ): Promise<number> {
     const track = new Track(channel, query, title, image);
     this.queue.push(track);
-    this.processQueue();
-    return track;
+    await this.processQueue();
+    return this.queue.length;
   }
 
   stop(options?: { skipCount?: number; force?: boolean }): number {
