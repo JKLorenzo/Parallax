@@ -203,6 +203,14 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
         for (let page = 1; page <= playlist_info.total_pages; page++) {
           const video_infos = await playlist_info.page(page);
+
+          for (let i = video_infos.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = video_infos[i];
+            video_infos[i] = video_infos[j];
+            video_infos[j] = temp;
+          }
+
           for (const video_info of video_infos) {
             enqueue(video_info.url, video_info.title, video_info.thumbnail?.url);
           }
@@ -226,8 +234,16 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         const spotify_playlist = await getSpotifyPlaylist(url);
         if (!spotify_playlist) return interaction.editReply('Spotify playlist not found.');
 
+        const spotify_infos = [...spotify_playlist.tracks.items];
+        for (let i = spotify_infos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = spotify_infos[i];
+          spotify_infos[i] = spotify_infos[j];
+          spotify_infos[j] = temp;
+        }
+
         let queued = 0;
-        for (const spotify_info of spotify_playlist.tracks.items) {
+        for (const spotify_info of spotify_infos) {
           const name = spotify_info.track.name;
           const artists = spotify_info.track.artists.map(a => a.name).join(', ');
 
@@ -260,11 +276,19 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         const soundcloud_playlist = await getSoundCloudPlaylist(url);
         if (!soundcloud_playlist) return interaction.editReply('SoundCloud playlist not found.');
 
-        for (const video_info of soundcloud_playlist.tracks) {
+        const soundcloud_infos = [...soundcloud_playlist.tracks];
+        for (let i = soundcloud_infos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = soundcloud_infos[i];
+          soundcloud_infos[i] = soundcloud_infos[j];
+          soundcloud_infos[j] = temp;
+        }
+
+        for (const soundcloud_info of soundcloud_infos) {
           enqueue(
-            video_info.url,
-            `${video_info.title} by ${video_info.author.name}`,
-            video_info.thumbnail,
+            soundcloud_info.url,
+            `${soundcloud_info.title} by ${soundcloud_info.author.name}`,
+            soundcloud_info.thumbnail,
           );
         }
 
