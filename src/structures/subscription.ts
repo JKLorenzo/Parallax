@@ -62,20 +62,22 @@ export default class Subscription {
     });
 
     this.audioPlayer.on('stateChange', (oldState, newState) => {
-      if (
-        newState.status === AudioPlayerStatus.Idle &&
-        oldState.status !== AudioPlayerStatus.Idle
-      ) {
-        (oldState.resource as AudioResource<Track>).metadata.onFinish();
+      const isOldStateIdle = oldState.status === AudioPlayerStatus.Idle;
+      const isNewStateIdle = newState.status === AudioPlayerStatus.Idle;
+      if (isNewStateIdle && !isOldStateIdle) {
+        const resource = oldState.resource as AudioResource<Track>;
+        resource.metadata.onFinish();
         this.processQueue();
       } else if (newState.status === AudioPlayerStatus.Playing) {
-        (newState.resource as AudioResource<Track>).metadata.onStart();
+        const resouce = newState.resource as AudioResource<Track>;
+        resouce.metadata.onStart();
       }
     });
 
-    this.audioPlayer.on('error', error =>
-      (error.resource as AudioResource<Track>).metadata.onError(error),
-    );
+    this.audioPlayer.on('error', error => {
+      const resource = error.resource as AudioResource<Track>;
+      resource.metadata.onError(error);
+    });
 
     voiceConnection.subscribe(this.audioPlayer);
   }
