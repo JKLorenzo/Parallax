@@ -25,11 +25,15 @@ export default class Subscription {
     this.queue = [];
 
     this.voiceConnection.on('stateChange', async (_, newState) => {
-      if (newState.status === VoiceConnectionStatus.Disconnected) {
-        if (
-          newState.reason === VoiceConnectionDisconnectReason.WebSocketClose &&
-          newState.closeCode === 4014
-        ) {
+      const isDisconnected = newState.status === VoiceConnectionStatus.Disconnected;
+      const isDestroyed = newState.status === VoiceConnectionStatus.Destroyed;
+      const isConnecting = newState.status === VoiceConnectionStatus.Connecting;
+      const isSignalling = newState.status === VoiceConnectionStatus.Signalling;
+
+      if (isDisconnected) {
+        const isWebsocketClosed =
+          newState.reason === VoiceConnectionDisconnectReason.WebSocketClose;
+        if (isWebsocketClosed && newState.closeCode === 4014) {
           try {
             await entersState(this.voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
           } catch {
@@ -41,13 +45,9 @@ export default class Subscription {
         } else {
           this.voiceConnection.destroy();
         }
-      } else if (newState.status === VoiceConnectionStatus.Destroyed) {
+      } else if (isDestroyed) {
         this.stop({ force: true });
-      } else if (
-        !this.readyLock &&
-        (newState.status === VoiceConnectionStatus.Connecting ||
-          newState.status === VoiceConnectionStatus.Signalling)
-      ) {
+      } else if (!this.readyLock && (isConnecting || isSignalling)) {
         this.readyLock = true;
         try {
           await entersState(this.voiceConnection, VoiceConnectionStatus.Ready, 20_000);
