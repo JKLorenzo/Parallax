@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "clean": "is-ci || rimraf dist",
+    "clean": "is-ci || rimraf {dist,*.mp3}",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "postinstall": "npm run clean && npm run build",
