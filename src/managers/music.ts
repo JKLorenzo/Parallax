@@ -25,7 +25,6 @@ import { synthesize } from '../modules/speech.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
-import { sleep } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
 
@@ -217,51 +216,27 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         const spotify_info = await getSpotifyTrack(url);
         if (!spotify_info) return interaction.editReply('Spotify track not found.');
 
+        const name = spotify_info.name;
         const artists = spotify_info.artists.map(a => a.name).join(', ');
-        const results = await playdl.search(`${spotify_info.name} by ${artists}`, { limit: 1 });
-        if (results.length === 0) return interaction.editReply(`Unable to play this track.`);
 
-        const result = results[0] as playdl.YouTube;
-        const video_info = await playdl.video_info(result.url!);
-
-        enqueue(
-          video_info.video_details.url,
-          `${spotify_info.name} by ${artists}`,
-          spotify_info.album.images[0].url,
-        );
+        enqueue(`${name} by ${artists}`, `${name} by ${artists}`, spotify_info.album.images[0].url);
 
         await interaction.editReply(`Enqueued **${spotify_info.name}** by **${artists}**.`);
       } else if (type === 'sp_playlist') {
         const spotify_playlist = await getSpotifyPlaylist(url);
         if (!spotify_playlist) return interaction.editReply('Spotify playlist not found.');
 
-        await interaction.editReply(
-          `Queueing ${spotify_playlist.tracks.total} songs from **${spotify_playlist.name}** playlist ` +
-            `by **${spotify_playlist.owner.display_name}**.`,
-        );
-
         let queued = 0;
         for (const spotify_info of spotify_playlist.tracks.items) {
           const name = spotify_info.track.name;
           const artists = spotify_info.track.artists.map(a => a.name).join(', ');
 
-          const results = await playdl.search(`${name} by ${artists}`, { limit: 1 });
-          if (results.length === 0) {
-            await sleep(1000);
-            continue;
-          }
-
-          const result = results[0] as playdl.YouTube;
-          const video_info = await playdl.video_info(result.url!);
-
           enqueue(
-            video_info.video_details.url,
+            `${name} by ${artists}`,
             `${name} by ${artists}`,
             spotify_info.track.album.images[0].url,
           );
-
           queued++;
-          await sleep(1000);
         }
 
         await interaction.editReply(
