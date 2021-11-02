@@ -25,6 +25,7 @@ import { synthesize } from '../modules/speech.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
+import { sleep } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
 
@@ -245,7 +246,10 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
           const artists = spotify_info.track.artists.map(a => a.name).join(', ');
 
           const results = await playdl.search(`${name} by ${artists}`, { limit: 1 });
-          if (results.length === 0) continue;
+          if (results.length === 0) {
+            await sleep(1000);
+            continue;
+          }
 
           const result = results[0] as playdl.YouTube;
           const video_info = await playdl.video_info(result.url!);
@@ -257,6 +261,7 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
           );
 
           queued++;
+          await sleep(1000);
         }
 
         await interaction.editReply(
