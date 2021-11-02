@@ -91,6 +91,13 @@ export default class Track {
   }
 
   async createAudioResource(): Promise<AudioResource<Track>> {
+    const type = await playdl.validate(this.query);
+    if (type === 'search') {
+      const results = await playdl.search(this.query, { limit: 1 });
+      if (results.length === 0) throw new Error('No match found for this query.');
+      this.query = results[0].url!;
+    }
+
     const stream = await playdl.stream(this.query);
     const resource = createAudioResource(stream.stream, {
       metadata: this,
