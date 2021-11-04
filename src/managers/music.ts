@@ -128,7 +128,7 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
   const current_voice_channel = guild.me?.voice.channel;
   let subscription = getSubscription(guild.id);
 
-  if (!channel) return interaction.reply('Join a voice channel and then try that again.');
+  if (!channel) return interaction.editReply('Join a voice channel and then try that again.');
 
   if (subscription && current_voice_channel && current_voice_channel.id !== channel.id) {
     return interaction.editReply("I'm currently playing on another channel.");
