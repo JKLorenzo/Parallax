@@ -98,10 +98,8 @@ export default class Subscription {
     let skipped = 0;
     if (options?.force) this.queueLock = true;
     if (options?.skipCount) {
-      if (options?.skipCount > 1) {
-        skipped = this.queue.splice(0, options?.skipCount - 1).length;
-        skipped += this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
-      }
+      if (options?.skipCount > 1) skipped = this.queue.splice(0, options?.skipCount - 1).length;
+      skipped += this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
     } else {
       this.queue = [];
     }
