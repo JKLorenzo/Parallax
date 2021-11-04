@@ -79,7 +79,7 @@ export default class Subscription {
       resource.metadata.onError(error);
     });
 
-    voiceConnection.subscribe(this.audioPlayer);
+    this.voiceConnection.subscribe(this.audioPlayer);
   }
 
   async enqueue(
