@@ -128,16 +128,13 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
   const current_voice_channel = guild.me?.voice.channel;
   let subscription = getSubscription(guild.id);
 
-  if (subscription && subscription.queue.length > 0 && current_voice_channel?.id !== channel?.id) {
-    return interaction.followUp("I'm currently playing on another channel.");
+  if (!channel) return interaction.reply('Join a voice channel and then try that again.');
+
+  if (subscription && current_voice_channel && current_voice_channel.id !== channel.id) {
+    return interaction.editReply("I'm currently playing on another channel.");
   }
 
-  if (
-    channel &&
-    (!subscription ||
-      (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle &&
-        subscription.queue.length === 0))
-  ) {
+  if (!subscription || !current_voice_channel) {
     subscription = new Subscription(
       joinVoiceChannel({
         channelId: channel.id,
@@ -149,17 +146,10 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     setSubscription(guild.id, subscription);
   }
 
-  if (!subscription) {
-    return interaction.followUp('Join a voice channel and then try that again.');
-  }
-
   try {
     await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
   } catch (error) {
-    console.warn(error);
-    return interaction.followUp(
-      'Failed to join voice channel within 20 seconds, please try again later.',
-    );
+    return interaction.editReply('Failed to join voice channel within 20 seconds.');
   }
 
   try {
@@ -340,36 +330,28 @@ export async function musicSkip(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (subscription && current_voice_channel?.id !== channel?.id) {
+  if (!subscription) return interaction.reply('Not playing in this server.');
+
+  if (!current_voice_channel || !channel || current_voice_channel.id !== channel.id) {
     return interaction.reply({
       content: "You must be on the same channel where I'm currently active to perform this action.",
-      ephemeral: true,
     });
   }
 
-  if (!subscription) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
-  }
-
+  let skipped = 0;
   if (interaction instanceof CommandInteraction) {
     const count = interaction.options.getInteger('count', false) ?? 1;
-    const skipped = subscription.stop({ skipCount: count });
-
-    await interaction.reply({
-      content: `Skipped ${skipped} ${skipped > 1 ? 'songs' : 'song'}.`,
-      ephemeral: true,
-    });
+    skipped = subscription.stop({ skipCount: count });
   } else {
-    subscription.stop({ skipCount: 1 });
-    await interaction.deferUpdate();
+    skipped = subscription.stop({ skipCount: 1 });
   }
+
+  await interaction.reply({
+    content: `${interaction.member} skipped ${skipped} ${skipped === 1 ? 'song' : 'songs'}.`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 export async function musicStop(
@@ -381,33 +363,22 @@ export async function musicStop(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (!current_voice_channel || !subscription) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
-  }
+  if (!subscription) return interaction.reply('Not playing in this server.');
 
-  if (current_voice_channel.id !== channel?.id) {
-    return interaction.reply({
-      content: "You must be on the same channel where I'm currently active to perform this action.",
-      ephemeral: true,
-    });
+  if (!current_voice_channel || !channel || current_voice_channel.id !== channel.id) {
+    return interaction.reply(
+      "You must be on the same channel where I'm currently active to perform this action.",
+    );
   }
 
   subscription.stop({ force: true });
-  if (interaction instanceof CommandInteraction) {
-    await interaction.reply({
-      content: 'Playback stopped and all queued music are cleared.',
-      ephemeral: true,
-    });
-  } else {
-    await interaction.deferUpdate();
-  }
+
+  await interaction.reply({
+    content: `Playback stopped by ${interaction.member}, and all queued music is cleared.`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 export async function musicQueue(
@@ -416,33 +387,25 @@ export async function musicQueue(
   const guild = interaction.guild as Guild;
   const subscription = getSubscription(guild.id);
 
-  if (!subscription) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
+  if (!subscription) return interaction.reply('Not playing in this server.');
+
+  if (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle) {
+    return interaction.reply({
+      content: 'Nothing is currently playing.',
+      ephemeral: true,
+    });
+  } else {
+    const resource = subscription.audioPlayer.state.resource as AudioResource<Track>;
+    const queue = subscription.queue
+      .slice(0, 10)
+      .map((track, index) => `${index + 1}) ${track.title}`)
+      .join('\n');
+
+    await interaction.reply({
+      content: `**Now Playing:**\n${resource.metadata.title}\n\n**On Queue: ${subscription.queue.length}**\n${queue}`,
+      ephemeral: true,
+    });
   }
-
-  const current =
-    subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
-      ? `Nothing is currently playing!`
-      : `**Now Playing:**\n${
-          (subscription.audioPlayer.state.resource as AudioResource<Track>).metadata.title
-        }`;
-
-  const queue = subscription.queue
-    .slice(0, 10)
-    .map((track, index) => `${index + 1}) ${track.title}`)
-    .join('\n');
-
-  await interaction.reply({
-    content: `${current}\n\n**On Queue: ${subscription.queue.length}**\n${queue}`,
-    ephemeral: true,
-  });
 }
 
 export async function musicPause(
@@ -455,32 +418,21 @@ export async function musicPause(
   const subscription = getSubscription(guild.id);
 
   if (subscription && current_voice_channel?.id !== channel?.id) {
-    return interaction.reply({
-      content: "You must be on the same channel where I'm currently active to perform this action.",
-      ephemeral: true,
-    });
+    return interaction.reply(
+      "You must be on the same channel where I'm currently active to perform this action.",
+    );
   }
 
-  if (!subscription) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
-  }
+  if (!subscription) return interaction.reply('Not playing in this server.');
 
   subscription.audioPlayer.pause();
-  if (interaction instanceof CommandInteraction) {
-    await interaction.reply({
-      content: 'Paused.',
-      ephemeral: true,
-    });
-  } else {
-    await interaction.deferUpdate();
-  }
+
+  await interaction.reply({
+    content: `Playback paused by ${interaction.member}.`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 export async function musicResume(
@@ -499,26 +451,16 @@ export async function musicResume(
     });
   }
 
-  if (!subscription) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
-  }
+  if (!subscription) return interaction.reply('Not playing in this server.');
 
   subscription.audioPlayer.unpause();
-  if (interaction instanceof CommandInteraction) {
-    await interaction.reply({
-      content: 'Unpaused.',
-      ephemeral: true,
-    });
-  } else {
-    await interaction.deferUpdate();
-  }
+
+  await interaction.reply({
+    content: `Playback resumed by ${interaction.member}.`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 export async function musicLeave(
@@ -531,22 +473,12 @@ export async function musicLeave(
   const subscription = getSubscription(guild.id);
 
   if (subscription && current_voice_channel && current_voice_channel?.id !== channel?.id) {
-    return interaction.reply({
-      content: "You must be on the same channel where I'm currently active to perform this action.",
-      ephemeral: true,
-    });
+    return interaction.reply(
+      "You must be on the same channel where I'm currently active to perform this action.",
+    );
   }
 
-  if (!subscription && !current_voice_channel) {
-    if (interaction instanceof CommandInteraction) {
-      return interaction.reply({
-        content: 'Not playing in this server.',
-        ephemeral: true,
-      });
-    } else {
-      return interaction.deferUpdate();
-    }
-  }
+  if (!subscription) return interaction.reply('Not playing in this server.');
 
   if (subscription) {
     subscription.voiceConnection.destroy();
@@ -556,7 +488,9 @@ export async function musicLeave(
   }
 
   await interaction.reply({
-    content: 'Disconnected from the channel.',
-    ephemeral: true,
+    content: `Voice channel disconnect initiated by ${interaction.member}.`,
+    allowedMentions: {
+      parse: [],
+    },
   });
 }
