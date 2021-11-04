@@ -61,13 +61,16 @@ export async function initInteraction(): Promise<void> {
     const deleted_commands = await Promise.all(promises);
     for (const command of deleted_commands) {
       if (command.guildId) {
-        logMessage('Interaction', `Guild Command ${command.name} deleted on ${command.guild}`);
+        logMessage(
+          'Interaction Manager',
+          `Guild Command ${command.name} deleted on ${command.guild}`,
+        );
       } else {
-        logMessage('Interaction', `Global Command ${command.name} deleted`);
+        logMessage('Interaction Manager', `Global Command ${command.name} deleted`);
       }
     }
   } catch (error) {
-    logError('Interaction', 'Initialize', error);
+    logError('Interaction Manager', 'Initialize', error);
   }
 
   client.on('interactionCreate', interaction => {
@@ -93,7 +96,7 @@ async function processCommand(
   try {
     await this_command.exec(interaction);
   } catch (error) {
-    logError('Interaction', 'Process Command', error);
+    logError('Interaction Manager', 'Process Command', error);
   }
 }
 
@@ -104,6 +107,6 @@ async function processComponent(interaction: MessageComponentInteraction): Promi
   try {
     await this_component.exec(interaction, customId);
   } catch (error) {
-    logError('Interaction', 'Process Component', error);
+    logError('Interaction Manager', 'Process Component', error);
   }
 }

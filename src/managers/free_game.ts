@@ -69,7 +69,7 @@ export async function scan(url?: string): Promise<string> {
     }
     return 'Uh-oh! The link you provided is no longer valid.';
   } catch (error) {
-    logError('Free Game', 'Scan', error);
+    logError('Free Game Manager', 'Scan', error);
     return `${error}`;
   }
 }
@@ -228,7 +228,7 @@ async function post(data: RedditPostData): Promise<string> {
 
     return `Done! ${embed.title} is pushed to ${server_count} servers.`;
   } catch (error) {
-    logError('Free Game', 'Post', error);
+    logError('Free Game Manager', 'Post', error);
     return `${error}`;
   }
 }
