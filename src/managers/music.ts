@@ -184,7 +184,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       );
 
       await interaction.editReply(
-        `Enqueued **${title}** by **${uploader}** at position ${position}.`,
+        `Enqueued **${title}** by **${uploader}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`,
       );
     } else {
       // Handle shortened urls
@@ -205,7 +207,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         );
 
         await interaction.editReply(
-          `Enqueued **${title}** by **${uploader}** at position ${position}.`,
+          `Enqueued **${title}** by **${uploader}**${
+            position > 0 ? ` at position ${position}` : ''
+          }.`,
         );
       } else if (type === 'yt_playlist') {
         const playlist_info = await playdl.playlist_info(url);
@@ -246,7 +250,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         );
 
         await interaction.editReply(
-          `Enqueued **${spotify_info.name}** by **${artists}** at position ${position}.`,
+          `Enqueued **${spotify_info.name}** by **${artists}**${
+            position > 0 ? ` at position ${position}` : ''
+          }.`,
         );
       } else if (type === 'sp_playlist') {
         const spotify_playlist = await getSpotifyPlaylist(url);
@@ -288,7 +294,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         );
 
         await interaction.editReply(
-          `Enqueued **${soundcloud_info.title}** by **${soundcloud_info.author.name}** at position ${position}.`,
+          `Enqueued **${soundcloud_info.title}** by **${soundcloud_info.author.name}**${
+            position > 0 ? ` at position ${position}` : ''
+          }.`,
         );
       } else if (type === 'so_playlist') {
         const soundcloud_playlist = await getSoundCloudPlaylist(url);
