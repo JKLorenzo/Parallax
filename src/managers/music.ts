@@ -174,15 +174,17 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       const result = results[0] as playdl.YouTube;
       const video_info = await playdl.video_info(result.url!);
 
+      const title = video_info.video_details.title;
+      const uploader = video_info.video_details.channel?.name;
+
       const position = await enqueue(
         video_info.video_details.url,
-        video_info.video_details.title,
+        `${title} by ${uploader}`,
         video_info.video_details.thumbnail?.url,
       );
 
       await interaction.editReply(
-        `Enqueued **${video_info.video_details.title}** by **${video_info.video_details.channel?.name}** ` +
-          `at position ${position}.`,
+        `Enqueued **${title}** by **${uploader}** at position ${position}.`,
       );
     } else {
       // Handle shortened urls
@@ -193,15 +195,17 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       if (type === 'yt_video') {
         const video_info = await playdl.video_info(url);
 
+        const title = video_info.video_details.title;
+        const uploader = video_info.video_details.channel?.name;
+
         const position = await enqueue(
           url,
-          video_info.video_details.title,
+          `${title} by ${uploader}`,
           video_info.video_details.thumbnail?.url,
         );
 
         await interaction.editReply(
-          `Enqueued **${video_info.video_details.title}** by **${video_info.video_details.channel?.name}** ` +
-            `at position ${position}.`,
+          `Enqueued **${title}** by **${uploader}** at position ${position}.`,
         );
       } else if (type === 'yt_playlist') {
         const playlist_info = await playdl.playlist_info(url);
@@ -218,7 +222,9 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
           }
 
           for (const video_info of video_infos) {
-            enqueue(video_info.url, video_info.title, video_info.thumbnail?.url);
+            const title = video_info.title;
+            const uploader = video_info.channel?.name;
+            enqueue(video_info.url, `${title} by ${uploader}`, video_info.thumbnail?.url);
           }
         }
 
