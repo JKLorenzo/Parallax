@@ -373,10 +373,12 @@ export async function musicStop(
     );
   }
 
-  subscription.stop({ force: true });
+  const cleared = subscription.stop();
 
   await interaction.reply({
-    content: `Playback stopped by ${interaction.member}, and all queued music is cleared.`,
+    content: `Playback stopped by ${interaction.member}, and ${cleared} ${
+      cleared === 1 ? 'song is' : 'songs are'
+    } removed from the queue.`,
     allowedMentions: {
       parse: [],
     },
