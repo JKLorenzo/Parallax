@@ -23,6 +23,7 @@ import { client } from '../main.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import { synthesize } from '../modules/speech.js';
 import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
+import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
 
@@ -58,11 +59,10 @@ export async function initMusic(): Promise<void> {
 
       try {
         await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
-      } catch (error) {
+        connection.subscribe(player);
+      } catch (_) {
         connection.destroy();
       }
-
-      connection.subscribe(player);
     }
 
     player.play(resource);
@@ -142,13 +142,15 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
       }),
     );
-    subscription.voiceConnection.on('error', console.warn);
+    subscription.voiceConnection.on('error', error => {
+      logError('Music Manager', 'Voice Connection', error);
+    });
     setSubscription(guild.id, subscription);
   }
 
   try {
     await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
-  } catch (error) {
+  } catch (_) {
     return interaction.editReply('Failed to join voice channel within 20 seconds.');
   }
 
