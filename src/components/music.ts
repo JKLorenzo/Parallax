@@ -156,6 +156,12 @@ export default class Music extends Component {
             });
           }
 
+          if (!guild.me.permissionsIn(channel).has('MANAGE_CHANNELS')) {
+            return interaction.reply(
+              'I need to have the `Manage Channels` permission to change voice channel regions.',
+            );
+          }
+
           if (region !== current_voice_channel.rtcRegion) {
             await current_voice_channel.setRTCRegion(region);
 
