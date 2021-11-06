@@ -134,6 +134,34 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
     return interaction.editReply("I'm currently playing on another channel.");
   }
 
+  if (!guild.me?.permissionsIn(channel).has('VIEW_CHANNEL')) {
+    return interaction.editReply(
+      'I need to have the `View Channel` permission to join your current voice channel.',
+    );
+  }
+
+  if (!guild.me?.permissionsIn(channel).has('CONNECT')) {
+    return interaction.editReply(
+      'I need to have the `Connect` permission to join your current voice channel.',
+    );
+  }
+
+  if (!guild.me?.permissionsIn(channel).has('SPEAK')) {
+    return interaction.editReply('I need to have the `Speak` permission to use this command.');
+  }
+
+  if (!guild.me?.permissionsIn(channel).has('USE_VAD')) {
+    return interaction.editReply(
+      'I need to have the `Use Voice Activity` permission to use this command.',
+    );
+  }
+
+  if (channel.full && !channel.joinable) {
+    return interaction.editReply(
+      'Your current voice channel has a user limit and is already full.',
+    );
+  }
+
   if (!subscription || !current_voice_channel) {
     subscription = new Subscription(
       joinVoiceChannel({
