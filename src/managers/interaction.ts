@@ -80,6 +80,12 @@ export async function initInteraction(): Promise<void> {
       return processComponent(interaction);
     }
   });
+
+  client.on('guildCreate', async guild => {
+    for (const command of _commands.values()) {
+      await command.init(guild);
+    }
+  });
 }
 
 export function getComponent(
