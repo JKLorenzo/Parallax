@@ -160,23 +160,35 @@ export default class Music extends Component {
             await current_voice_channel.setRTCRegion(region);
 
             const embed = interaction.message.embeds[0] as MessageEmbed;
+            const channel_name = current_voice_channel?.name ?? 'Unknown';
+            const channel_bitrate = current_voice_channel
+              ? `${current_voice_channel.bitrate / 1000}kbps`
+              : 'Unknown';
+            const channel_region = current_voice_channel
+              ? current_voice_channel.rtcRegion
+                  ?.split(' ')
+                  .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
+              : 'Unknown';
+
             await interaction.update({
               embeds: [
                 embed.setFooter(
-                  `Channel: ${current_voice_channel?.name ?? 'Unknown'}  |  Region: ${
-                    current_voice_channel?.rtcRegion
-                      ?.split(' ')
-                      .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
-                  }  |  Bitrate: ${
-                    current_voice_channel
-                      ? `${current_voice_channel.bitrate / 1000}kbps`
-                      : 'Unknown'
-                  }`,
+                  `Channel: ${channel_name}  |  Region: ${channel_region}  |  Bitrate: ${channel_bitrate}`,
                 ),
               ],
             });
+            await interaction.followUp({
+              content: `${member} changed the voice channel region to ${channel_region}.`,
+              allowedMentions: {
+                parse: [],
+              },
+            });
           } else {
-            await interaction.deferUpdate();
+            await interaction.reply({
+              content:
+                'Your current voice channel is already set to the desired voice channel region.',
+              ephemeral: true,
+            });
           }
           break;
         }
