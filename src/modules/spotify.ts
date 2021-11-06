@@ -2,6 +2,7 @@ import SpotifyWebApi from 'spotify-web-api-node';
 
 const _trackCache = new Map<string, SpotifyApi.SingleTrackResponse>();
 const _playlistCache = new Map<string, SpotifyApi.SinglePlaylistResponse>();
+const _albumCache = new Map<string, SpotifyApi.SingleAlbumResponse>();
 
 const spotify = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_ID,
@@ -49,6 +50,22 @@ export async function getSpotifyPlaylist(
 
   const data = playlist.body;
   if (data) _playlistCache.set(playlistId, data);
+
+  return data;
+}
+
+export async function getSpotifyAlbum(
+  url: string,
+): Promise<SpotifyApi.SingleAlbumResponse | undefined> {
+  const albumId = url.split('album/')[1].split('?si=')[0].trim();
+
+  const cached = _albumCache.get(albumId);
+  if (cached) return cached;
+
+  const album = await spotify.getAlbum(albumId);
+
+  const data = album.body;
+  if (data) _albumCache.set(albumId, data);
 
   return data;
 }
