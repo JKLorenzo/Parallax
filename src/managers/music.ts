@@ -22,7 +22,7 @@ import playdl from 'play-dl';
 import { client } from '../main.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import { synthesize } from '../modules/speech.js';
-import { getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
+import { getSpotifyAlbum, getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
@@ -274,6 +274,31 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         await interaction.editReply(
           `Enqueued ${queued} songs from **${spotify_playlist.name}** playlist ` +
             `by **${spotify_playlist.owner.display_name}**.`,
+        );
+      } else if (type === 'sp_album') {
+        const spotify_album = await getSpotifyAlbum(url);
+        if (!spotify_album) return interaction.editReply('Spotify album not found.');
+
+        const spotify_infos = [...spotify_album.tracks.items];
+        for (let i = spotify_infos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = spotify_infos[i];
+          spotify_infos[i] = spotify_infos[j];
+          spotify_infos[j] = temp;
+        }
+
+        let queued = 0;
+        for (const spotify_info of spotify_infos) {
+          const name = spotify_info.name;
+          const artists = spotify_info.artists.map(a => a.name).join(', ');
+
+          enqueue(`${name} by ${artists}`, `${name} by ${artists}`, spotify_album.images[0].url);
+          queued++;
+        }
+
+        await interaction.editReply(
+          `Enqueued ${queued} songs from **${spotify_album.name}** album ` +
+            `by **${spotify_album.artists.map(a => a.name).join(', ')}**.`,
         );
       } else if (type === 'so_track') {
         const soundcloud_info = await getSoundCloudTrack(url);
