@@ -166,19 +166,17 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       const result = results[0] as playdl.YouTube;
       const video_info = await playdl.video_info(result.url!);
 
-      const title = video_info.video_details.title;
-      const uploader = video_info.video_details.channel?.name;
+      const title = video_info.video_details.title?.trim();
+      const author = video_info.video_details.channel?.name?.trim();
 
       const position = await enqueue(
         video_info.video_details.url,
-        `${title} by ${uploader}`,
+        `${title} by ${author}`,
         video_info.video_details.thumbnail?.url,
       );
 
       await interaction.editReply(
-        `Enqueued **${title}** by **${uploader}**${
-          position > 0 ? ` at position ${position}` : ''
-        }.`,
+        `Enqueued **${title}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
       );
     } else {
       // Handle shortened urls
@@ -189,23 +187,26 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
       if (type === 'yt_video') {
         const video_info = await playdl.video_info(url);
 
-        const title = video_info.video_details.title;
-        const uploader = video_info.video_details.channel?.name;
+        const title = video_info.video_details.title?.trim();
+        const author = video_info.video_details.channel?.name?.trim();
 
         const position = await enqueue(
           url,
-          `${title} by ${uploader}`,
+          `${title} by ${author}`,
           video_info.video_details.thumbnail?.url,
         );
 
         await interaction.editReply(
-          `Enqueued **${title}** by **${uploader}**${
+          `Enqueued **${title}** by **${author}**${
             position > 0 ? ` at position ${position}` : ''
           }.`,
         );
       } else if (type === 'yt_playlist') {
         const playlist_info = await playdl.playlist_info(url);
         await playlist_info.fetch();
+
+        const playlist_title = playlist_info.title?.trim();
+        const playlist_author = playlist_info.channel?.name?.trim();
 
         for (let page = 1; page <= playlist_info.total_pages; page++) {
           const video_infos = await playlist_info.page(page);
@@ -218,37 +219,41 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
           }
 
           for (const video_info of video_infos) {
-            const title = video_info.title;
-            const uploader = video_info.channel?.name;
-            enqueue(video_info.url, `${title} by ${uploader}`, video_info.thumbnail?.url);
+            const title = video_info.title?.trim();
+            const author = video_info.channel?.name?.trim();
+            await enqueue(video_info.url, `${title} by ${author}`, video_info.thumbnail?.url);
           }
         }
 
         await interaction.editReply(
-          `Enqueued ${playlist_info.total_videos} songs from **${playlist_info.title}** playlist ` +
-            `by **${playlist_info.channel?.name}**.`,
+          `Enqueued ${playlist_info.total_videos} songs from **${playlist_title}** playlist ` +
+            `by **${playlist_author}**.`,
         );
       } else if (type === 'sp_track') {
         const spotify_info = await getSpotifyTrack(url);
         if (!spotify_info) return interaction.editReply('Spotify track not found.');
 
-        const name = spotify_info.name;
-        const artists = spotify_info.artists.map(a => a.name).join(', ');
+        const name = spotify_info.name?.trim();
+        const author = spotify_info.artists
+          .map(a => a.name)
+          .join(', ')
+          .trim();
 
         const position = await enqueue(
-          `${name} by ${artists}`,
-          `${name} by ${artists}`,
+          `${name} by ${author}`,
+          `${name} by ${author}`,
           spotify_info.album.images[0].url,
         );
 
         await interaction.editReply(
-          `Enqueued **${spotify_info.name}** by **${artists}**${
-            position > 0 ? ` at position ${position}` : ''
-          }.`,
+          `Enqueued **${name}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
         );
       } else if (type === 'sp_playlist') {
         const spotify_playlist = await getSpotifyPlaylist(url);
         if (!spotify_playlist) return interaction.editReply('Spotify playlist not found.');
+
+        const playlist_title = spotify_playlist.name.trim();
+        const playlist_author = spotify_playlist.owner.display_name?.trim();
 
         const spotify_infos = [...spotify_playlist.tracks.items];
         for (let i = spotify_infos.length - 1; i > 0; i--) {
@@ -260,10 +265,13 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
         let queued = 0;
         for (const spotify_info of spotify_infos) {
-          const name = spotify_info.track.name;
-          const artists = spotify_info.track.artists.map(a => a.name).join(', ');
+          const name = spotify_info.track.name?.trim();
+          const artists = spotify_info.track.artists
+            .map(a => a.name)
+            .join(', ')
+            .trim();
 
-          enqueue(
+          await enqueue(
             `${name} by ${artists}`,
             `${name} by ${artists}`,
             spotify_info.track.album.images[0].url,
@@ -272,12 +280,17 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         }
 
         await interaction.editReply(
-          `Enqueued ${queued} songs from **${spotify_playlist.name}** playlist ` +
-            `by **${spotify_playlist.owner.display_name}**.`,
+          `Enqueued ${queued} songs from **${playlist_title}** playlist by **${playlist_author}**.`,
         );
       } else if (type === 'sp_album') {
         const spotify_album = await getSpotifyAlbum(url);
         if (!spotify_album) return interaction.editReply('Spotify album not found.');
+
+        const album_title = spotify_album.name.trim();
+        const album_author = spotify_album.artists
+          .map(a => a.name)
+          .join(', ')
+          .trim();
 
         const spotify_infos = [...spotify_album.tracks.items];
         for (let i = spotify_infos.length - 1; i > 0; i--) {
@@ -289,35 +302,47 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
         let queued = 0;
         for (const spotify_info of spotify_infos) {
-          const name = spotify_info.name;
-          const artists = spotify_info.artists.map(a => a.name).join(', ');
+          const name = spotify_info.name.trim();
+          const artists = spotify_info.artists
+            .map(a => a.name)
+            .join(', ')
+            .trim();
 
-          enqueue(`${name} by ${artists}`, `${name} by ${artists}`, spotify_album.images[0].url);
+          await enqueue(
+            `${name} by ${artists}`,
+            `${name} by ${artists}`,
+            spotify_album.images[0].url,
+          );
           queued++;
         }
 
         await interaction.editReply(
-          `Enqueued ${queued} songs from **${spotify_album.name}** album ` +
-            `by **${spotify_album.artists.map(a => a.name).join(', ')}**.`,
+          `Enqueued ${queued} songs from **${album_title}** album by **${album_author}**.`,
         );
       } else if (type === 'so_track') {
         const soundcloud_info = await getSoundCloudTrack(url);
         if (!soundcloud_info) return interaction.editReply('SoundCloud track not found.');
 
+        const track_title = soundcloud_info.title.trim();
+        const track_author = soundcloud_info.author.name.trim();
+
         const position = await enqueue(
           soundcloud_info.url,
-          `${soundcloud_info.title} by ${soundcloud_info.author.name}`,
+          `${track_title} by ${track_author}`,
           soundcloud_info.thumbnail,
         );
 
         await interaction.editReply(
-          `Enqueued **${soundcloud_info.title}** by **${soundcloud_info.author.name}**${
+          `Enqueued **${track_title}** by **${track_author}**${
             position > 0 ? ` at position ${position}` : ''
           }.`,
         );
       } else if (type === 'so_playlist') {
         const soundcloud_playlist = await getSoundCloudPlaylist(url);
         if (!soundcloud_playlist) return interaction.editReply('SoundCloud playlist not found.');
+
+        const playlist_title = soundcloud_playlist.title.trim();
+        const playlist_author = soundcloud_playlist.author.name.trim();
 
         const soundcloud_infos = [...soundcloud_playlist.tracks];
         for (let i = soundcloud_infos.length - 1; i > 0; i--) {
@@ -328,16 +353,18 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
         }
 
         for (const soundcloud_info of soundcloud_infos) {
-          enqueue(
+          const track_title = soundcloud_info.title.trim();
+          const track_author = soundcloud_info.author.name.trim();
+          await enqueue(
             soundcloud_info.url,
-            `${soundcloud_info.title} by ${soundcloud_info.author.name}`,
+            `${track_title} by ${track_author}`,
             soundcloud_info.thumbnail,
           );
         }
 
         await interaction.editReply(
-          `Enqueued ${soundcloud_playlist.trackCount} songs from **${soundcloud_playlist.title}** playlist ` +
-            `by **${soundcloud_playlist.author.name}**.`,
+          `Enqueued ${soundcloud_playlist.trackCount} songs from **${playlist_title}** playlist ` +
+            `by **${playlist_author}**.`,
         );
       } else {
         await interaction.editReply('This URL is currently not supported.');
