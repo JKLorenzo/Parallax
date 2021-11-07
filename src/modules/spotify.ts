@@ -1,5 +1,6 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 
+const _searchCache = new Map<string, SpotifyApi.SearchResponse>();
 const _trackCache = new Map<string, SpotifyApi.SingleTrackResponse>();
 const _playlistCache = new Map<string, SpotifyApi.SinglePlaylistResponse>();
 const _albumCache = new Map<string, SpotifyApi.SingleAlbumResponse>();
@@ -21,6 +22,20 @@ async function initSpotify(): Promise<void> {
 }
 
 await initSpotify();
+
+export async function searchSpotify(query: string): Promise<SpotifyApi.SearchResponse> {
+  const searchQuery = query.toLowerCase().replaceAll('  ', ' ').trim();
+
+  const cached = _searchCache.get(searchQuery);
+  if (cached) return cached;
+
+  const track = await spotify.search(query, ['track'], { limit: 1 });
+
+  const data = track.body;
+  if (data) _searchCache.set(searchQuery, data);
+
+  return data;
+}
 
 export async function getSpotifyTrack(
   url: string,
