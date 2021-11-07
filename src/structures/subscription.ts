@@ -99,10 +99,11 @@ export default class Subscription {
     if (options?.force) this.queueLock = true;
     if (options?.skipCount) {
       if (options?.skipCount > 1) skipped = this.queue.splice(0, options?.skipCount - 1).length;
-      skipped += this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
     } else {
+      skipped = this.queue.length;
       this.queue = [];
     }
+    skipped += this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
     this.audioPlayer.stop(options?.force);
     return skipped;
   }
