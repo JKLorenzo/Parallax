@@ -1,11 +1,9 @@
 import {
   AudioPlayerStatus,
   AudioResource,
-  createAudioPlayer,
   DiscordGatewayAdapterCreator,
   entersState,
   joinVoiceChannel,
-  NoSubscriberBehavior,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import {
@@ -21,7 +19,6 @@ import fetch from 'node-fetch';
 import playdl from 'play-dl';
 import { client } from '../main.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
-import { synthesize } from '../modules/speech.js';
 import {
   getSpotifyAlbum,
   getSpotifyPlaylist,
@@ -35,57 +32,6 @@ import Track from '../structures/track.js';
 const _subscriptions = new Map<Snowflake, Subscription>();
 
 export async function initMusic(): Promise<void> {
-  const active_guilds = client.guilds.cache.filter(guild => {
-    const member = guild.me;
-    if (!member) return false;
-    if (!member.voice.channelId) return false;
-    return true;
-  });
-
-  if (active_guilds.size > 0) {
-    const resource = await synthesize(
-      'All queued music was removed due to a bot restart. I will now disconnect from this channel.',
-    );
-    const player = createAudioPlayer({
-      behaviors: {
-        noSubscriber: NoSubscriberBehavior.Play,
-      },
-    });
-
-    for (const guild of active_guilds.values()) {
-      const channelId = guild.me?.voice.channelId;
-      if (!channelId) continue;
-
-      const connection = joinVoiceChannel({
-        channelId: channelId,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-      });
-
-      try {
-        await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
-        connection.subscribe(player);
-      } catch (_) {
-        connection.destroy();
-      }
-    }
-
-    player.play(resource);
-
-    player.on('stateChange', (oldState, newState) => {
-      if (
-        oldState.status === AudioPlayerStatus.Playing &&
-        newState.status === AudioPlayerStatus.Idle
-      ) {
-        for (const guild of active_guilds.values()) {
-          guild.me?.voice.disconnect();
-        }
-        player.removeAllListeners();
-        console.log('Playback has stopped');
-      }
-    });
-  }
-
   playdl.setToken({
     soundcloud: {
       client_id: process.env.SOUNDCLOUD_ID!,
