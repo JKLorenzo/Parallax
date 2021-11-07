@@ -11,20 +11,26 @@ import { sleep } from '../../utils/functions.js';
 
 export default class Purge extends Command {
   constructor() {
-    super('guild', {
-      name: 'purge',
-      description: 'Removes a number of messages on the current channel.',
-      type: 'CHAT_INPUT',
-      defaultPermission: true,
-      options: [
-        {
-          name: 'message_count',
-          description: 'The number of messages to delete.',
-          type: 'INTEGER',
-          required: true,
-        },
-      ],
-    });
+    super(
+      'guild',
+      {
+        name: 'purge',
+        description: 'Removes a number of messages on the current channel.',
+        type: 'CHAT_INPUT',
+        defaultPermission: true,
+        options: [
+          {
+            name: 'message_count',
+            description: 'The number of messages to delete.',
+            type: 'INTEGER',
+            required: true,
+          },
+        ],
+      },
+      {
+        guilds: guild => guild.me?.permissions.has('MANAGE_MESSAGES') ?? false,
+      },
+    );
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {
