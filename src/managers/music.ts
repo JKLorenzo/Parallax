@@ -124,8 +124,6 @@ export function deleteSubscription(guild_id: Snowflake): void {
 }
 
 export async function musicPlay(interaction: CommandInteraction): Promise<unknown> {
-  await interaction.deferReply();
-
   const song = interaction.options.getString('song', true).trim();
   const guild = interaction.guild as Guild;
   const member = interaction.member as GuildMember;
@@ -133,39 +131,56 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
   const current_voice_channel = guild.me?.voice.channel;
   let subscription = getSubscription(guild.id);
 
-  if (!channel) return interaction.editReply('Join a voice channel and then try that again.');
+  if (!channel) {
+    return interaction.reply({
+      content: 'Join a voice channel and then try that again.',
+      ephemeral: true,
+    });
+  }
 
   if (subscription && current_voice_channel && current_voice_channel.id !== channel.id) {
-    return interaction.editReply("I'm currently playing on another channel.");
+    return interaction.reply({
+      content: "I'm currently playing on another channel.",
+      ephemeral: true,
+    });
   }
 
   if (!guild.me?.permissionsIn(channel).has('VIEW_CHANNEL')) {
-    return interaction.editReply(
-      'I need to have the `View Channel` permission to join your current voice channel.',
-    );
+    return interaction.reply({
+      content: 'I need to have the `View Channel` permission to join your current voice channel.',
+      ephemeral: true,
+    });
   }
 
   if (!guild.me?.permissionsIn(channel).has('CONNECT')) {
-    return interaction.editReply(
-      'I need to have the `Connect` permission to join your current voice channel.',
-    );
+    return interaction.reply({
+      content: 'I need to have the `Connect` permission to join your current voice channel.',
+      ephemeral: true,
+    });
   }
 
   if (!guild.me?.permissionsIn(channel).has('SPEAK')) {
-    return interaction.editReply('I need to have the `Speak` permission to use this command.');
+    return interaction.reply({
+      content: 'I need to have the `Speak` permission to use this command.',
+      ephemeral: true,
+    });
   }
 
   if (!guild.me?.permissionsIn(channel).has('USE_VAD')) {
-    return interaction.editReply(
-      'I need to have the `Use Voice Activity` permission to use this command.',
-    );
+    return interaction.reply({
+      content: 'I need to have the `Use Voice Activity` permission to use this command.',
+      ephemeral: true,
+    });
   }
 
   if (channel.full && !channel.joinable) {
-    return interaction.editReply(
-      'Your current voice channel has a user limit and is already full.',
-    );
+    return interaction.reply({
+      content: 'Your current voice channel has a user limit and is already full.',
+      ephemeral: true,
+    });
   }
+
+  await interaction.deferReply();
 
   if (!subscription || !current_voice_channel) {
     subscription = new Subscription(
@@ -419,11 +434,17 @@ export async function musicSkip(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   if (!current_voice_channel || !channel || current_voice_channel.id !== channel.id) {
     return interaction.reply({
       content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
     });
   }
 
@@ -452,12 +473,18 @@ export async function musicStop(
   const current_voice_channel = guild.me?.voice.channel;
   const subscription = getSubscription(guild.id);
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   if (!current_voice_channel || !channel || current_voice_channel.id !== channel.id) {
-    return interaction.reply(
-      "You must be on the same channel where I'm currently active to perform this action.",
-    );
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
   }
 
   const cleared = subscription.stop();
@@ -478,7 +505,12 @@ export async function musicQueue(
   const guild = interaction.guild as Guild;
   const subscription = getSubscription(guild.id);
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle) {
     return interaction.reply({
@@ -509,12 +541,18 @@ export async function musicPause(
   const subscription = getSubscription(guild.id);
 
   if (subscription && current_voice_channel?.id !== channel?.id) {
-    return interaction.reply(
-      "You must be on the same channel where I'm currently active to perform this action.",
-    );
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
   }
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   subscription.audioPlayer.pause();
 
@@ -542,7 +580,12 @@ export async function musicResume(
     });
   }
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   subscription.audioPlayer.unpause();
 
@@ -564,12 +607,18 @@ export async function musicLeave(
   const subscription = getSubscription(guild.id);
 
   if (subscription && current_voice_channel && current_voice_channel?.id !== channel?.id) {
-    return interaction.reply(
-      "You must be on the same channel where I'm currently active to perform this action.",
-    );
+    return interaction.reply({
+      content: "You must be on the same channel where I'm currently active to perform this action.",
+      ephemeral: true,
+    });
   }
 
-  if (!subscription) return interaction.reply('Not playing in this server.');
+  if (!subscription) {
+    return interaction.reply({
+      content: "I'm currently not playing any music on this server.",
+      ephemeral: true,
+    });
+  }
 
   if (subscription) {
     subscription.voiceConnection.destroy();
