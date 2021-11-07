@@ -22,7 +22,12 @@ import playdl from 'play-dl';
 import { client } from '../main.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import { synthesize } from '../modules/speech.js';
-import { getSpotifyAlbum, getSpotifyPlaylist, getSpotifyTrack } from '../modules/spotify.js';
+import {
+  getSpotifyAlbum,
+  getSpotifyPlaylist,
+  getSpotifyTrack,
+  searchSpotify,
+} from '../modules/spotify.js';
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
@@ -188,23 +193,25 @@ export async function musicPlay(interaction: CommandInteraction): Promise<unknow
 
     let type = await playdl.validate(song);
     if (type === 'search') {
-      const results = await playdl.search(song, { limit: 1 });
-      if (results.length === 0) return interaction.editReply('No match found.');
+      const spotify_infos = await searchSpotify(song);
 
-      const result = results[0] as playdl.YouTube;
-      const video_info = await playdl.video_info(result.url!);
+      const spotify_info = spotify_infos.tracks?.items[0];
+      if (!spotify_info) return interaction.editReply('No match found.');
 
-      const title = video_info.video_details.title?.trim();
-      const author = video_info.video_details.channel?.name?.trim();
+      const name = spotify_info.name.trim();
+      const author = spotify_info.artists
+        .map(a => a.name)
+        .join(', ')
+        .trim();
 
       const position = await enqueue(
-        video_info.video_details.url,
-        `${title} by ${author}`,
-        video_info.video_details.thumbnail?.url,
+        `${name} by ${author}`,
+        `${name} by ${author}`,
+        spotify_info.album.images[0].url,
       );
 
       await interaction.editReply(
-        `Enqueued **${title}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
+        `Enqueued **${name}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
       );
     } else {
       // Handle shortened urls
