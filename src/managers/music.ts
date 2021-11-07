@@ -33,7 +33,7 @@ import Track from '../structures/track.js';
 const _subscriptions = new Map<Snowflake, Subscription>();
 
 export async function initMusic(): Promise<void> {
-  await initSpotify;
+  await initSpotify();
 
   playdl.setToken({
     soundcloud: {
