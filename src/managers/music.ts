@@ -440,7 +440,7 @@ export async function musicStop(
 
   await interaction.reply({
     content: `Playback stopped by ${interaction.member}, and ${cleared} ${
-      cleared === 1 ? 'song is' : 'songs are'
+      cleared === 1 ? 'song was' : 'songs were'
     } removed from the queue.`,
     allowedMentions: {
       parse: [],
