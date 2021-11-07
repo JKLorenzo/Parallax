@@ -23,6 +23,7 @@ import {
   getSpotifyAlbum,
   getSpotifyPlaylist,
   getSpotifyTrack,
+  initSpotify,
   searchSpotify,
 } from '../modules/spotify.js';
 import { logError } from '../modules/telemetry.js';
@@ -32,6 +33,8 @@ import Track from '../structures/track.js';
 const _subscriptions = new Map<Snowflake, Subscription>();
 
 export async function initMusic(): Promise<void> {
+  await initSpotify;
+
   playdl.setToken({
     soundcloud: {
       client_id: process.env.SOUNDCLOUD_ID!,

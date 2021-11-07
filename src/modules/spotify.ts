@@ -10,7 +10,7 @@ const spotify = new SpotifyWebApi({
   clientSecret: process.env.SPOTIFY_SECRET,
 });
 
-async function initSpotify(): Promise<void> {
+export async function initSpotify(): Promise<void> {
   try {
     const data = await spotify.clientCredentialsGrant();
     spotify.setAccessToken(data.body.access_token);
@@ -20,8 +20,6 @@ async function initSpotify(): Promise<void> {
     setTimeout(initSpotify, 5000);
   }
 }
-
-await initSpotify();
 
 export async function searchSpotify(query: string): Promise<SpotifyApi.SearchResponse> {
   const searchQuery = query.toLowerCase().replaceAll('  ', ' ').trim();
