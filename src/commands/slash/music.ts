@@ -103,7 +103,7 @@ export default class Music extends Command {
 
     if (config.channel && config.channel !== interaction.channelId) {
       const guild = interaction.guild as Guild;
-      const channel = guild.channels.cache.get(interaction.channelId);
+      const channel = guild.channels.cache.get(config.channel);
 
       if (!channel) {
         return interaction.reply({
