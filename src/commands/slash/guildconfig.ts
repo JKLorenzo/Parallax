@@ -7,7 +7,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { client } from '../../main.js';
-import { getComponent } from '../../managers/interaction.js';
+import { getComponent, reloadCommand } from '../../managers/interaction.js';
 import {
   getFreeGameConfig,
   getGameConfig,
@@ -155,7 +155,7 @@ export default class GuildConfig extends Command {
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
     const command = interaction.options.getSubcommand();
-    const guild = client.guilds.cache.get(interaction.guildId!) as Guild;
+    const guild = client.guilds.cache.get(interaction.guildId) as Guild;
 
     await interaction.deferReply();
 
@@ -199,6 +199,10 @@ export default class GuildConfig extends Command {
       }
 
       if (data) await updateGameConfig(guild.id, data);
+      if (typeof data.enabled === 'boolean') {
+        await reloadCommand('invite', guild);
+        await reloadCommand('players', guild);
+      }
 
       embed.setDescription(
         [
@@ -447,6 +451,9 @@ export default class GuildConfig extends Command {
       }
 
       if (data) await updateMusicConfig(guild.id, data);
+      if (typeof data.enabled === 'boolean') {
+        await reloadCommand('music', guild);
+      }
 
       embed.setDescription(
         [
