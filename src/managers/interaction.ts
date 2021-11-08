@@ -5,6 +5,7 @@ import Discord, {
   Collection,
   CommandInteraction,
   ContextMenuInteraction,
+  Guild,
   MessageActionRowOptions,
   MessageComponentInteraction,
 } from 'discord.js';
@@ -86,6 +87,14 @@ export async function initInteraction(): Promise<void> {
       await command.init(guild);
     }
   });
+}
+
+export async function reloadCommand(name: string, guild?: Guild): Promise<void> {
+  try {
+    await _commands.get(name)?.init(guild);
+  } catch (error) {
+    logError('Interaction Manager', 'Reload Command', error);
+  }
 }
 
 export function getComponent(
