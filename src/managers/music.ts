@@ -8,6 +8,7 @@ import {
 } from '@discordjs/voice';
 import {
   CommandInteraction,
+  ContextMenuInteraction,
   Guild,
   GuildMember,
   MessageComponentInteraction,
@@ -72,8 +73,13 @@ export function deleteSubscription(guild_id: Snowflake): void {
   _subscriptions.delete(guild_id);
 }
 
-export async function musicPlay(interaction: CommandInteraction): Promise<unknown> {
-  const song = interaction.options.getString('song', true).trim();
+export async function musicPlay(
+  interaction: CommandInteraction | ContextMenuInteraction,
+): Promise<unknown> {
+  const song = interaction.isContextMenu()
+    ? interaction.options.getMessage('message', true).content.trim()
+    : interaction.options.getString('song', true).trim();
+
   const guild = interaction.guild as Guild;
   const member = interaction.member as GuildMember;
   const channel = member.voice.channel;
