@@ -77,8 +77,8 @@ export default class Music extends Command {
       {
         guilds: async guild => {
           const config = await getMusicConfig(guild.id);
-          if (!config || !config.enabled) return false;
-          return true;
+          if (config?.enabled) return true;
+          return false;
         },
       },
     );
