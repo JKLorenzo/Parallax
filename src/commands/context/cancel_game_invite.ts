@@ -1,14 +1,25 @@
 import { ContextMenuInteraction, Message } from 'discord.js';
+import { getGameConfig } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { hasAny, parseMention } from '../../utils/functions.js';
 
 export default class CancelGameInvite extends Command {
   constructor() {
-    super('guild', {
-      name: 'Cancel Game Invite',
-      type: 'MESSAGE',
-      defaultPermission: true,
-    });
+    super(
+      'guild',
+      {
+        name: 'Cancel Game Invite',
+        type: 'MESSAGE',
+        defaultPermission: true,
+      },
+      {
+        guilds: async guild => {
+          const config = await getGameConfig(guild.id);
+          if (config?.enabled) return true;
+          return false;
+        },
+      },
+    );
   }
 
   async exec(interaction: ContextMenuInteraction): Promise<unknown> {
