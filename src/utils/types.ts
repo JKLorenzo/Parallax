@@ -25,6 +25,7 @@ export type GuildConfig = {
   free_game?: FreeGameConfig;
   game?: GameConfig;
   play?: PlayConfig;
+  music?: MusicConfig;
 };
 
 export type FreeGameConfig = {
@@ -49,6 +50,11 @@ export type PlayConfig = {
   hoisted?: boolean;
   mentionable?: boolean;
   reference_role?: Snowflake;
+};
+
+export type MusicConfig = {
+  enabled?: boolean;
+  channel?: Snowflake;
 };
 
 export type GameData = {

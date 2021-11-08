@@ -10,6 +10,7 @@ import {
   GameData,
   GuildConfig,
   ImageData,
+  MusicConfig,
   PlayConfig,
   RedditPostData,
 } from '../utils/types.js';
@@ -318,4 +319,34 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
     .db(guildId)
     .collection('config')
     .updateOne({ _id: 'play' }, { $set: config.play }, { upsert: true });
+}
+
+export async function getMusicConfig(guildId: Snowflake): Promise<MusicConfig | undefined> {
+  if (!_guildconfig.get(guildId)?.music) {
+    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'music' });
+
+    _guildconfig.set(guildId, {
+      music: {
+        enabled: result?.enabled,
+        channel: result?.channel,
+      },
+    });
+  }
+
+  return _guildconfig.get(guildId)?.music;
+}
+
+export async function updateMusicConfig(guildId: Snowflake, data: MusicConfig): Promise<void> {
+  if (Object.keys(data).length === 0) return;
+
+  const config = _guildconfig.get(guildId) ?? {};
+  if (!config.music) config.music = {};
+  if ('enabled' in data) config.music.enabled = data.enabled;
+  if ('channel' in data) config.music.channel = data.channel;
+  _guildconfig.set(guildId, config);
+
+  await mongoClient
+    .db(guildId)
+    .collection('config')
+    .updateOne({ _id: 'music' }, { $set: config.music }, { upsert: true });
 }

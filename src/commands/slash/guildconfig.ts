@@ -11,14 +11,16 @@ import { getComponent } from '../../managers/interaction.js';
 import {
   getFreeGameConfig,
   getGameConfig,
+  getMusicConfig,
   getPlayConfig,
   updateFreeGameConfig,
   updateGameConfig,
+  updateMusicConfig,
   updatePlayConfig,
 } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { hasAny } from '../../utils/functions.js';
-import { FreeGameConfig, GameConfig, PlayConfig } from '../../utils/types.js';
+import { FreeGameConfig, GameConfig, MusicConfig, PlayConfig } from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
   constructor() {
@@ -126,6 +128,24 @@ export default class GuildConfig extends Command {
               name: 'xbox',
               description: 'The role to mention when theres a free game for Xbox.',
               type: 'ROLE',
+            },
+          ],
+        },
+        {
+          name: 'music',
+          description: 'Gets or updates the music configuration of this server.',
+          type: 'SUB_COMMAND',
+          options: [
+            {
+              name: 'enabled',
+              description: 'Enable or disable this config.',
+              type: 'BOOLEAN',
+            },
+            {
+              name: 'channel',
+              description: 'The channel where music commands should be received.',
+              type: 'CHANNEL',
+              channelTypes: ['GUILD_TEXT'],
             },
           ],
         },
@@ -404,6 +424,35 @@ export default class GuildConfig extends Command {
           }`,
           `**Xbox**: ${
             config.xbox_role ? guild.roles.cache.get(config.xbox_role) : 'Not Set' ?? 'Invalid'
+          }`,
+        ].join('\n'),
+      );
+    } else if (command === 'music') {
+      const data = {} as MusicConfig;
+      const config = (await getMusicConfig(guild.id)) ?? {};
+
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (channel) config.channel = data.channel = channel.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
+        }
+      }
+
+      if (data) await updateMusicConfig(guild.id, data);
+
+      embed.setDescription(
+        [
+          `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
+          `**Music Channel**: ${
+            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
           }`,
         ].join('\n'),
       );
