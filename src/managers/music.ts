@@ -76,9 +76,17 @@ export function deleteSubscription(guild_id: Snowflake): void {
 export async function musicPlay(
   interaction: CommandInteraction | ContextMenuInteraction,
 ): Promise<unknown> {
-  const song = interaction.isContextMenu()
-    ? interaction.options.getMessage('message', true).content.trim()
-    : interaction.options.getString('song', true).trim();
+  let song = interaction.isContextMenu()
+    ? interaction.options.getMessage('message', true).content
+    : interaction.options.getString('song', true);
+  song = song.replaceAll('  ', ' ').trim();
+
+  if (song.length === 0) {
+    return interaction.reply({
+      content: 'Search query is empty.',
+      ephemeral: true,
+    });
+  }
 
   const guild = interaction.guild as Guild;
   const member = interaction.member as GuildMember;
