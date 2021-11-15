@@ -76,12 +76,12 @@ export function deleteSubscription(guild_id: Snowflake): void {
 export async function musicPlay(
   interaction: CommandInteraction | ContextMenuInteraction,
 ): Promise<unknown> {
-  let song = interaction.isContextMenu()
+  let query = interaction.isContextMenu()
     ? interaction.options.getMessage('message', true).content
-    : interaction.options.getString('song', true);
-  song = song.replaceAll('  ', ' ').trim();
+    : interaction.options.getString('query', true);
+  query = query.replaceAll('  ', ' ').trim();
 
-  if (song.length === 0) {
+  if (query.length === 0) {
     return interaction.reply({
       content: 'Search query is empty.',
       ephemeral: true,
@@ -166,12 +166,12 @@ export async function musicPlay(
   }
 
   try {
-    const enqueue = (query: string, title?: string, image?: string): Promise<number> =>
-      subscription!.enqueue(interaction.channel as TextChannel, query, title, image);
+    const enqueue = (q: string, t?: string, i?: string): Promise<number> =>
+      subscription!.enqueue(interaction.channel as TextChannel, q, t, i);
 
-    let type = await playdl.validate(song);
+    let type = await playdl.validate(query);
     if (type === 'search') {
-      const spotify_infos = await searchSpotify(song);
+      const spotify_infos = await searchSpotify(query);
 
       const spotify_info = spotify_infos.tracks?.items[0];
       if (!spotify_info) return interaction.editReply('No match found.');
@@ -193,7 +193,7 @@ export async function musicPlay(
       );
     } else {
       // Handle shortened urls
-      const redirect = await fetch(song);
+      const redirect = await fetch(query);
       const url = redirect.url;
       type = await playdl.validate(redirect.url);
 

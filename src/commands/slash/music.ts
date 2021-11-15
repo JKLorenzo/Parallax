@@ -27,9 +27,9 @@ export default class Music extends Command {
             type: 'SUB_COMMAND',
             options: [
               {
-                name: 'song',
+                name: 'query',
                 type: 'STRING',
-                description: 'The name of the song or its URL',
+                description: 'The name of the song or its URL (YouTube, SoundCloud, Spotify).',
                 required: true,
               },
             ],
