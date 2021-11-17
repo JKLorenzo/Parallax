@@ -222,7 +222,7 @@ export default class Music extends Command {
           return interaction.editReply('Failed to join voice channel within 20 seconds.');
         }
 
-        const result = await musicPlay(query, member, text_channel, subscription);
+        const result = await musicPlay(query, text_channel, subscription);
 
         await interaction.editReply(result);
         break;

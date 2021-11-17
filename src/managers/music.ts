@@ -120,7 +120,7 @@ async function processMessage(message: Message): Promise<unknown> {
     return message.reply('Failed to join voice channel within 20 seconds.');
   }
 
-  const result = await musicPlay(query, member, text_channel, subscription);
+  const result = await musicPlay(query, text_channel, subscription);
 
   await message.reply(result);
 }
@@ -155,7 +155,6 @@ export function deleteSubscription(guild_id: Snowflake): void {
 
 export async function musicPlay(
   query: string,
-  member: GuildMember,
   text_channel: TextChannel,
   subscription: Subscription,
 ): Promise<string> {
