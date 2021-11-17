@@ -157,7 +157,7 @@ export default class GuildConfig extends Command {
     const command = interaction.options.getSubcommand();
     const guild = client.guilds.cache.get(interaction.guildId) as Guild;
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     const embed = new MessageEmbed({
       author: {
