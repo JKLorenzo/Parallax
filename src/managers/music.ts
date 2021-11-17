@@ -68,26 +68,21 @@ async function processMessage(message: Message): Promise<unknown> {
 
   if (query.length === 0) return;
 
-  if (query.split(' ').length > 1) {
-    // Check if message is a command for other bots
-    try {
-      const result = await Promise.race([
-        text_channel.awaitMessages({
-          filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
-          max: 1,
-          time: 1500,
-        }),
-        message.awaitReactions({
-          filter: reac => reac.users.cache.filter(u => u.bot).size > 0,
-          max: 1,
-          time: 1500,
-        }),
-      ]);
-      if (result.size > 0) return;
-    } catch (_) {
-      // No messages was received from other bots, continue
-    }
-  }
+  // Check if message is a command for other bots
+  const response = await Promise.race([
+    text_channel.awaitMessages({
+      filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
+      max: 1,
+      time: 1500,
+    }),
+    message.awaitReactions({
+      filter: reac => reac.users.cache.some(u => u.bot),
+      max: 1,
+      time: 1500,
+    }),
+  ]);
+
+  if (response.size > 0) return;
 
   if (!voice_channel) {
     return message.reply('Join a voice channel and then try that again.');
