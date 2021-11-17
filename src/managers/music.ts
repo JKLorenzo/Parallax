@@ -68,6 +68,21 @@ async function processMessage(message: Message): Promise<unknown> {
 
   if (query.length === 0) return;
 
+  if (query.split(' ').length > 1) {
+    try {
+      // Check if message is a command for other bots
+      const replies = await text_channel.awaitMessages({
+        filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
+        max: 1,
+        time: 1500,
+        errors: ['time'],
+      });
+      if (replies.size > 0) return;
+    } catch (_) {
+      return;
+    }
+  }
+
   if (!voice_channel) {
     return message.reply('Join a voice channel and then try that again.');
   }
