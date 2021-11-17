@@ -71,12 +71,19 @@ async function processMessage(message: Message): Promise<unknown> {
   if (query.split(' ').length > 1) {
     // Check if message is a command for other bots
     try {
-      const replies = await text_channel.awaitMessages({
-        filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
-        max: 1,
-        time: 1500,
-      });
-      if (replies.size > 0) return;
+      const result = await Promise.race([
+        text_channel.awaitMessages({
+          filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
+          max: 1,
+          time: 1500,
+        }),
+        message.awaitReactions({
+          filter: reac => reac.users.cache.filter(u => u.bot).size > 0,
+          max: 1,
+          time: 1500,
+        }),
+      ]);
+      if (result.size > 0) return;
     } catch (_) {
       // No messages was received from other bots, continue
     }
