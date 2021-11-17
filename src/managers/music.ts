@@ -8,9 +8,9 @@ import {
 } from '@discordjs/voice';
 import {
   CommandInteraction,
-  ContextMenuInteraction,
   Guild,
   GuildMember,
+  Message,
   MessageComponentInteraction,
   Snowflake,
   TextChannel,
@@ -19,6 +19,7 @@ import {
 import fetch from 'node-fetch';
 import playdl from 'play-dl';
 import { client } from '../main.js';
+import { getMusicConfig } from '../modules/database.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
 import {
   getSpotifyAlbum,
@@ -43,6 +44,85 @@ export async function initMusic(): Promise<void> {
   });
 
   client.on('voiceStateUpdate', processVoiceStateUpdate);
+
+  client.on('messageCreate', message => {
+    processMessage(message);
+  });
+}
+
+async function processMessage(message: Message): Promise<unknown> {
+  if (message.author.bot) return;
+
+  const guild = message.guild;
+  if (!guild) return;
+
+  const config = await getMusicConfig(guild.id);
+  if (!config?.enabled || message.channelId !== config.channel) return;
+
+  const query = message.content.replaceAll('  ', ' ').trim();
+  const member = message.member as GuildMember;
+  const text_channel = message.channel as TextChannel;
+  const voice_channel = member.voice.channel;
+  const current_voice_channel = guild.me?.voice.channel;
+  let subscription = getSubscription(guild.id);
+
+  if (query.length === 0) return;
+
+  if (!voice_channel) {
+    return message.reply('Join a voice channel and then try that again.');
+  }
+
+  if (subscription && current_voice_channel && current_voice_channel.id !== voice_channel.id) {
+    return message.reply("I'm currently playing on another channel.");
+  }
+
+  if (!guild.me?.permissionsIn(voice_channel).has('VIEW_CHANNEL')) {
+    return message.reply(
+      'I need to have the `View Channel` permission to join your current voice channel.',
+    );
+  }
+
+  if (!guild.me?.permissionsIn(voice_channel).has('CONNECT')) {
+    return message.reply(
+      'I need to have the `Connect` permission to join your current voice channel.',
+    );
+  }
+
+  if (!guild.me?.permissionsIn(voice_channel).has('SPEAK')) {
+    return message.reply('I need to have the `Speak` permission to use this command.');
+  }
+
+  if (!guild.me?.permissionsIn(voice_channel).has('USE_VAD')) {
+    return message.reply('I need to have the `Use Voice Activity` permission to use this command.');
+  }
+
+  if (voice_channel.full && !voice_channel.joinable) {
+    return message.reply('Your current voice channel has a user limit and is already full.');
+  }
+
+  if (!subscription || !current_voice_channel) {
+    subscription = new Subscription(
+      joinVoiceChannel({
+        channelId: voice_channel.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+      }),
+    );
+    subscription.voiceConnection.on('error', error => {
+      logError('Music Manager', 'Voice Connection', error);
+    });
+    setSubscription(guild.id, subscription);
+  }
+
+  try {
+    await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
+  } catch (_) {
+    return message.reply('Failed to join voice channel within 20 seconds.');
+  }
+
+  const result = await musicPlay(query, member, text_channel, subscription);
+
+  await message.reply(result);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -74,107 +154,21 @@ export function deleteSubscription(guild_id: Snowflake): void {
 }
 
 export async function musicPlay(
-  interaction: CommandInteraction | ContextMenuInteraction,
-): Promise<unknown> {
-  let query = interaction.isContextMenu()
-    ? interaction.options.getMessage('message', true).content
-    : interaction.options.getString('query', true);
-  query = query.replaceAll('  ', ' ').trim();
-
-  if (query.length === 0) {
-    return interaction.reply({
-      content: 'Search query is empty.',
-      ephemeral: true,
-    });
-  }
-
-  const guild = interaction.guild as Guild;
-  const member = interaction.member as GuildMember;
-  const channel = member.voice.channel;
-  const current_voice_channel = guild.me?.voice.channel;
-  let subscription = getSubscription(guild.id);
-
-  if (!channel) {
-    return interaction.reply({
-      content: 'Join a voice channel and then try that again.',
-      ephemeral: true,
-    });
-  }
-
-  if (subscription && current_voice_channel && current_voice_channel.id !== channel.id) {
-    return interaction.reply({
-      content: "I'm currently playing on another channel.",
-      ephemeral: true,
-    });
-  }
-
-  if (!guild.me?.permissionsIn(channel).has('VIEW_CHANNEL')) {
-    return interaction.reply({
-      content: 'I need to have the `View Channel` permission to join your current voice channel.',
-      ephemeral: true,
-    });
-  }
-
-  if (!guild.me?.permissionsIn(channel).has('CONNECT')) {
-    return interaction.reply({
-      content: 'I need to have the `Connect` permission to join your current voice channel.',
-      ephemeral: true,
-    });
-  }
-
-  if (!guild.me?.permissionsIn(channel).has('SPEAK')) {
-    return interaction.reply({
-      content: 'I need to have the `Speak` permission to use this command.',
-      ephemeral: true,
-    });
-  }
-
-  if (!guild.me?.permissionsIn(channel).has('USE_VAD')) {
-    return interaction.reply({
-      content: 'I need to have the `Use Voice Activity` permission to use this command.',
-      ephemeral: true,
-    });
-  }
-
-  if (channel.full && !channel.joinable) {
-    return interaction.reply({
-      content: 'Your current voice channel has a user limit and is already full.',
-      ephemeral: true,
-    });
-  }
-
-  await interaction.deferReply();
-
-  if (!subscription || !current_voice_channel) {
-    subscription = new Subscription(
-      joinVoiceChannel({
-        channelId: channel.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
-      }),
-    );
-    subscription.voiceConnection.on('error', error => {
-      logError('Music Manager', 'Voice Connection', error);
-    });
-    setSubscription(guild.id, subscription);
-  }
+  query: string,
+  member: GuildMember,
+  text_channel: TextChannel,
+  subscription: Subscription,
+): Promise<string> {
+  const enqueue = (q: string, t?: string, i?: string) =>
+    subscription!.enqueue(text_channel, q, t, i);
 
   try {
-    await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
-  } catch (_) {
-    return interaction.editReply('Failed to join voice channel within 20 seconds.');
-  }
-
-  try {
-    const enqueue = (q: string, t?: string, i?: string): Promise<number> =>
-      subscription!.enqueue(interaction.channel as TextChannel, q, t, i);
-
     let type = await playdl.validate(query);
     if (type === 'search') {
       const spotify_infos = await searchSpotify(query);
 
       const spotify_info = spotify_infos.tracks?.items[0];
-      if (!spotify_info) return interaction.editReply('No match found.');
+      if (!spotify_info) return 'No match found.';
 
       const name = spotify_info.name.trim();
       const author = spotify_info.artists
@@ -188,9 +182,9 @@ export async function musicPlay(
         spotify_info.album.images[0].url,
       );
 
-      await interaction.editReply(
-        `Enqueued **${name}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
-      );
+      return `Enqueued **${name}** by **${author}**${
+        position > 0 ? ` at position ${position}` : ''
+      }.`;
     } else {
       // Handle shortened urls
       const redirect = await fetch(query);
@@ -209,11 +203,9 @@ export async function musicPlay(
           video_info.video_details.thumbnail?.url,
         );
 
-        await interaction.editReply(
-          `Enqueued **${title}** by **${author}**${
-            position > 0 ? ` at position ${position}` : ''
-          }.`,
-        );
+        return `Enqueued **${title}** by **${author}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`;
       } else if (type === 'yt_playlist') {
         const playlist_info = await playdl.playlist_info(url);
         await playlist_info.fetch();
@@ -238,13 +230,13 @@ export async function musicPlay(
           }
         }
 
-        await interaction.editReply(
+        return (
           `Enqueued ${playlist_info.total_videos} songs from **${playlist_title}** playlist ` +
-            `by **${playlist_author}**.`,
+          `by **${playlist_author}**.`
         );
       } else if (type === 'sp_track') {
         const spotify_info = await getSpotifyTrack(url);
-        if (!spotify_info) return interaction.editReply('Spotify track not found.');
+        if (!spotify_info) return 'Spotify track not found.';
 
         const name = spotify_info.name?.trim();
         const author = spotify_info.artists
@@ -258,12 +250,12 @@ export async function musicPlay(
           spotify_info.album.images[0].url,
         );
 
-        await interaction.editReply(
-          `Enqueued **${name}** by **${author}**${position > 0 ? ` at position ${position}` : ''}.`,
-        );
+        return `Enqueued **${name}** by **${author}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`;
       } else if (type === 'sp_playlist') {
         const spotify_playlist = await getSpotifyPlaylist(url);
-        if (!spotify_playlist) return interaction.editReply('Spotify playlist not found.');
+        if (!spotify_playlist) return 'Spotify playlist not found.';
 
         const playlist_title = spotify_playlist.name.trim();
         const playlist_author = spotify_playlist.owner.display_name?.trim();
@@ -292,12 +284,10 @@ export async function musicPlay(
           queued++;
         }
 
-        await interaction.editReply(
-          `Enqueued ${queued} songs from **${playlist_title}** playlist by **${playlist_author}**.`,
-        );
+        return `Enqueued ${queued} songs from **${playlist_title}** playlist by **${playlist_author}**.`;
       } else if (type === 'sp_album') {
         const spotify_album = await getSpotifyAlbum(url);
-        if (!spotify_album) return interaction.editReply('Spotify album not found.');
+        if (!spotify_album) return 'Spotify album not found.';
 
         const album_title = spotify_album.name.trim();
         const album_author = spotify_album.artists
@@ -329,12 +319,10 @@ export async function musicPlay(
           queued++;
         }
 
-        await interaction.editReply(
-          `Enqueued ${queued} songs from **${album_title}** album by **${album_author}**.`,
-        );
+        return `Enqueued ${queued} songs from **${album_title}** album by **${album_author}**.`;
       } else if (type === 'so_track') {
         const soundcloud_info = await getSoundCloudTrack(url);
-        if (!soundcloud_info) return interaction.editReply('SoundCloud track not found.');
+        if (!soundcloud_info) return 'SoundCloud track not found.';
 
         const track_title = soundcloud_info.title.trim();
         const track_author = soundcloud_info.author.name.trim();
@@ -345,14 +333,12 @@ export async function musicPlay(
           soundcloud_info.thumbnail,
         );
 
-        await interaction.editReply(
-          `Enqueued **${track_title}** by **${track_author}**${
-            position > 0 ? ` at position ${position}` : ''
-          }.`,
-        );
+        return `Enqueued **${track_title}** by **${track_author}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`;
       } else if (type === 'so_playlist') {
         const soundcloud_playlist = await getSoundCloudPlaylist(url);
-        if (!soundcloud_playlist) return interaction.editReply('SoundCloud playlist not found.');
+        if (!soundcloud_playlist) return 'SoundCloud playlist not found.';
 
         const playlist_title = soundcloud_playlist.title.trim();
         const playlist_author = soundcloud_playlist.author.name.trim();
@@ -375,16 +361,16 @@ export async function musicPlay(
           );
         }
 
-        await interaction.editReply(
+        return (
           `Enqueued ${soundcloud_playlist.trackCount} songs from **${playlist_title}** playlist ` +
-            `by **${playlist_author}**.`,
+          `by **${playlist_author}**.`
         );
       } else {
-        await interaction.editReply('This URL is currently not supported.');
+        return 'This URL is currently not supported.';
       }
     }
   } catch (error) {
-    await interaction.editReply(`Failed to play track due to an error.\n\`\`\`${error}\`\`\``);
+    return `Failed to play track due to an error.\n\`\`\`${error}\`\`\``;
   }
 }
 

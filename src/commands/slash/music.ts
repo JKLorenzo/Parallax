@@ -1,4 +1,10 @@
-import { CommandInteraction, Guild } from 'discord.js';
+import {
+  DiscordGatewayAdapterCreator,
+  entersState,
+  joinVoiceChannel,
+  VoiceConnectionStatus,
+} from '@discordjs/voice';
+import { CommandInteraction, Guild, GuildMember, TextChannel } from 'discord.js';
 import {
   musicPlay,
   musicSkip,
@@ -7,9 +13,13 @@ import {
   musicPause,
   musicResume,
   musicLeave,
+  getSubscription,
+  setSubscription,
 } from '../../managers/music.js';
 import { getMusicConfig } from '../../modules/database.js';
+import { logError } from '../../modules/telemetry.js';
 import Command from '../../structures/command.js';
+import Subscription from '../../structures/subscription.js';
 
 export default class Music extends Command {
   constructor() {
@@ -84,7 +94,7 @@ export default class Music extends Command {
     );
   }
 
-  async exec(interaction: CommandInteraction): Promise<void> {
+  async exec(interaction: CommandInteraction): Promise<unknown> {
     const config = await getMusicConfig(interaction.guildId);
 
     if (!config) {
@@ -121,7 +131,100 @@ export default class Music extends Command {
 
     switch (interaction.options.getSubcommand()) {
       case 'play': {
-        await musicPlay(interaction);
+        const query = interaction.options.getString('query', true).replaceAll('  ', ' ').trim();
+        const guild = interaction.guild as Guild;
+        const member = interaction.member as GuildMember;
+        const text_channel = interaction.channel as TextChannel;
+        const voice_channel = member.voice.channel;
+        const current_voice_channel = guild.me?.voice.channel;
+        let subscription = getSubscription(guild.id);
+
+        if (query.length === 0) {
+          return interaction.reply({
+            content: 'Search query is empty.',
+            ephemeral: true,
+          });
+        }
+
+        if (!voice_channel) {
+          return interaction.reply({
+            content: 'Join a voice channel and then try that again.',
+            ephemeral: true,
+          });
+        }
+
+        if (
+          subscription &&
+          current_voice_channel &&
+          current_voice_channel.id !== voice_channel.id
+        ) {
+          return interaction.reply({
+            content: "I'm currently playing on another channel.",
+            ephemeral: true,
+          });
+        }
+
+        if (!guild.me?.permissionsIn(voice_channel).has('VIEW_CHANNEL')) {
+          return interaction.reply({
+            content:
+              'I need to have the `View Channel` permission to join your current voice channel.',
+            ephemeral: true,
+          });
+        }
+
+        if (!guild.me?.permissionsIn(voice_channel).has('CONNECT')) {
+          return interaction.reply({
+            content: 'I need to have the `Connect` permission to join your current voice channel.',
+            ephemeral: true,
+          });
+        }
+
+        if (!guild.me?.permissionsIn(voice_channel).has('SPEAK')) {
+          return interaction.reply({
+            content: 'I need to have the `Speak` permission to use this command.',
+            ephemeral: true,
+          });
+        }
+
+        if (!guild.me?.permissionsIn(voice_channel).has('USE_VAD')) {
+          return interaction.reply({
+            content: 'I need to have the `Use Voice Activity` permission to use this command.',
+            ephemeral: true,
+          });
+        }
+
+        if (voice_channel.full && !voice_channel.joinable) {
+          return interaction.reply({
+            content: 'Your current voice channel has a user limit and is already full.',
+            ephemeral: true,
+          });
+        }
+
+        await interaction.deferReply();
+
+        if (!subscription || !current_voice_channel) {
+          subscription = new Subscription(
+            joinVoiceChannel({
+              channelId: voice_channel.id,
+              guildId: guild.id,
+              adapterCreator: guild.voiceAdapterCreator as DiscordGatewayAdapterCreator,
+            }),
+          );
+          subscription.voiceConnection.on('error', error => {
+            logError('Music Manager', 'Voice Connection', error);
+          });
+          setSubscription(guild.id, subscription);
+        }
+
+        try {
+          await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
+        } catch (_) {
+          return interaction.editReply('Failed to join voice channel within 20 seconds.');
+        }
+
+        const result = await musicPlay(query, member, text_channel, subscription);
+
+        await interaction.editReply(result);
         break;
       }
       case 'skip': {
