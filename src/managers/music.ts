@@ -31,6 +31,7 @@ import {
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
+import { getStringSimilarity, parseHTML } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
 
@@ -183,23 +184,49 @@ export async function musicPlay(
       const spotify_infos = await searchSpotify(query);
 
       const spotify_info = spotify_infos.tracks?.items[0];
-      if (!spotify_info) return 'No match found.';
-
-      const name = spotify_info.name.trim();
-      const author = spotify_info.artists
-        .map(a => a.name)
-        .join(', ')
-        .trim();
-
-      const position = await enqueue(
-        `${name} by ${author}`,
-        `${name} by ${author}`,
-        spotify_info.album.images[0].url,
+      const similarity = getStringSimilarity(
+        query,
+        `${spotify_info?.name} ${spotify_info?.artists.map(a => a.name).join(' ')}`,
       );
+      if (spotify_info && similarity > 80) {
+        const name = spotify_info.name.trim();
+        const author = spotify_info.artists
+          .map(a => a.name)
+          .join(', ')
+          .trim();
 
-      return `Enqueued **${name}** by **${author}**${
-        position > 0 ? ` at position ${position}` : ''
-      }.`;
+        const position = await enqueue(
+          `${name} by ${author}`,
+          `${name} by ${author}`,
+          spotify_info.album.images[0].url,
+        );
+
+        return `Enqueued **${name}** by **${author}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`;
+      } else {
+        const search_result = await playdl.search(query, {
+          limit: 1,
+          source: { youtube: 'video' },
+        });
+        if (search_result.length === 0) return 'No match found';
+
+        const result = search_result[0] as playdl.YouTube;
+        const youtube_info = await playdl.video_info(result.url!);
+
+        const title = parseHTML(youtube_info.video_details.title ?? '').trim();
+        const author = parseHTML(youtube_info.video_details.channel?.name ?? '').trim();
+
+        const position = await enqueue(
+          youtube_info.video_details.url,
+          `${title} by ${author}`,
+          youtube_info.video_details.thumbnail?.url,
+        );
+
+        return `Enqueued **${title}** by **${author}**${
+          position > 0 ? ` at position ${position}` : ''
+        }.`;
+      }
     } else {
       // Handle shortened urls
       const redirect = await fetch(query);
