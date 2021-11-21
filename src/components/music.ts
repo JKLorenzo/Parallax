@@ -1,5 +1,5 @@
 import { AudioPlayerStatus } from '@discordjs/voice';
-import { Guild, GuildMember, MessageComponentInteraction, MessageEmbed } from 'discord.js';
+import { ButtonInteraction, Guild } from 'discord.js';
 import { client } from '../main.js';
 import {
   getSubscription,
@@ -17,41 +17,6 @@ export default class Music extends Component {
     super({
       name: 'music',
       options: [
-        {
-          type: 'ACTION_ROW',
-          components: [
-            {
-              customId: 'region',
-              type: 'SELECT_MENU',
-              placeholder: 'Update the RTC Region of your Channel',
-              minValues: 1,
-              maxValues: 1,
-              options: [
-                {
-                  label: 'Automatic',
-                  value: 'automatic',
-                  emoji: client.emojis.cache.find(e => e.name === 'discord'),
-                  description: 'Let Discord decide automatically',
-                },
-                {
-                  label: 'SG - Singapore',
-                  value: 'singapore',
-                  emoji: client.emojis.cache.find(e => e.name === 'singapore'),
-                },
-                {
-                  label: 'HK - Hong Kong',
-                  value: 'hongkong',
-                  emoji: client.emojis.cache.find(e => e.name === 'hongkong'),
-                },
-                {
-                  label: 'JP - Japan',
-                  value: 'japan',
-                  emoji: client.emojis.cache.find(e => e.name === 'japan'),
-                },
-              ],
-            },
-          ],
-        },
         {
           type: 'ACTION_ROW',
           components: [
@@ -92,114 +57,41 @@ export default class Music extends Component {
     });
   }
 
-  async exec(interaction: MessageComponentInteraction, customId: string): Promise<void> {
-    if (interaction.isButton()) {
-      switch (customId) {
-        case 'pauseplay': {
-          const guild = interaction.guild as Guild;
-          const subscription = getSubscription(guild.id);
+  async exec(interaction: ButtonInteraction, customId: string): Promise<void> {
+    switch (customId) {
+      case 'pauseplay': {
+        const guild = interaction.guild as Guild;
+        const subscription = getSubscription(guild.id);
 
-          if (subscription) {
-            switch (subscription.audioPlayer.state.status) {
-              case AudioPlayerStatus.Paused: {
-                await musicResume(interaction);
-                break;
-              }
-              case AudioPlayerStatus.Playing: {
-                await musicPause(interaction);
-                break;
-              }
+        if (subscription) {
+          switch (subscription.audioPlayer.state.status) {
+            case AudioPlayerStatus.Paused: {
+              await musicResume(interaction);
+              break;
+            }
+            case AudioPlayerStatus.Playing: {
+              await musicPause(interaction);
+              break;
             }
           }
-          break;
         }
-        case 'skip': {
-          await musicSkip(interaction);
-          break;
-        }
-        case 'stop': {
-          await musicStop(interaction);
-          break;
-        }
-        case 'queue': {
-          await musicQueue(interaction);
-          break;
-        }
-        case 'leave': {
-          await musicLeave(interaction);
-          break;
-        }
+        break;
       }
-    } else if (interaction.isSelectMenu()) {
-      switch (customId) {
-        case 'region': {
-          const value = interaction.values[0];
-          const region = value === 'automatic' ? null : value;
-
-          const guild = interaction.guild as Guild;
-          const member = interaction.member as GuildMember;
-          const channel = member.voice.channel;
-          const current_voice_channel = guild.me?.voice.channel;
-
-          if (!current_voice_channel) {
-            return interaction.reply({
-              content: "I'm currently not connected to any voice channel.",
-              ephemeral: true,
-            });
-          }
-
-          if (current_voice_channel.id !== channel?.id) {
-            return interaction.reply({
-              content:
-                "You must be on the same channel where I'm currently active to perform this action.",
-              ephemeral: true,
-            });
-          }
-
-          if (!guild.me.permissionsIn(channel).has('MANAGE_CHANNELS')) {
-            return interaction.reply({
-              content:
-                'I need to have the `Manage Channels` permission to change voice channel regions.',
-              ephemeral: true,
-            });
-          }
-
-          if (region !== current_voice_channel.rtcRegion) {
-            await current_voice_channel.setRTCRegion(region);
-
-            const embed = interaction.message.embeds[0] as MessageEmbed;
-            const channel_name = current_voice_channel?.name ?? 'Unknown';
-            const channel_bitrate = current_voice_channel
-              ? `${current_voice_channel.bitrate / 1000}kbps`
-              : 'Unknown';
-            const channel_region = current_voice_channel
-              ? current_voice_channel.rtcRegion
-                  ?.split(' ')
-                  .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
-              : 'Unknown';
-
-            await interaction.update({
-              embeds: [
-                embed.setFooter(
-                  `Channel: ${channel_name}  |  Region: ${channel_region}  |  Bitrate: ${channel_bitrate}`,
-                ),
-              ],
-            });
-            await interaction.followUp({
-              content: `${member} changed the voice channel region to ${channel_region}.`,
-              allowedMentions: {
-                parse: [],
-              },
-            });
-          } else {
-            await interaction.reply({
-              content:
-                'Your current voice channel is already set to the desired voice channel region.',
-              ephemeral: true,
-            });
-          }
-          break;
-        }
+      case 'skip': {
+        await musicSkip(interaction);
+        break;
+      }
+      case 'stop': {
+        await musicStop(interaction);
+        break;
+      }
+      case 'queue': {
+        await musicQueue(interaction);
+        break;
+      }
+      case 'leave': {
+        await musicLeave(interaction);
+        break;
       }
     }
   }
