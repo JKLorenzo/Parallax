@@ -51,6 +51,34 @@ export async function initMusic(): Promise<void> {
   });
 }
 
+export function getSubscription(guild_id: Snowflake): Subscription | undefined {
+  return _subscriptions.get(guild_id);
+}
+
+export function setSubscription(guild_id: Snowflake, subscription: Subscription): void {
+  _subscriptions.set(guild_id, subscription);
+}
+
+export function deleteSubscription(guild_id: Snowflake): void {
+  _subscriptions.delete(guild_id);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
+  const bot_channel = oldState.guild.me?.voice.channel;
+  const member_channel = oldState.channel;
+
+  if (!bot_channel || !member_channel || bot_channel.id !== member_channel.id) return;
+  if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
+
+  const subscription = getSubscription(oldState.guild.id);
+  if (subscription) {
+    subscription.voiceConnection.destroy();
+    deleteSubscription(oldState.guild.id);
+  }
+  await oldState.guild.me?.voice.disconnect();
+}
+
 async function processMessage(message: Message): Promise<unknown> {
   if (message.author.bot) return;
 
@@ -146,34 +174,6 @@ async function processMessage(message: Message): Promise<unknown> {
   const result = await musicPlay(query, text_channel, subscription);
 
   await reply(result);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
-  const bot_channel = oldState.guild.me?.voice.channel;
-  const member_channel = oldState.channel;
-
-  if (!bot_channel || !member_channel || bot_channel.id !== member_channel.id) return;
-  if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
-
-  const subscription = getSubscription(oldState.guild.id);
-  if (subscription) {
-    subscription.voiceConnection.destroy();
-    deleteSubscription(oldState.guild.id);
-  }
-  await oldState.guild.me?.voice.disconnect();
-}
-
-export function getSubscription(guild_id: Snowflake): Subscription | undefined {
-  return _subscriptions.get(guild_id);
-}
-
-export function setSubscription(guild_id: Snowflake, subscription: Subscription): void {
-  _subscriptions.set(guild_id, subscription);
-}
-
-export function deleteSubscription(guild_id: Snowflake): void {
-  _subscriptions.delete(guild_id);
 }
 
 export async function musicPlay(
