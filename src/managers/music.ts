@@ -184,11 +184,17 @@ export async function musicPlay(
       const spotify_infos = await searchSpotify(query);
 
       const spotify_info = spotify_infos.tracks?.items[0];
-      const similarity = getStringSimilarity(
-        query,
-        `${spotify_info?.name} ${spotify_info?.artists.map(a => a.name).join(' ')}`,
+      const title_similarity = getStringSimilarity(
+        query.toLowerCase(),
+        `${spotify_info?.name}`.toLowerCase(),
       );
-      if (spotify_info && similarity > 80) {
+      const title_author_similarity = getStringSimilarity(
+        query.toLowerCase(),
+        `${spotify_info?.name} ${spotify_info?.artists.map(a => a.name).join(' ')}`.toLowerCase(),
+      );
+      const isSimilar = title_similarity > 80 || title_author_similarity > 80;
+
+      if (spotify_info && isSimilar) {
         const name = spotify_info.name.trim();
         const author = spotify_info.artists
           .map(a => a.name)
