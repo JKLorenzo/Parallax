@@ -85,36 +85,42 @@ async function processMessage(message: Message): Promise<unknown> {
 
   if (response.size > 0) return;
 
+  const reply = (content: string) =>
+    message.reply({
+      content: content,
+      allowedMentions: {
+        repliedUser: false,
+      },
+    });
+
   if (!voice_channel) {
-    return message.reply('Join a voice channel and then try that again.');
+    return reply('Join a voice channel and then try that again.');
   }
 
   if (subscription && current_voice_channel && current_voice_channel.id !== voice_channel.id) {
-    return message.reply("I'm currently playing on another channel.");
+    return reply("I'm currently playing on another channel.");
   }
 
   if (!guild.me?.permissionsIn(voice_channel).has('VIEW_CHANNEL')) {
-    return message.reply(
+    return reply(
       'I need to have the `View Channel` permission to join your current voice channel.',
     );
   }
 
   if (!guild.me?.permissionsIn(voice_channel).has('CONNECT')) {
-    return message.reply(
-      'I need to have the `Connect` permission to join your current voice channel.',
-    );
+    return reply('I need to have the `Connect` permission to join your current voice channel.');
   }
 
   if (!guild.me?.permissionsIn(voice_channel).has('SPEAK')) {
-    return message.reply('I need to have the `Speak` permission to use this command.');
+    return reply('I need to have the `Speak` permission to use this command.');
   }
 
   if (!guild.me?.permissionsIn(voice_channel).has('USE_VAD')) {
-    return message.reply('I need to have the `Use Voice Activity` permission to use this command.');
+    return reply('I need to have the `Use Voice Activity` permission to use this command.');
   }
 
   if (voice_channel.full && !voice_channel.joinable) {
-    return message.reply('Your current voice channel has a user limit and is already full.');
+    return reply('Your current voice channel has a user limit and is already full.');
   }
 
   if (!subscription || !current_voice_channel) {
@@ -134,12 +140,12 @@ async function processMessage(message: Message): Promise<unknown> {
   try {
     await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
   } catch (_) {
-    return message.reply('Failed to join voice channel within 20 seconds.');
+    return reply('Failed to join voice channel within 20 seconds.');
   }
 
   const result = await musicPlay(query, text_channel, subscription);
 
-  await message.reply(result);
+  await reply(result);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
