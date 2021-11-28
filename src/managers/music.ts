@@ -31,9 +31,19 @@ import {
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
-import { getStringSimilarity, parseHTML } from '../utils/functions.js';
+import { getStringSimilarity, hasAny, parseHTML } from '../utils/functions.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
+
+let _429 = false;
+
+export function had429(): boolean {
+  return _429;
+}
+
+export function got429(): void {
+  _429 = true;
+}
 
 export async function initMusic(): Promise<void> {
   await initSpotify();
@@ -151,6 +161,10 @@ async function processMessage(message: Message): Promise<unknown> {
     return reply('Your current voice channel has a user limit and is already full.');
   }
 
+  if (had429()) {
+    return reply('Music commands are temporarily disabled. Please try again later.');
+  }
+
   if (!subscription || !current_voice_channel) {
     subscription = new Subscription(
       joinVoiceChannel({
@@ -173,7 +187,7 @@ async function processMessage(message: Message): Promise<unknown> {
 
   const result = await musicPlay(query, text_channel, subscription);
 
-  await reply(result);
+  if (result) await reply(result);
 }
 
 export async function musicPlay(
@@ -181,6 +195,8 @@ export async function musicPlay(
   text_channel: TextChannel,
   subscription: Subscription,
 ): Promise<string> {
+  if (had429()) return 'Music commands are temporarily disabled. Please try again later.';
+
   const enqueue = (q: string, t?: string, i?: string) =>
     subscription!.enqueue(text_channel, q, t, i);
 
@@ -424,7 +440,12 @@ export async function musicPlay(
       }
     }
   } catch (error) {
-    return `Failed to play track due to an error.\n\`\`\`${error}\`\`\``;
+    if (hasAny(String(error), 'Got 429 from the request')) {
+      got429();
+      return `Music commands are temporarily disabled. Please try again later.`;
+    } else {
+      return `Failed to play track due to an error.\n\`\`\`${error}\`\`\``;
+    }
   }
 }
 

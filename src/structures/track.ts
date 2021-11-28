@@ -2,7 +2,8 @@ import { AudioResource, createAudioResource } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
 import playdl from 'play-dl';
 import { getComponent } from '../managers/interaction.js';
-import { getSubscription } from '../managers/music.js';
+import { getSubscription, got429, had429 } from '../managers/music.js';
+import { hasAny } from '../utils/functions.js';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -78,12 +79,14 @@ export default class Track {
     this.onError = error => {
       this.onError = noop;
       console.warn(error);
-      if (message) {
-        message.edit(
-          `Failed to play ${this.title ?? this.query} due to an error.\n\`\`\`\n${error}\n\`\`\``,
-        );
+
+      const reply = message ? message.edit : channel.send;
+
+      if (hasAny(String(error), 'Got 429 from the request')) {
+        if (!had429()) reply(`Music commands are temporarily disabled. Please try again later.`);
+        got429();
       } else {
-        channel.send(
+        reply(
           `Failed to play ${this.title ?? this.query} due to an error.\n\`\`\`\n${error}\n\`\`\``,
         );
       }
