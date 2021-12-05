@@ -57,9 +57,8 @@ export async function getUserGames(userId: Snowflake): Promise<string[]> {
       .toArray();
 
     for (const data of result) {
-      const game_name = hexToUtf(data.id);
-      if (games.includes(game_name)) continue;
-      games.push(game_name);
+      if (games.includes(data.name)) continue;
+      games.push(data.name);
     }
     _usergames.set(userId, games);
   }
@@ -68,7 +67,6 @@ export async function getUserGames(userId: Snowflake): Promise<string[]> {
 
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
   const hex_name = utfToHex(game_name);
-
   if (_limiter.limit(`${userId}-${hex_name}`)) return;
 
   const games = _usergames.get(userId) ?? [];
@@ -78,7 +76,7 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
     .db('users')
     .collection(userId)
     .updateOne(
-      { id: hex_name, type: 'game' },
+      { name: game_name, type: 'game' },
       { $set: { last_updated: Date.now() } },
       { upsert: true },
     );
