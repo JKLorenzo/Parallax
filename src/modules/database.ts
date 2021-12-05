@@ -33,7 +33,7 @@ export async function initDatabase(): Promise<void> {
 
 export async function getBotConfig(key: BotConfigKeys): Promise<string | undefined> {
   if (!_botconfig.get(key)) {
-    const result = await mongoClient.db('global').collection('config').findOne({ id: key });
+    const result = await mongoClient.db('global').collection('config').findOne({ key });
     if (result?.value) _botconfig.set(key, result.value);
   }
   return _botconfig.get(key);
@@ -44,7 +44,7 @@ export async function setBotConfig(key: BotConfigKeys, value: string): Promise<v
   await mongoClient
     .db('global')
     .collection('config')
-    .updateOne({ id: key }, { $set: { value: value } }, { upsert: true });
+    .updateOne({ key }, { $set: { value } }, { upsert: true });
 }
 
 export async function getUserGames(userId: Snowflake): Promise<string[]> {
