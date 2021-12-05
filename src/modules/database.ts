@@ -148,7 +148,7 @@ export async function updateImage(data: ImageData): Promise<void> {
 export async function getGame(name: string): Promise<GameData | undefined> {
   const id = utfToHex(name);
   if (!_games.has(id)) {
-    const result = await mongoClient.db('global').collection('games').findOne({ id });
+    const result = await mongoClient.db('global').collection('games').findOne({ name });
 
     _games.set(
       id,
@@ -172,7 +172,7 @@ export async function updateGame(data: GameData): Promise<void> {
   await mongoClient
     .db('global')
     .collection('games')
-    .updateOne({ id }, { $set: data }, { upsert: true });
+    .updateOne({ name: data.name }, { $set: data }, { upsert: true });
 }
 
 export async function getFreeGame(url: string): Promise<RedditPostData | undefined> {
