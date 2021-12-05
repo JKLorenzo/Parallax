@@ -33,7 +33,7 @@ export async function initDatabase(): Promise<void> {
 
 export async function getBotConfig(key: BotConfigKeys): Promise<string | undefined> {
   if (!_botconfig.get(key)) {
-    const result = await mongoClient.db('global').collection('config').findOne({ _id: key });
+    const result = await mongoClient.db('global').collection('config').findOne({ id: key });
     if (result?.value) _botconfig.set(key, result.value);
   }
   return _botconfig.get(key);
@@ -44,7 +44,7 @@ export async function setBotConfig(key: BotConfigKeys, value: string): Promise<v
   await mongoClient
     .db('global')
     .collection('config')
-    .updateOne({ _id: key }, { $set: { value: value } }, { upsert: true });
+    .updateOne({ id: key }, { $set: { value: value } }, { upsert: true });
 }
 
 export async function getUserGames(userId: Snowflake): Promise<string[]> {
@@ -55,8 +55,9 @@ export async function getUserGames(userId: Snowflake): Promise<string[]> {
       .collection(userId)
       .find({ type: 'game' })
       .toArray();
+
     for (const data of result) {
-      const game_name = hexToUtf(data._id);
+      const game_name = hexToUtf(data.id);
       if (games.includes(game_name)) continue;
       games.push(game_name);
     }
@@ -77,7 +78,7 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
     .db('users')
     .collection(userId)
     .updateOne(
-      { _id: hex_name, type: 'game' },
+      { id: hex_name, type: 'game' },
       { $set: { _id: hex_name, type: 'game', last_updated: Date.now() } },
       { upsert: true },
     );
@@ -99,9 +100,9 @@ export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
     if (result.length === 0) continue;
 
     try {
-      await collection.deleteMany({ _id: { $in: result.map(r => r._id) }, type: 'game' });
+      await collection.deleteMany({ id: { $in: result.map(r => r.id) }, type: 'game' });
 
-      const expired_games = result.map(r => hexToUtf(r._id));
+      const expired_games = result.map(r => hexToUtf(r.id));
       const games = _usergames.get(collection.collectionName) ?? [];
 
       _usergames.set(
@@ -120,7 +121,8 @@ export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
 export async function getImage(name: string): Promise<ImageData | undefined> {
   const id = utfToHex(name);
   if (!_images.get(id)) {
-    const result = await mongoClient.db('global').collection('images').findOne({ _id: id });
+    const result = await mongoClient.db('global').collection('images').findOne({ id });
+
     if (result) {
       _images.set(id, {
         name: name,
@@ -140,13 +142,14 @@ export async function updateImage(data: ImageData): Promise<void> {
   await mongoClient
     .db('global')
     .collection('images')
-    .updateOne({ _id: id }, { $set: data }, { upsert: true });
+    .updateOne({ id }, { $set: data }, { upsert: true });
 }
 
 export async function getGame(name: string): Promise<GameData | undefined> {
   const id = utfToHex(name);
   if (!_games.has(id)) {
-    const result = await mongoClient.db('global').collection('games').findOne({ _id: id });
+    const result = await mongoClient.db('global').collection('games').findOne({ id });
+
     _games.set(
       id,
       result && 'name' in result && 'status' in result
@@ -169,7 +172,7 @@ export async function updateGame(data: GameData): Promise<void> {
   await mongoClient
     .db('global')
     .collection('games')
-    .updateOne({ _id: id }, { $set: data }, { upsert: true });
+    .updateOne({ id }, { $set: data }, { upsert: true });
 }
 
 export async function getFreeGame(url: string): Promise<RedditPostData | undefined> {
@@ -211,7 +214,7 @@ export async function pushFreeGame(data: RedditPostData): Promise<void> {
 
 export async function getFreeGameConfig(guildId: Snowflake): Promise<FreeGameConfig | undefined> {
   if (!_guildconfig.get(guildId)?.free_game) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'free_game' });
+    const result = await mongoClient.db(guildId).collection('config').findOne({ id: 'free_game' });
 
     _guildconfig.set(guildId, {
       free_game: {
@@ -249,12 +252,12 @@ export async function updateFreeGameConfig(
   await mongoClient
     .db(guildId)
     .collection('config')
-    .updateOne({ _id: 'free_game' }, { $set: config.free_game }, { upsert: true });
+    .updateOne({ id: 'free_game' }, { $set: config.free_game }, { upsert: true });
 }
 
 export async function getGameConfig(guildId: Snowflake): Promise<GameConfig | undefined> {
   if (!_guildconfig.get(guildId)?.game) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'game' });
+    const result = await mongoClient.db(guildId).collection('config').findOne({ id: 'game' });
 
     _guildconfig.set(guildId, {
       game: {
@@ -284,12 +287,12 @@ export async function updateGameConfig(guildId: Snowflake, data: GameConfig): Pr
   await mongoClient
     .db(guildId)
     .collection('config')
-    .updateOne({ _id: 'game' }, { $set: config.game }, { upsert: true });
+    .updateOne({ id: 'game' }, { $set: config.game }, { upsert: true });
 }
 
 export async function getPlayConfig(guildId: Snowflake): Promise<PlayConfig | undefined> {
   if (!_guildconfig.get(guildId)?.play) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'play' });
+    const result = await mongoClient.db(guildId).collection('config').findOne({ id: 'play' });
 
     _guildconfig.set(guildId, {
       play: {
@@ -318,12 +321,12 @@ export async function updatePlayConfig(guildId: Snowflake, data: PlayConfig): Pr
   await mongoClient
     .db(guildId)
     .collection('config')
-    .updateOne({ _id: 'play' }, { $set: config.play }, { upsert: true });
+    .updateOne({ id: 'play' }, { $set: config.play }, { upsert: true });
 }
 
 export async function getMusicConfig(guildId: Snowflake): Promise<MusicConfig | undefined> {
   if (!_guildconfig.get(guildId)?.music) {
-    const result = await mongoClient.db(guildId).collection('config').findOne({ _id: 'music' });
+    const result = await mongoClient.db(guildId).collection('config').findOne({ id: 'music' });
 
     _guildconfig.set(guildId, {
       music: {
@@ -348,5 +351,5 @@ export async function updateMusicConfig(guildId: Snowflake, data: MusicConfig): 
   await mongoClient
     .db(guildId)
     .collection('config')
-    .updateOne({ _id: 'music' }, { $set: config.music }, { upsert: true });
+    .updateOne({ id: 'music' }, { $set: config.music }, { upsert: true });
 }
