@@ -79,7 +79,7 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
     .collection(userId)
     .updateOne(
       { id: hex_name, type: 'game' },
-      { $set: { _id: hex_name, type: 'game', last_updated: Date.now() } },
+      { $set: { last_updated: Date.now() } },
       { upsert: true },
     );
 }
