@@ -121,7 +121,7 @@ export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
 export async function getImage(name: string): Promise<ImageData | undefined> {
   const id = utfToHex(name);
   if (!_images.get(id)) {
-    const result = await mongoClient.db('global').collection('images').findOne({ id });
+    const result = await mongoClient.db('global').collection('images').findOne({ name });
 
     if (result) {
       _images.set(id, {
@@ -139,10 +139,15 @@ export async function updateImage(data: ImageData): Promise<void> {
   if (!data.name) return;
 
   const id = utfToHex(data.name);
+  const image = (await getImage(data.name)) ?? { name: data.name };
+  if ('bannerUrl' in data) image.bannerUrl = data.bannerUrl;
+  if ('iconUrl' in data) image.iconUrl = data.iconUrl;
+  _images.set(id, image);
+
   await mongoClient
     .db('global')
     .collection('images')
-    .updateOne({ id }, { $set: data }, { upsert: true });
+    .updateOne({ name: image.name }, { $set: image }, { upsert: true });
 }
 
 export async function getGame(name: string): Promise<GameData | undefined> {
