@@ -248,7 +248,7 @@ export async function musicPlay(
         const position = await enqueue(
           youtube_info.video_details.url,
           `${title} by ${author}`,
-          youtube_info.video_details.thumbnail?.url,
+          youtube_info.video_details.thumbnails[0]?.url,
         );
 
         return `Enqueued **${title}** by **${author}**${
@@ -270,7 +270,7 @@ export async function musicPlay(
         const position = await enqueue(
           url,
           `${title} by ${author}`,
-          video_info.video_details.thumbnail?.url,
+          video_info.video_details.thumbnails[0]?.url,
         );
 
         return `Enqueued **${title}** by **${author}**${
@@ -296,7 +296,7 @@ export async function musicPlay(
           for (const video_info of video_infos) {
             const title = video_info.title?.trim();
             const author = video_info.channel?.name?.trim();
-            await enqueue(video_info.url, `${title} by ${author}`, video_info.thumbnail?.url);
+            await enqueue(video_info.url, `${title} by ${author}`, video_info.thumbnails[0]?.url);
           }
         }
 
