@@ -32,8 +32,10 @@ import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
 import { getStringSimilarity, hasAny, parseHTML } from '../utils/functions.js';
+import { Queuer } from '../utils/queuer.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
+const _messageQueue = new Queuer();
 
 let _429 = false;
 
@@ -57,7 +59,9 @@ export async function initMusic(): Promise<void> {
   client.on('voiceStateUpdate', processVoiceStateUpdate);
 
   client.on('messageCreate', message => {
-    processMessage(message);
+    _messageQueue.queue(async () => {
+      await processMessage(message);
+    });
   });
 }
 
