@@ -17,7 +17,7 @@ import {
   VoiceState,
 } from 'discord.js';
 import fetch from 'node-fetch';
-import playdl from 'play-dl';
+import playdl, { YouTube } from 'play-dl';
 import { client } from '../main.js';
 import { getMusicConfig } from '../modules/database.js';
 import { getSoundCloudPlaylist, getSoundCloudTrack } from '../modules/soundcloud.js';
@@ -243,7 +243,7 @@ export async function musicPlay(
         });
         if (search_result.length === 0) return 'No match found';
 
-        const result = search_result[0] as playdl.YouTube;
+        const result = search_result[0] as YouTube;
         const youtube_info = await playdl.video_info(result.url!);
 
         const title = parseHTML(youtube_info.video_details.title ?? '').trim();
