@@ -83,36 +83,51 @@ export async function updateUserGame(userId: Snowflake, game_name: string): Prom
 }
 
 export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
-  const collections = await mongoClient.db('users').collections();
+  // Expire in 7 days
+  const seven_days = 604800000;
+  const expire_time = Date.now() - seven_days;
   const expired = new Map<string, string[]>();
-  for (const collection of collections) {
-    // Expire in 7 days
-    const expire_time = Date.now() - 604800000;
-    const result = await collection
-      .find({
-        type: 'game',
-        last_updated: { $lte: expire_time },
-      })
-      .toArray();
 
-    if (result.length === 0) continue;
+  try {
+    const collections = await mongoClient.db('users').collections();
 
-    try {
-      await collection.deleteMany({ id: { $in: result.map(r => r.id) }, type: 'game' });
+    for (const collection of collections) {
+      const user_id = collection.collectionName;
+      let result;
 
-      const expired_games = result.map(r => hexToUtf(r.id));
-      const games = _usergames.get(collection.collectionName) ?? [];
+      try {
+        result = await collection
+          .find({
+            type: 'game',
+            last_updated: { $lte: expire_time },
+          })
+          .toArray();
+      } catch (error) {
+        logError('Database', 'Fetch User Expired Games', error);
+      }
 
-      _usergames.set(
-        collection.collectionName,
-        games.filter(g => !expired_games.includes(g)),
-      );
+      if (!result || result.length === 0) continue;
 
-      expired.set(collection.collectionName, expired_games);
-    } catch (error) {
-      logError('Database', 'Clear User Expired Games', error);
+      try {
+        await collection.deleteMany({ id: { $in: result.map(r => r.id) }, type: 'game' });
+
+        const expired_games = result.map(r => hexToUtf(r.id));
+        const games = _usergames.get(user_id) ?? [];
+
+        _usergames.set(
+          user_id,
+          games.filter(g => !expired_games.includes(g)),
+        );
+
+        expired.set(user_id, expired_games);
+      } catch (error) {
+        logError('Database', 'Clear User Expired Games', error);
+      }
     }
+  } catch (error) {
+    logError('Database', 'Get User Expired Games', error);
   }
+
   return expired;
 }
 

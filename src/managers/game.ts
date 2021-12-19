@@ -33,7 +33,7 @@ export async function initGame(): Promise<void> {
             const game_role = guild.roles.cache.find(r => r.name === `${game_prefix}${game_name}`);
             if (game_role) game_roles.push(game_role);
           }
-          if (member && game_roles) await removeRole(member, game_roles);
+          if (member && game_roles.length) await removeRole(member, game_roles);
         }
       }
 
