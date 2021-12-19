@@ -116,12 +116,12 @@ async function processMessage(message: Message): Promise<unknown> {
     text_channel.awaitMessages({
       filter: msg => msg.author.bot && msg.author.id !== client.user?.id,
       max: 1,
-      time: 1500,
+      time: 2000,
     }),
     message.awaitReactions({
       filter: reac => reac.users.cache.some(u => u.bot),
       max: 1,
-      time: 1500,
+      time: 2000,
     }),
   ]);
 
