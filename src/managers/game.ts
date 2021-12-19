@@ -15,9 +15,11 @@ import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js'
 import { logError } from '../modules/telemetry.js';
 import { fetchImage } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
+import { Queuer } from '../utils/queuer.js';
 import { ActivityData } from '../utils/types.js';
 
 const _screeningLimiter = new Limiter(1800000);
+const _presenceQueuer = new Queuer();
 
 export const game_prefix = '🔰';
 
@@ -65,7 +67,11 @@ export async function initGame(): Promise<void> {
 
   await clearExpired();
 
-  client.on('presenceUpdate', processPresence);
+  client.on('presenceUpdate', (oldPresence, newPresence) => {
+    _presenceQueuer.queue(async () => {
+      await processPresence(oldPresence, newPresence);
+    });
+  });
 }
 
 async function processPresence(oldPresence: Presence | null, newPresence: Presence): Promise<void> {
