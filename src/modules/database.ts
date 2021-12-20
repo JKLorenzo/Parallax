@@ -1,7 +1,7 @@
 import { Snowflake } from 'discord.js';
 import mongodb from 'mongodb';
 import { logError } from './telemetry.js';
-import { hexToUtf, utfToHex } from '../utils/functions.js';
+import { utfToHex } from '../utils/functions.js';
 import Limiter from '../utils/limiter.js';
 import {
   BotConfigKeys,
@@ -67,9 +67,9 @@ export async function getUserGames(userId: Snowflake): Promise<string[]> {
 
 export async function updateUserGame(userId: Snowflake, game_name: string): Promise<void> {
   const hex_name = utfToHex(game_name);
-  if (_limiter.limit(`${userId}-${hex_name}`)) return;
+  if (_limiter.limit(`${userId}-updateusergame-${hex_name}`)) return;
 
-  const games = _usergames.get(userId) ?? [];
+  const games = await getUserGames(userId);
   if (!games.includes(game_name)) _usergames.set(userId, [...games, game_name]);
 
   await mongoClient
@@ -109,15 +109,15 @@ export async function getUserExpiredGames(): Promise<Map<string, string[]>> {
       if (!result || result.length === 0) continue;
 
       try {
-        await collection.deleteMany({ id: { $in: result.map(r => r.id) }, type: 'game' });
-
-        const expired_games = result.map(r => hexToUtf(r.id));
-        const games = _usergames.get(user_id) ?? [];
+        const games = await getUserGames(user_id);
+        const expired_games = result.map(r => r.name);
 
         _usergames.set(
           user_id,
           games.filter(g => !expired_games.includes(g)),
         );
+
+        await collection.deleteMany({ name: { $in: result.map(r => r.name) }, type: 'game' });
 
         expired.set(user_id, expired_games);
       } catch (error) {
