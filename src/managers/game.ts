@@ -27,12 +27,12 @@ export async function initGame(): Promise<void> {
   const clearExpired = async () => {
     try {
       const expired = await getUserExpiredGames();
-      for (const [userId, game_names] of expired) {
+      for (const [userId, role_names] of expired) {
         for (const guild of client.guilds.cache.values()) {
           const member = guild.members.cache.get(userId);
           const game_roles = [];
-          for (const game_name of game_names) {
-            const game_role = guild.roles.cache.find(r => r.name === `${game_prefix}${game_name}`);
+          for (const role_name of role_names) {
+            const game_role = guild.roles.cache.find(r => r.name === role_name);
             if (game_role) game_roles.push(game_role);
           }
           if (member && game_roles.length) await removeRole(member, game_roles);
