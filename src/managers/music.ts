@@ -60,7 +60,11 @@ export async function initMusic(): Promise<void> {
 
   client.on('messageCreate', message => {
     _messageQueue.queue(async () => {
-      await processMessage(message);
+      try {
+        await processMessage(message);
+      } catch (error) {
+        logError('Music Manager', 'Process Message', error);
+      }
     });
   });
 }
