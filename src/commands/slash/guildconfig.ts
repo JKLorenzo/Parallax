@@ -155,7 +155,7 @@ export default class GuildConfig extends Command {
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
     const command = interaction.options.getSubcommand();
-    const guild = client.guilds.cache.get(interaction.guildId) as Guild;
+    const guild = client.guilds.cache.get(interaction.guildId!) as Guild;
 
     await interaction.deferReply({ ephemeral: true });
 

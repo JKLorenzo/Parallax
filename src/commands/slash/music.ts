@@ -95,7 +95,7 @@ export default class Music extends Command {
   }
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
-    const config = await getMusicConfig(interaction.guildId);
+    const config = await getMusicConfig(interaction.guildId!);
 
     if (!config) {
       return interaction.reply({
