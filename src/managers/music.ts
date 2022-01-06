@@ -86,8 +86,9 @@ async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceStat
   if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
 
   // Account for voice channel tranfers
-  await sleep(3000);
-  if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
+  await sleep(10000);
+  const guild = client.guilds.cache.get(oldState.channelId!);
+  if ((guild?.me?.voice?.channel?.members.filter(m => !m.user.bot).size ?? 0) > 0) return;
 
   const subscription = getSubscription(oldState.guild.id);
   if (subscription) {
