@@ -31,7 +31,7 @@ import {
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
-import { getStringSimilarity, hasAny, parseHTML } from '../utils/functions.js';
+import { getStringSimilarity, hasAny, parseHTML, sleep } from '../utils/functions.js';
 import { Queuer } from '../utils/queuer.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
@@ -83,6 +83,10 @@ async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceStat
   const member_channel = oldState.channel;
 
   if (!bot_channel || !member_channel || bot_channel.id !== member_channel.id) return;
+  if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
+
+  // Account for voice channel tranfers
+  await sleep(3000);
   if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
 
   const subscription = getSubscription(oldState.guild.id);
