@@ -31,7 +31,7 @@ import {
 import { logError } from '../modules/telemetry.js';
 import Subscription from '../structures/subscription.js';
 import Track from '../structures/track.js';
-import { getStringSimilarity, hasAny, parseHTML } from '../utils/functions.js';
+import { getStringSimilarity, hasAny, parseHTML, sleep } from '../utils/functions.js';
 import { Queuer } from '../utils/queuer.js';
 
 const _subscriptions = new Map<Snowflake, Subscription>();
@@ -60,7 +60,11 @@ export async function initMusic(): Promise<void> {
 
   client.on('messageCreate', message => {
     _messageQueue.queue(async () => {
-      await processMessage(message);
+      try {
+        await processMessage(message);
+      } catch (error) {
+        logError('Music Manager', 'Process Message', error);
+      }
     });
   });
 }
@@ -84,6 +88,11 @@ async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceStat
 
   if (!bot_channel || !member_channel || bot_channel.id !== member_channel.id) return;
   if (bot_channel.members.filter(m => !m.user.bot).size > 0) return;
+
+  // Account for voice channel tranfers
+  await sleep(10000);
+  const guild = client.guilds.cache.get(oldState.channelId!);
+  if ((guild?.me?.voice?.channel?.members.filter(m => !m.user.bot).size ?? 0) > 0) return;
 
   const subscription = getSubscription(oldState.guild.id);
   if (subscription) {
