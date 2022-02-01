@@ -64,7 +64,7 @@ export default class Track {
           .edit({
             embeds: [
               message.embeds[0]
-                .setAuthor('Parallax Music Player: Previously Played')
+                .setAuthor({ name: 'Parallax Music Player: Previously Played' })
                 .setColor('YELLOW'),
             ],
             components: [],
