@@ -35,7 +35,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.7.0",
     "@discordjs/voice": "^0.8.0",
-    "color": "^4.2.0",
+    "color": "^4.2.1",
     "common-tags": "^1.8.2",
     "discord-api-types": "^0.26.1",
     "discord.js": "^13.5.0",
