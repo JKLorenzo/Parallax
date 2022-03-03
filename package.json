@@ -39,7 +39,7 @@
     "common-tags": "^1.8.2",
     "discord-api-types": "^0.26.1",
     "discord.js": "^13.5.0",
-    "ffmpeg-static": "^4.4.1",
+    "ffmpeg-static": "^5.0.0",
     "g-i-s": "^2.1.6",
     "libsodium-wrappers": "^0.7.9",
     "lodash": "^4.17.21",
