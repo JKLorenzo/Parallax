@@ -41,7 +41,7 @@
     "discord.js": "^13.5.0",
     "ffmpeg-static": "^4.4.1",
     "g-i-s": "^2.1.6",
-    "libsodium-wrappers": "^0.7.9",
+    "libsodium-wrappers": "^0.7.10",
     "lodash": "^4.17.21",
     "mongodb": "^4.4.1",
     "node-cron": "^3.0.0",
