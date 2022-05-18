@@ -13,6 +13,8 @@
   
   It automatically creates and assigns roles based on the user's gaming activity. 
   
-  A good understanding of Discord's permissions is required.
+  Playing tracks from YouTube, Spotify, and SoundClound.
+  
+  For personal use only.
   
 </div>
