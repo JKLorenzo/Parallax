@@ -111,24 +111,6 @@ export default class Music extends Command {
       });
     }
 
-    if (config.channel && config.channel !== interaction.channelId) {
-      const guild = interaction.guild as Guild;
-      const channel = guild.channels.cache.get(config.channel);
-
-      if (!channel) {
-        return interaction.reply({
-          content:
-            'Channel property of music configuration is invalid. Please update your music configuration.',
-          ephemeral: true,
-        });
-      }
-
-      return interaction.reply({
-        content: `Music commands can only be used on ${channel} channel.`,
-        ephemeral: true,
-      });
-    }
-
     switch (interaction.options.getSubcommand()) {
       case 'play': {
         const query = interaction.options.getString('query', true).replaceAll('  ', ' ').trim();
