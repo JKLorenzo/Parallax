@@ -1,6 +1,7 @@
 import { AudioResource, createAudioResource } from '@discordjs/voice';
 import { Message, TextChannel } from 'discord.js';
 import playdl from 'play-dl';
+import { client } from '../main.js';
 import { getComponent } from '../managers/interaction.js';
 import { getSubscription, got429, had429 } from '../managers/music.js';
 import { hasAny } from '../utils/functions.js';
@@ -30,6 +31,13 @@ export default class Track {
         const subscription = getSubscription(channel.guildId);
         const nextTrack = subscription?.queue.at(0);
 
+        const queueLength = subscription?.queue.length ?? 'Unknown';
+        const bitrate = voice_channel ? `${voice_channel.bitrate / 1000}kbps` : 'Unknown';
+        const region =
+          voice_channel?.rtcRegion
+            ?.split(' ')
+            .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic';
+
         channel
           .send({
             embeds: [
@@ -38,13 +46,8 @@ export default class Track {
                 title: this.title,
                 description: nextTrack ? `Up Next: ${nextTrack.title}` : '',
                 footer: {
-                  text: `Channel: ${voice_channel?.name ?? 'Unknown'}  |  Region: ${
-                    voice_channel?.rtcRegion
-                      ?.split(' ')
-                      .map(s => `${s.charAt(0).toUpperCase()}${s.slice(1)}`) ?? 'Automatic'
-                  }  |  Bitrate: ${
-                    voice_channel ? `${voice_channel.bitrate / 1000}kbps` : 'Unknown'
-                  }`,
+                  iconURL: client.emojis.cache.find(e => e.name === 'youtube_music')?.url,
+                  text: `YouTube Music  |  Region: ${region}  |  Bitrate: ${bitrate}  |  Queued Songs: ${queueLength}`,
                 },
                 thumbnail: { url: this.image },
                 color: 'GREEN',
@@ -59,20 +62,21 @@ export default class Track {
 
     this.onFinish = () => {
       this.onFinish = noop;
+
       if (message && message.editable) {
-        message
-          .edit({
-            embeds: [
-              message.embeds[0]
-                .setAuthor({ name: 'Parallax Music Player: Previously Played' })
-                .setColor('YELLOW'),
-            ],
-            components: [],
-          })
-          .catch(console.warn);
+        const embed = message.embeds[0]
+          .setAuthor({ name: 'Parallax Music Player: Previously Played' })
+          .setColor('YELLOW')
+          .setFooter(null);
+
+        if (hasAny(this.query, 'youtube')) {
+          embed.setDescription(`Listen to this song again on [YouTube](${this.query}).`);
+        }
+
+        message.edit({ embeds: [embed], components: [] }).catch(console.warn);
         setTimeout(() => {
           if (message && message.deletable) message.delete().catch(console.warn);
-        }, 10000);
+        }, 15000);
       }
     };
 
