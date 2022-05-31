@@ -59,6 +59,8 @@ export default class Sudo extends Command {
     const lastResult = this._lastResult;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const callback = (value: unknown) => this._callback(interaction, value);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const followup = (value: unknown) => this._followup(interaction, value);
 
     if (command.startsWith('```') && command.endsWith('```')) {
       command = command.replace(/(^.*?\s)|(\n.*$)/g, '');
@@ -85,6 +87,15 @@ export default class Sudo extends Command {
     } else {
       const result = this._makeResult(value, process.hrtime(this._hrStart));
       interacton.editReply({ embeds: result.map(r => new MessageEmbed({ description: r })) });
+    }
+  }
+
+  _followup(interacton: CommandInteraction, value: unknown): void {
+    if (value instanceof Error) {
+      interacton.followUp(`FollowUp Failed: \`${value}\``);
+    } else {
+      const result = this._makeResult(value, process.hrtime(this._hrStart));
+      interacton.followUp({ embeds: result.map(r => new MessageEmbed({ description: r })) });
     }
   }
 
