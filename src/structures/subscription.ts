@@ -24,7 +24,7 @@ export default class Subscription {
     this.audioPlayer = createAudioPlayer();
     this.queue = [];
 
-    this.voiceConnection.on('stateChange', async (_, newState) => {
+    this.voiceConnection.on<'stateChange'>('stateChange', async (_, newState) => {
       const isDisconnected = newState.status === VoiceConnectionStatus.Disconnected;
       const isDestroyed = newState.status === VoiceConnectionStatus.Destroyed;
       const isConnecting = newState.status === VoiceConnectionStatus.Connecting;
@@ -61,7 +61,7 @@ export default class Subscription {
       }
     });
 
-    this.audioPlayer.on('stateChange', (oldState, newState) => {
+    this.audioPlayer.on<'stateChange'>('stateChange', (oldState, newState) => {
       const isOldStateIdle = oldState.status === AudioPlayerStatus.Idle;
       const isNewStateIdle = newState.status === AudioPlayerStatus.Idle;
       if (isNewStateIdle && !isOldStateIdle) {

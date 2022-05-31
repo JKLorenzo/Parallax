@@ -1,6 +1,6 @@
 import {
   ApplicationCommandNonOptionsData,
-  ApplicationCommandOptionChoice,
+  ApplicationCommandOptionChoiceData,
   ApplicationCommandSubCommandData,
   ChatInputApplicationCommandData,
   CommandInteraction,
@@ -47,7 +47,7 @@ export default class Game extends Command {
     if (this._inviteoptions.map(option => option.name).includes(this_name)) {
       this.registerPartitionAsSubcommand(partition, ++iteration);
     } else {
-      const player_count_choices = [] as ApplicationCommandOptionChoice[];
+      const player_count_choices = [] as ApplicationCommandOptionChoiceData[];
       for (let i = 2; i <= 10; i++) player_count_choices.push({ name: `${i}`, value: i });
 
       const reserved_inviteoptions = [] as ApplicationCommandNonOptionsData[];

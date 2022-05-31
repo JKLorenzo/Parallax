@@ -118,22 +118,6 @@ export default abstract class Command {
               } updated on ${this_guild}`,
             );
           }
-
-          // Update permissions
-          if (this.data.type === 'CHAT_INPUT') {
-            const guildPermissions = await this_guild.commands.permissions.fetch({});
-            if (!_.isEqual(guildPermissions.get(this_command.id), this.permissions)) {
-              await this_command.permissions.set({
-                permissions: this.permissions ?? [],
-              });
-              logMessage(
-                'Command',
-                `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
-                  this.data.name
-                } permissions updated on ${this_guild}`,
-              );
-            }
-          }
         } else if (this_command && hasFilter) {
           // Delete
           await this_command.delete();
