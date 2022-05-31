@@ -8,3 +8,6 @@ node_modules/
 dist/
 *.mp3
 *.log
+
+# Local
+.env

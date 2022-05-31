@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client, Intents } from 'discord.js';
 import { initFreeGame } from './managers/free_game.js';
 import { initGame } from './managers/game.js';
