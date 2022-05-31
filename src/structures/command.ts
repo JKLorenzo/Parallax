@@ -1,13 +1,12 @@
 import {
   ApplicationCommandData,
-  ApplicationCommandPermissionData,
   ClientApplication,
   CommandInteraction,
   ContextMenuInteraction,
   Guild,
 } from 'discord.js';
 import _ from 'lodash';
-import { client, ownerId } from '../main.js';
+import { client } from '../main.js';
 import { logMessage } from '../modules/telemetry.js';
 import { GuildCommandOptions } from '../utils/types.js';
 
@@ -140,35 +139,5 @@ export default abstract class Command {
 
   get scope(): 'guild' | 'global' {
     return this._scope;
-  }
-
-  get permissions(): ApplicationCommandPermissionData[] | undefined {
-    const permissions = [] as ApplicationCommandPermissionData[];
-
-    if (this._options?.permissions?.roles?.allow) {
-      this._options.permissions.roles.allow.forEach(id =>
-        permissions.push({ id: id, permission: true, type: 'ROLE' }),
-      );
-    }
-    if (this._options?.permissions?.roles?.deny) {
-      this._options.permissions.roles.deny.forEach(id =>
-        permissions.push({ id: id, permission: false, type: 'ROLE' }),
-      );
-    }
-
-    permissions.push({ id: ownerId, permission: true, type: 'USER' });
-
-    if (this._options?.permissions?.users?.allow) {
-      this._options.permissions.users.allow.forEach(id =>
-        permissions.push({ id: id, permission: true, type: 'USER' }),
-      );
-    }
-    if (this._options?.permissions?.users?.deny) {
-      this._options.permissions.users.deny.forEach(id =>
-        permissions.push({ id: id, permission: false, type: 'USER' }),
-      );
-    }
-
-    return permissions.length ? permissions : undefined;
   }
 }
