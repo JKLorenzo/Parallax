@@ -48,7 +48,7 @@
     "node-cron": "^3.0.0",
     "node-fetch": "^3.2.4",
     "node-google-tts-api": "^1.1.1",
-    "play-dl": "^1.9.4",
+    "play-dl": "^1.9.5",
     "probe-image-size": "^7.2.3",
     "soundcloud-scraper": "^5.0.2",
     "spotify-web-api-node": "^5.0.2"
