@@ -24,133 +24,138 @@ import { FreeGameConfig, GameConfig, MusicConfig, PlayConfig } from '../../utils
 
 export default class GuildConfig extends Command {
   constructor() {
-    super('guild', {
-      name: 'guildconfig',
-      description: 'Gets or updates the configuration of this server.',
-      type: 'CHAT_INPUT',
-      defaultPermission: false,
-      options: [
-        {
-          name: 'game',
-          description: 'Gets or updates the game configuration of this server.',
-          type: 'SUB_COMMAND',
-          options: [
-            {
-              name: 'enabled',
-              description: 'Enable or disable this config.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'mentionable',
-              description: 'Whether the generated game roles are mentionable.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'invite_channel',
-              description: 'The channel where game invites will be sent.',
-              type: 'CHANNEL',
-            },
-            {
-              name: 'role_reference',
-              description: 'The reference role to be used for positioning.',
-              type: 'ROLE',
-            },
-          ],
-        },
-        {
-          name: 'play',
-          description: 'Gets or updates the play configuration of this server.',
-          type: 'SUB_COMMAND',
-          options: [
-            {
-              name: 'enabled',
-              description: 'Enable or disable this config.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'hoisted',
-              description: 'Whether the generated play roles are hoisted.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'mentionable',
-              description: 'Whether the generated play roles are mentionable.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'role_reference',
-              description: 'The reference role to be used for positioning.',
-              type: 'ROLE',
-            },
-          ],
-        },
-        {
-          name: 'free_game',
-          description: 'Gets or updates the free game configuration of this server.',
-          type: 'SUB_COMMAND',
-          options: [
-            {
-              name: 'show_options',
-              description: 'Sends the role selection pane to this channel.',
-              type: 'CHANNEL',
-            },
-            {
-              name: 'enabled',
-              description: 'Enable or disable this config.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'channel',
-              description: 'The channel where free games will be sent.',
-              type: 'CHANNEL',
-            },
-            {
-              name: 'steam',
-              description: 'The role to mention when theres a free game on Steam.',
-              type: 'ROLE',
-            },
-            {
-              name: 'epic',
-              description: 'The role to mention when theres a free game on Epic Games.',
-              type: 'ROLE',
-            },
-            {
-              name: 'gog',
-              description: 'The role to mention when theres a free game on GOG.',
-              type: 'ROLE',
-            },
-            {
-              name: 'ps',
-              description: 'The role to mention when theres a free game for PlayStation.',
-              type: 'ROLE',
-            },
-            {
-              name: 'xbox',
-              description: 'The role to mention when theres a free game for Xbox.',
-              type: 'ROLE',
-            },
-          ],
-        },
-        {
-          name: 'music',
-          description: 'Gets or updates the music configuration of this server.',
-          type: 'SUB_COMMAND',
-          options: [
-            {
-              name: 'enabled',
-              description: 'Enable or disable this config.',
-              type: 'BOOLEAN',
-            },
-            {
-              name: 'channel',
-              description: 'The channel where music commands should be received.',
-              type: 'CHANNEL',
-              channelTypes: ['GUILD_TEXT'],
-            },
-          ],
-        },
-      ],
-    });
+    super(
+      {
+        name: 'guildconfig',
+        description: 'Gets or updates the configuration of this server.',
+        type: 'CHAT_INPUT',
+        defaultPermission: false,
+        options: [
+          {
+            name: 'game',
+            description: 'Gets or updates the game configuration of this server.',
+            type: 'SUB_COMMAND',
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'mentionable',
+                description: 'Whether the generated game roles are mentionable.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'invite_channel',
+                description: 'The channel where game invites will be sent.',
+                type: 'CHANNEL',
+              },
+              {
+                name: 'role_reference',
+                description: 'The reference role to be used for positioning.',
+                type: 'ROLE',
+              },
+            ],
+          },
+          {
+            name: 'play',
+            description: 'Gets or updates the play configuration of this server.',
+            type: 'SUB_COMMAND',
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'hoisted',
+                description: 'Whether the generated play roles are hoisted.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'mentionable',
+                description: 'Whether the generated play roles are mentionable.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'role_reference',
+                description: 'The reference role to be used for positioning.',
+                type: 'ROLE',
+              },
+            ],
+          },
+          {
+            name: 'free_game',
+            description: 'Gets or updates the free game configuration of this server.',
+            type: 'SUB_COMMAND',
+            options: [
+              {
+                name: 'show_options',
+                description: 'Sends the role selection pane to this channel.',
+                type: 'CHANNEL',
+              },
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'channel',
+                description: 'The channel where free games will be sent.',
+                type: 'CHANNEL',
+              },
+              {
+                name: 'steam',
+                description: 'The role to mention when theres a free game on Steam.',
+                type: 'ROLE',
+              },
+              {
+                name: 'epic',
+                description: 'The role to mention when theres a free game on Epic Games.',
+                type: 'ROLE',
+              },
+              {
+                name: 'gog',
+                description: 'The role to mention when theres a free game on GOG.',
+                type: 'ROLE',
+              },
+              {
+                name: 'ps',
+                description: 'The role to mention when theres a free game for PlayStation.',
+                type: 'ROLE',
+              },
+              {
+                name: 'xbox',
+                description: 'The role to mention when theres a free game for Xbox.',
+                type: 'ROLE',
+              },
+            ],
+          },
+          {
+            name: 'music',
+            description: 'Gets or updates the music configuration of this server.',
+            type: 'SUB_COMMAND',
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'channel',
+                description: 'The channel where music commands should be received.',
+                type: 'CHANNEL',
+                channelTypes: ['GUILD_TEXT'],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        scope: 'guild',
+      },
+    );
   }
 
   async exec(interaction: CommandInteraction): Promise<unknown> {

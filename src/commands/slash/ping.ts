@@ -3,12 +3,17 @@ import Command from '../../structures/command.js';
 
 export default class Ping extends Command {
   constructor() {
-    super('global', {
-      name: 'ping',
-      description: 'Checks the ping of this bot.',
-      type: 'CHAT_INPUT',
-      defaultPermission: true,
-    });
+    super(
+      {
+        name: 'ping',
+        description: 'Checks the ping of this bot.',
+        type: 'CHAT_INPUT',
+        defaultPermission: true,
+      },
+      {
+        scope: 'global',
+      },
+    );
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {

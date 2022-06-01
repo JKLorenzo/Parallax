@@ -21,7 +21,6 @@ export default class Game extends Command {
 
   constructor() {
     super(
-      'guild',
       {
         name: 'players',
         description: 'Show the list of players of a game.',
@@ -30,6 +29,7 @@ export default class Game extends Command {
         options: [],
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const config = await getGameConfig(guild.id);
           if (config?.enabled) return true;

@@ -8,17 +8,9 @@ export type BotConfigKeys =
   | 'GameScreeningChannelId'
   | 'GuildMaxRoles';
 
-export type CommandPermissionData = {
-  allow?: Snowflake[];
-  deny?: Snowflake[];
-};
-
-export type GuildCommandOptions = {
+export type CommandOptions = {
+  scope: 'global' | 'guild';
   guilds?(guild: Guild): Promise<boolean> | boolean;
-  permissions?: {
-    users?: CommandPermissionData;
-    roles?: CommandPermissionData;
-  };
 };
 
 export type GuildConfig = {

@@ -6,7 +6,6 @@ import { BotConfigKeys } from '../../utils/types.js';
 export default class BotConfig extends Command {
   constructor() {
     super(
-      'guild',
       {
         name: 'botconfig',
         description: 'Gets or sets the bot configuration.',
@@ -48,6 +47,7 @@ export default class BotConfig extends Command {
         ],
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const guildId = await getBotConfig('ControlServerId');
           if (!guildId || guildId !== guild.id) return false;

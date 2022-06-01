@@ -16,7 +16,6 @@ export default class Sudo extends Command {
 
   constructor() {
     super(
-      'guild',
       {
         name: 'sudo',
         description: 'Executes a command as a superuser.',
@@ -32,6 +31,7 @@ export default class Sudo extends Command {
         ],
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const guildId = await getBotConfig('ControlServerId');
           if (!guildId || guildId !== guild.id) return false;

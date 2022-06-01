@@ -6,13 +6,13 @@ import { hasAny, parseMention } from '../../utils/functions.js';
 export default class CancelGameInvite extends Command {
   constructor() {
     super(
-      'guild',
       {
         name: 'Cancel Game Invite',
         type: 'MESSAGE',
         defaultPermission: true,
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const config = await getGameConfig(guild.id);
           if (config?.enabled) return true;

@@ -8,19 +8,13 @@ import {
 import _ from 'lodash';
 import { client } from '../main.js';
 import { logMessage } from '../modules/telemetry.js';
-import { GuildCommandOptions } from '../utils/types.js';
+import { CommandOptions } from '../utils/types.js';
 
 export default abstract class Command {
-  private _scope: 'guild' | 'global';
   private _data: ApplicationCommandData;
-  private _options?: GuildCommandOptions;
+  private _options: CommandOptions;
 
-  constructor(
-    scope: 'guild' | 'global',
-    data: ApplicationCommandData,
-    options?: GuildCommandOptions,
-  ) {
-    this._scope = scope;
+  constructor(data: ApplicationCommandData, options: CommandOptions) {
     this._data = {} as ApplicationCommandData;
     this._options = options;
 
@@ -138,6 +132,6 @@ export default abstract class Command {
   }
 
   get scope(): 'guild' | 'global' {
-    return this._scope;
+    return this._options.scope;
   }
 }

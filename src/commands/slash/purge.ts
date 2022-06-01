@@ -12,7 +12,6 @@ import { sleep } from '../../utils/functions.js';
 export default class Purge extends Command {
   constructor() {
     super(
-      'guild',
       {
         name: 'purge',
         description: 'Removes a number of messages on the current channel.',
@@ -28,6 +27,7 @@ export default class Purge extends Command {
         ],
       },
       {
+        scope: 'guild',
         guilds: guild => guild.me?.permissions.has('MANAGE_MESSAGES') ?? false,
       },
     );

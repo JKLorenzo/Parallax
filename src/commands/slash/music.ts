@@ -24,7 +24,6 @@ import Subscription from '../../structures/subscription.js';
 export default class Music extends Command {
   constructor() {
     super(
-      'guild',
       {
         name: 'music',
         description: 'Contains all the music commands of this bot.',
@@ -85,6 +84,7 @@ export default class Music extends Command {
         ],
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const config = await getMusicConfig(guild.id);
           if (config?.enabled) return true;

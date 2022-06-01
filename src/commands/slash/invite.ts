@@ -22,7 +22,6 @@ export default class Game extends Command {
 
   constructor() {
     super(
-      'guild',
       {
         name: 'invite',
         description: 'Invite other members to play a game.',
@@ -31,6 +30,7 @@ export default class Game extends Command {
         options: [],
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const config = await getGameConfig(guild.id);
           if (config?.enabled) return true;

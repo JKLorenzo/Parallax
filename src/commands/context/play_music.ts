@@ -14,13 +14,13 @@ import Subscription from '../../structures/subscription.js';
 export default class PlayMusic extends Command {
   constructor() {
     super(
-      'guild',
       {
         name: 'Play Music',
         type: 'MESSAGE',
         defaultPermission: true,
       },
       {
+        scope: 'guild',
         guilds: async guild => {
           const config = await getMusicConfig(guild.id);
           if (config?.enabled) return true;
