@@ -166,6 +166,14 @@ async function processMemberAdd(member: GuildMember): Promise<void> {
       components: member.pending ? [] : getComponent('gateway'),
     });
   }
+
+  if (!member.pending) {
+    await member.send({
+      content:
+        `Hey there, ${member}! **${guild.name}** uses a membership verification system. ` +
+        'Please hang tight while the admins of this server reviews your membership application.',
+    });
+  }
 }
 
 async function processMemberUpdate(
@@ -212,5 +220,11 @@ async function processMemberUpdate(
     allowedMentions: {
       parse: ['everyone'],
     },
+  });
+
+  await newMember.send({
+    content:
+      `Hey there, ${newMember}! **${guild.name}** uses a membership verification system. ` +
+      'Please hang tight while the admins of this server reviews your membership application.',
   });
 }
