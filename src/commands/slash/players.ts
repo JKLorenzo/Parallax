@@ -16,7 +16,7 @@ import { getGame, getGameConfig } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { fetchImage } from '../../utils/functions.js';
 
-export default class Game extends Command {
+export default class Players extends Command {
   private _playersoptions = [] as ApplicationCommandSubCommandData[];
 
   constructor() {
