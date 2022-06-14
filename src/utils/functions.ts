@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Snowflake } from 'discord.js';
 import gis from 'g-i-s';
+import humanizeDuration from 'humanize-duration';
 import probe from 'probe-image-size';
 import { getImage, updateImage } from '../modules/database.js';
 import { ImageData, ImageOptions } from '../utils/types.js';
@@ -150,4 +151,31 @@ export function getStringSimilarity(str1: string, str2: string): number {
   }
 
   return 100 * ((longer.length - temp[shorter.length]) / longer.length);
+}
+
+export function compareDate(date: Date) {
+  const today = new Date();
+  const diffMs = today.valueOf() - date.valueOf();
+  const days = Math.floor(diffMs / 86400000);
+  const hours = Math.floor((diffMs % 86400000) / 3600000);
+  const minutes = Math.round(((diffMs % 86400000) % 3600000) / 60000);
+  return {
+    days: days,
+    hours: hours,
+    minutes: minutes,
+    totalMinutes: Math.round(diffMs / 60000),
+    estimate: humanizeDuration(diffMs, { largest: 1, round: true }),
+  };
+}
+
+export function toSelectiveUpper(
+  str: string,
+  options?: { word?: 'first' | 'all'; seperator?: string },
+): string {
+  switch (options?.word) {
+    case 'all':
+      return `${str.split(options.seperator ?? ' ')}`;
+    default:
+      return `${str.charAt(0).toUpperCase()}${str.slice(1)}`;
+  }
 }

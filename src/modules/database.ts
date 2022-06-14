@@ -13,6 +13,8 @@ import {
   MusicConfig,
   PlayConfig,
   RedditPostData,
+  GatewayConfig,
+  MemberData,
 } from '../utils/types.js';
 
 const mongoClient = new mongodb.MongoClient(process.env.DB_URI!);
@@ -24,6 +26,8 @@ const _games = new Map<string, GameData | undefined>();
 const _images = new Map<string, ImageData>();
 const _freegames = new Map<string, RedditPostData>();
 const _usergames = new Map<string, string[]>();
+
+const _memberdata = new Map<string, Map<string, MemberData>>();
 
 const _limiter = new Limiter(1800000);
 
@@ -373,4 +377,77 @@ export async function updateMusicConfig(guildId: Snowflake, data: MusicConfig): 
     .db(guildId)
     .collection('config')
     .updateOne({ name: 'music' }, { $set: config.music }, { upsert: true });
+}
+
+export async function getGatewayConfig(guildId: Snowflake): Promise<GatewayConfig | undefined> {
+  if (!_guildconfig.get(guildId)?.gateway) {
+    const result = await mongoClient.db(guildId).collection('config').findOne({ name: 'gateway' });
+
+    _guildconfig.set(guildId, {
+      gateway: {
+        enabled: result?.enabled,
+        channel: result?.channel,
+        role: result?.role,
+      },
+    });
+  }
+
+  return _guildconfig.get(guildId)?.gateway;
+}
+
+export async function updateGatewayConfig(guildId: Snowflake, data: GatewayConfig): Promise<void> {
+  if (Object.keys(data).length === 0) return;
+
+  const config = _guildconfig.get(guildId) ?? {};
+  if (!config.gateway) config.gateway = {};
+  if ('enabled' in data) config.gateway.enabled = data.enabled;
+  if ('channel' in data) config.gateway.channel = data.channel;
+  if ('role' in data) config.gateway.role = data.role;
+  _guildconfig.set(guildId, config);
+
+  await mongoClient
+    .db(guildId)
+    .collection('config')
+    .updateOne({ name: 'gateway' }, { $set: config.gateway }, { upsert: true });
+}
+
+export async function getMemberData(
+  guildId: Snowflake,
+  memberId: Snowflake,
+): Promise<MemberData | undefined> {
+  if (!_memberdata.get(guildId)?.get(memberId)) {
+    const result = await mongoClient.db(guildId).collection('members').findOne({ id: memberId });
+
+    const members = _memberdata.get(guildId) ?? new Map<string, MemberData>();
+    const member: MemberData = {
+      id: memberId,
+      tag: result?.tag,
+      inviter: result?.inviter,
+      inviterTag: result?.inviterTag,
+      moderator: result?.moderator,
+      moderatorTag: result?.moderatorTag,
+    };
+
+    members.set(memberId, member);
+    _memberdata.set(guildId, members);
+  }
+
+  return _memberdata.get(guildId)?.get(memberId);
+}
+
+export async function setMemberData(guildId: Snowflake, data: MemberData): Promise<void> {
+  const members = _memberdata.get(guildId) ?? new Map<string, MemberData>();
+  const member: MemberData = members.get(data.id) ?? { id: data.id };
+  if ('tag' in data) member.tag = data.tag;
+  if ('inviter' in data) member.inviter = data.inviter;
+  if ('inviterTag' in data) member.inviterTag = data.inviterTag;
+  if ('moderator' in data) member.moderator = data.moderator;
+  if ('moderatorTag' in data) member.moderatorTag = data.moderatorTag;
+  members.set(member.id, member);
+  _memberdata.set(guildId, members);
+
+  await mongoClient
+    .db(guildId)
+    .collection('members')
+    .updateOne({ id: member.id }, { $set: member }, { upsert: true });
 }

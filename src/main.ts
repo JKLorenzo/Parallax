@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { Client, Intents } from 'discord.js';
 import { initFreeGame } from './managers/free_game.js';
 import { initGame } from './managers/game.js';
+import { initGateway } from './managers/gateway.js';
 import { initInteraction } from './managers/interaction.js';
 import { initMusic } from './managers/music.js';
 import { initPlay } from './managers/play.js';
@@ -19,6 +20,7 @@ export const client = new Client({
   },
   intents: [
     Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_INVITES,
     Intents.FLAGS.GUILD_MEMBERS,
     Intents.FLAGS.GUILD_MESSAGES,
     Intents.FLAGS.GUILD_PRESENCES,
@@ -41,6 +43,7 @@ client.on('ready', async () => {
   console.log('Online');
   await initTelemetry();
   await initInteraction();
+  await initGateway();
   await initMusic();
   await initGame();
   await initPlay();

@@ -11,16 +11,24 @@ import { getComponent, reloadCommand } from '../../managers/interaction.js';
 import {
   getFreeGameConfig,
   getGameConfig,
+  getGatewayConfig,
   getMusicConfig,
   getPlayConfig,
   updateFreeGameConfig,
   updateGameConfig,
+  updateGatewayConfig,
   updateMusicConfig,
   updatePlayConfig,
 } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { hasAny } from '../../utils/functions.js';
-import { FreeGameConfig, GameConfig, MusicConfig, PlayConfig } from '../../utils/types.js';
+import {
+  FreeGameConfig,
+  GameConfig,
+  GatewayConfig,
+  MusicConfig,
+  PlayConfig,
+} from '../../utils/types.js';
 
 export default class GuildConfig extends Command {
   constructor() {
@@ -50,6 +58,7 @@ export default class GuildConfig extends Command {
                 name: 'invite_channel',
                 description: 'The channel where game invites will be sent.',
                 type: 'CHANNEL',
+                channelTypes: ['GUILD_TEXT'],
               },
               {
                 name: 'role_reference',
@@ -94,6 +103,7 @@ export default class GuildConfig extends Command {
                 name: 'show_options',
                 description: 'Sends the role selection pane to this channel.',
                 type: 'CHANNEL',
+                channelTypes: ['GUILD_TEXT'],
               },
               {
                 name: 'enabled',
@@ -104,6 +114,7 @@ export default class GuildConfig extends Command {
                 name: 'channel',
                 description: 'The channel where free games will be sent.',
                 type: 'CHANNEL',
+                channelTypes: ['GUILD_TEXT'],
               },
               {
                 name: 'steam',
@@ -150,6 +161,29 @@ export default class GuildConfig extends Command {
               },
             ],
           },
+          {
+            name: 'gateway',
+            description: 'Gets or updates the gateway configuration of this server.',
+            type: 'SUB_COMMAND',
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: 'BOOLEAN',
+              },
+              {
+                name: 'channel',
+                description: 'The channel where gateway notifications will be be sent.',
+                type: 'CHANNEL',
+                channelTypes: ['GUILD_TEXT'],
+              },
+              {
+                name: 'role',
+                description: 'The role that will be given to approved users.',
+                type: 'ROLE',
+              },
+            ],
+          },
         ],
       },
       {
@@ -161,8 +195,6 @@ export default class GuildConfig extends Command {
   async exec(interaction: CommandInteraction): Promise<unknown> {
     const command = interaction.options.getSubcommand();
     const guild = client.guilds.cache.get(interaction.guildId!) as Guild;
-
-    await interaction.deferReply({ ephemeral: true });
 
     const embed = new MessageEmbed({
       author: {
@@ -203,7 +235,7 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updateGameConfig(guild.id, data);
+      await updateGameConfig(guild.id, data);
       if (typeof data.enabled === 'boolean') {
         await reloadCommand('invite', guild);
         await reloadCommand('players', guild);
@@ -250,7 +282,7 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updatePlayConfig(guild.id, data);
+      await updatePlayConfig(guild.id, data);
 
       embed.setDescription(
         [
@@ -279,9 +311,7 @@ export default class GuildConfig extends Command {
       const xbox_role = interaction.options.getRole('xbox');
 
       if (channel && channel.type !== 'GUILD_TEXT') {
-        return interaction.editReply(
-          `The selected channel ${channel} is not a text-based channel.`,
-        );
+        return interaction.reply(`The selected channel ${channel} is not a text-based channel.`);
       }
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
@@ -306,20 +336,20 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updateFreeGameConfig(guild.id, data);
+      await updateFreeGameConfig(guild.id, data);
 
       if (show_options) {
         if (!config.channel) {
-          return interaction.editReply('Invalid config: `channel` option is not set.');
+          return interaction.reply('Invalid config: `channel` option is not set.');
         }
 
         const free_game_channel = guild.channels.cache.get(config.channel);
         if (!free_game_channel) {
-          return interaction.editReply('Invalid config: `channel` option is no longer valid.');
+          return interaction.reply('Invalid config: `channel` option is no longer valid.');
         }
 
         if (show_options.type !== 'GUILD_TEXT') {
-          return interaction.editReply(
+          return interaction.reply(
             `The selected channel (${show_options}) is not a text-based channel. ${
               data ? 'All changes are saved.' : ''
             }`,
@@ -373,7 +403,7 @@ export default class GuildConfig extends Command {
         }
 
         if (role_descriptions.length === 0) {
-          return interaction.editReply(
+          return interaction.reply(
             'At least one configured platform is required to perform this action.',
           );
         }
@@ -455,7 +485,8 @@ export default class GuildConfig extends Command {
         }
       }
 
-      if (data) await updateMusicConfig(guild.id, data);
+      await updateMusicConfig(guild.id, data);
+
       if (typeof data.enabled === 'boolean') {
         await reloadCommand('music', guild);
       }
@@ -468,10 +499,43 @@ export default class GuildConfig extends Command {
           }`,
         ].join('\n'),
       );
+    } else if (command === 'gateway') {
+      const data = {} as GatewayConfig;
+      const config = (await getGatewayConfig(guild.id)) ?? {};
+
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+      const role = interaction.options.getRole('role');
+
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (channel) config.channel = data.channel = channel.id;
+      if (role) config.role = data.role = role.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
+          config.role = data.role = undefined;
+        }
+      }
+
+      await updateGatewayConfig(guild.id, data);
+
+      embed.setDescription(
+        [
+          `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
+          `**Channel**: ${
+            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**Role**: ${config.role ? guild.roles.cache.get(config.role) : 'Not Set' ?? 'Invalid'}`,
+        ].join('\n'),
+      );
     }
 
     if (embed.description) {
-      await interaction.editReply({
+      await interaction.reply({
         files: [new MessageAttachment('./src/assets/settings.png')],
         embeds: [embed],
       });

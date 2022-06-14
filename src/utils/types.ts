@@ -18,6 +18,7 @@ export type GuildConfig = {
   game?: GameConfig;
   play?: PlayConfig;
   music?: MusicConfig;
+  gateway?: GatewayConfig;
 };
 
 export type FreeGameConfig = {
@@ -47,6 +48,12 @@ export type PlayConfig = {
 export type MusicConfig = {
   enabled?: boolean;
   channel?: Snowflake;
+};
+
+export type GatewayConfig = {
+  enabled?: boolean;
+  channel?: Snowflake;
+  role?: Snowflake;
 };
 
 export type GameData = {
@@ -90,4 +97,13 @@ export type RedditResponseData = {
       data: RedditPostData;
     }[];
   };
+};
+
+export type MemberData = {
+  id: Snowflake;
+  tag?: string;
+  inviter?: Snowflake;
+  inviterTag?: string;
+  moderator?: Snowflake;
+  moderatorTag?: string;
 };
