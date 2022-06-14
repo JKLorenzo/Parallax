@@ -185,7 +185,7 @@ async function processMemberUpdate(
   const messages = await channel.messages.fetch();
   const message = messages.find(thisMessage => {
     const thisMember = guild.members.cache.get(
-      parseMention(thisMessage.embeds[0]?.fields[0]?.value),
+      parseMention(thisMessage.embeds[0]?.fields[0]?.value ?? ''),
     );
     return (
       thisMember?.id === newMember.id &&
