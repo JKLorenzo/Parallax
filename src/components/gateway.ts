@@ -1,5 +1,6 @@
 import { ButtonInteraction, GuildMember, Message, TextChannel } from 'discord.js';
 import { getGatewayConfig, setMemberData } from '../modules/database.js';
+import { addRole } from '../modules/role.js';
 import Component from '../structures/component.js';
 import { parseMention } from '../utils/functions.js';
 
@@ -57,7 +58,7 @@ export default class Gateway extends Component {
             moderator: moderator.id,
             moderatorTag: moderator.user.tag,
           });
-          await member.roles.add(role);
+          await addRole(member, role);
           embed.fields[3].value = `Approved by ${moderator}`;
           embed.setColor('GREEN');
           break;
