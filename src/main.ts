@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { Client, Intents } from 'discord.js';
+import { initEvents } from './managers/events.js';
 import { initFreeGame } from './managers/free_game.js';
 import { initGame } from './managers/game.js';
 import { initGateway } from './managers/gateway.js';
@@ -25,6 +26,7 @@ export const client = new Client({
     Intents.FLAGS.GUILD_MESSAGES,
     Intents.FLAGS.GUILD_PRESENCES,
     Intents.FLAGS.GUILD_VOICE_STATES,
+    Intents.FLAGS.GUILD_SCHEDULED_EVENTS,
     Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
   ],
   presence: {
@@ -48,6 +50,7 @@ client.on('ready', async () => {
   await initGame();
   await initPlay();
   await initFreeGame();
+  initEvents();
   console.log('Initialized');
 });
 
