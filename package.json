@@ -65,16 +65,16 @@
     "@types/node-fetch": "^3.0.3",
     "@types/probe-image-size": "^7.0.1",
     "@types/spotify-web-api-node": "^5.0.7",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
-    "eslint": "^8.16.0",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^8.0.1",
     "is-ci": "^3.0.1",
-    "lint-staged": "^13.0.0",
-    "prettier": "^2.6.2",
-    "typescript": "^4.7.2"
+    "lint-staged": "^13.0.1",
+    "prettier": "^2.7.0",
+    "typescript": "^4.7.3"
   }
 }
