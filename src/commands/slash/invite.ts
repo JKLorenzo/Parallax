@@ -1,5 +1,6 @@
 import {
-  ApplicationCommandSubCommandData,
+  ApplicationCommandData,
+  ApplicationCommandOptionData,
   ChatInputApplicationCommandData,
   CommandInteraction,
   Guild,
@@ -16,7 +17,8 @@ import Command from '../../structures/command.js';
 import { fetchImage } from '../../utils/functions.js';
 
 export default class Invite extends Command {
-  private _inviteoptions = [] as ApplicationCommandSubCommandData[];
+  private _template: ApplicationCommandData;
+  private _optionsData = [] as ApplicationCommandOptionData[];
 
   constructor() {
     super(
@@ -37,16 +39,18 @@ export default class Invite extends Command {
         },
       },
     );
+
+    this._template = _.cloneDeep(this.data);
   }
 
-  registerPartitionAsSubcommand(partition: Role[], iteration = 0): void {
+  registerPartitionAsSubCommand(partition: Role[], iteration = 0): void {
     const start = partition[0].name.toLowerCase().charAt(game_prefix.length);
     const end = partition[partition.length - 1].name.toLowerCase().charAt(game_prefix.length);
     const this_name = `${start}_to_${end}${iteration ? `_${iteration}` : ''}`;
-    if (this._inviteoptions.map(option => option.name).includes(this_name)) {
-      this.registerPartitionAsSubcommand(partition, ++iteration);
+    if (this._optionsData.map(option => option.name).includes(this_name)) {
+      this.registerPartitionAsSubCommand(partition, ++iteration);
     } else {
-      this._inviteoptions.push({
+      this._optionsData.push({
         name: this_name,
         description: `Invite other members to play a game. (${start.toUpperCase()} to ${end.toUpperCase()})`,
         type: 'SUB_COMMAND',
@@ -77,54 +81,52 @@ export default class Invite extends Command {
     }
   }
 
-  async init(): Promise<void> {
-    const template = _.cloneDeep(this.data);
+  async _init(): Promise<void> {
+    for (const guild of client.guilds.cache.values()) {
+      this._optionsData = [];
 
-    const init_this = async () => {
-      for (const guild of client.guilds.cache.values()) {
-        const data = _.cloneDeep(template) as ChatInputApplicationCommandData;
-        this._inviteoptions = [];
+      const games = [] as Role[];
+      const partitions = [] as Role[][];
+      const data = { ...this._template } as ChatInputApplicationCommandData;
+      const roles = [...guild.roles.cache.filter(r => r.name.startsWith(game_prefix)).values()];
 
-        const partitions = [] as Role[][];
-        const games = [] as Role[];
-        const game_roles = [
-          ...guild.roles.cache.filter(r => r.name.startsWith(game_prefix)).values(),
-        ];
-        for (const role of game_roles) {
-          const game = await getGame(role.name.replace(game_prefix, ''));
-          if (game) games.push(role);
-        }
-        const games_alphabetical = games.sort(
-          (a, b) => a.name.toLowerCase().charCodeAt(0) - b.name.toLowerCase().charCodeAt(0),
-        );
-        for (const game of games_alphabetical.values()) {
-          // Initialize the first and the next partition
-          if (!partitions.length || partitions[partitions.length - 1].length >= 15) {
-            partitions.push([]);
-          }
-          partitions[partitions.length - 1].push(game);
-        }
-
-        for (const partition of partitions) {
-          this.registerPartitionAsSubcommand(partition);
-        }
-
-        if (this._inviteoptions.length) {
-          data.options = this._inviteoptions;
-          this.patch(data);
-          await super.init(guild);
-        } else {
-          await guild.commands.fetch();
-          const this_command = guild.commands.cache.find(
-            c => c.name === this.data.name && c.type === this.data.type,
-          );
-          if (this_command) await this_command.delete();
-        }
+      for (const role of roles) {
+        const game = await getGame(role.name.replace(game_prefix, ''));
+        if (game) games.push(role);
       }
-    };
 
-    await init_this();
-    cron.schedule('*/60 * * * *', init_this);
+      const sortedGames = games.sort(
+        (a, b) =>
+          -[a.name.toLowerCase(), b.name.toLowerCase()].sort().indexOf(b.name.toLowerCase()),
+      );
+
+      for (const game of sortedGames.values()) {
+        // Initialize the first and the next partition
+        if (!partitions.length || partitions[partitions.length - 1].length >= 15) {
+          partitions.push([]);
+        }
+        partitions[partitions.length - 1].push(game);
+      }
+
+      for (const partition of partitions) this.registerPartitionAsSubCommand(partition);
+
+      if (this._optionsData.length) {
+        data.options = this._optionsData;
+        this.patch(data);
+        await super.init(guild);
+      } else {
+        await guild.commands.fetch();
+        const this_command = guild.commands.cache.find(
+          c => c.name === this.data.name && c.type === this.data.type,
+        );
+        if (this_command) await this_command.delete();
+      }
+    }
+  }
+
+  async init(): Promise<void> {
+    await this._init();
+    cron.schedule('*/60 * * * *', this._init);
   }
 
   async exec(interaction: CommandInteraction): Promise<unknown> {
