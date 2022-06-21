@@ -12,7 +12,8 @@
     "postinstall": "npm run clean && npm run build",
     "prepare": "is-ci || husky install",
     "prettier": "prettier --check **/*.{json,yml,yaml}",
-    "prettier:fix": "prettier --write **/*.{json,yml,yaml}"
+    "prettier:fix": "prettier --write **/*.{json,yml,yaml}",
+    "start": "node ."
   },
   "engines": {
     "node": "16.x"
