@@ -40,7 +40,7 @@
     "common-tags": "^1.8.2",
     "discord.js": "^13.8.0",
     "dotenv": "^16.0.1",
-    "ffmpeg-static": "^5.0.0",
+    "ffmpeg-static": "^5.0.2",
     "g-i-s": "^2.1.6",
     "humanize-duration": "^3.27.2",
     "libsodium-wrappers": "^0.7.10",
