@@ -3,32 +3,20 @@ import { getMemberData } from '../../modules/database.js';
 import Command from '../../structures/command.js';
 import { compareDate, toSelectiveUpper } from '../../utils/functions.js';
 
-export default class Stats extends Command {
+export default class Info extends Command {
   constructor() {
     super(
       {
-        name: 'stats',
-        description: 'Shows the current stats of the selected target.',
+        name: 'info',
+        description: 'Shows the current info of the selected user.',
         type: 'CHAT_INPUT',
         defaultPermission: true,
         options: [
           {
-            name: 'bot',
-            description: 'Shows the current stats of this bot.',
-            type: 'SUB_COMMAND',
-          },
-          {
             name: 'user',
-            description: 'Shows the current stats of the selected user.',
-            type: 'SUB_COMMAND',
-            options: [
-              {
-                name: 'user',
-                description: 'Select the desired user.',
-                type: 'USER',
-                required: true,
-              },
-            ],
+            description: 'Select the desired user.',
+            type: 'USER',
+            required: true,
           },
         ],
       },
@@ -37,43 +25,36 @@ export default class Stats extends Command {
   }
 
   async exec(interaction: CommandInteraction): Promise<void> {
-    const command = interaction.options.getSubcommand();
     const guild = interaction.guild!;
+    const member = interaction.options.getMember('user', true);
 
-    let target;
-    if (command === 'bot') {
-      target = guild.me!;
-    } else if (command === 'user') {
-      target = interaction.options.getMember('user');
-    }
-
-    if (!target || !(target instanceof GuildMember)) {
+    if (!member || !(member instanceof GuildMember)) {
       return interaction.reply({
         content: 'User not found or is no longer a member of this guild.',
       });
     }
 
-    const data = await getMemberData(guild.id, target.id);
+    const data = await getMemberData(guild.id, member.id);
     const inviter = data?.inviter ? guild.members.cache.get(data.inviter) : undefined;
     const moderator = data?.moderator ? guild.members.cache.get(data.moderator) : undefined;
 
-    const user = await target.user.fetch();
+    const user = await member.user.fetch();
 
     await interaction.reply({
       ephemeral: true,
       embeds: [
         {
           author: { name: `Parallax Snooper: ${guild.name}` },
-          title: `${target.displayName} (${target.user.tag})`,
-          thumbnail: { url: target.displayAvatarURL() },
+          title: `${member.displayName} (${user.tag})`,
+          thumbnail: { url: member.displayAvatarURL() },
           fields: [
             {
               name: 'User ID:',
-              value: target.id,
+              value: user.id,
             },
             {
               name: 'Profile:',
-              value: target.toString(),
+              value: user.toString(),
             },
             {
               name: `Invited By: ${data?.inviterTag ? `(${data.inviterTag})` : ''}`,
@@ -85,12 +66,12 @@ export default class Stats extends Command {
             },
             {
               name: 'Status:',
-              value: toSelectiveUpper(target.presence?.status ?? 'Invisible or Offline'),
+              value: toSelectiveUpper(member.presence?.status ?? 'Invisible or Offline'),
             },
             {
               name: 'Activities:',
               value:
-                target.presence?.activities
+                member.presence?.activities
                   .map(activity => {
                     switch (activity.type) {
                       case 'COMPETING':
@@ -129,21 +110,23 @@ export default class Stats extends Command {
             },
             {
               name: 'Guild Avatar URL:',
-              value: target.displayAvatarURL(),
+              value: member.displayAvatarURL(),
             },
             {
               name: `Account Created: (${compareDate(user.createdAt).estimate} ago)`,
               value: user.createdAt.toString(),
             },
             {
-              name: `Joined Guild: (${compareDate(target.joinedAt!).estimate} ago)`,
-              value: target.joinedAt!.toString(),
+              name: `Joined Guild: ${
+                member.joinedAt ? `(${compareDate(member.joinedAt).estimate} ago)` : 'N/A'
+              }`,
+              value: member.joinedAt?.toString() ?? 'N/A',
             },
             {
               name: `Boosting Since: ${
-                target.premiumSince ? `(${compareDate(target.premiumSince).estimate} ago)` : ''
+                member.premiumSince ? `(${compareDate(member.premiumSince).estimate} ago)` : ''
               }`,
-              value: target.premiumSince?.toString() ?? 'N/A',
+              value: member.premiumSince?.toString() ?? 'N/A',
             },
           ],
           image: { url: user.bannerURL() ?? undefined },
