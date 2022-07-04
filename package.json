@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
-    "@discordjs/opus": "^0.7.0",
+    "@discordjs/opus": "^0.8.0",
     "@discordjs/voice": "^0.10.0",
     "color": "^4.2.3",
     "common-tags": "^1.8.2",
