@@ -1,4 +1,4 @@
-import { Activity, Guild, Snowflake } from 'discord.js';
+import { Activity, Guild, Snowflake, User } from 'discord.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
@@ -106,4 +106,12 @@ export type MemberData = {
   inviterTag?: string;
   moderator?: Snowflake;
   moderatorTag?: string;
+};
+
+export type CachedInvite = {
+  code: string;
+  expiresTimestamp: number | null;
+  inviter: User | null;
+  maxUses: number | null;
+  uses: number | null;
 };
