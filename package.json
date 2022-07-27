@@ -45,7 +45,7 @@
     "humanize-duration": "^3.27.2",
     "libsodium-wrappers": "^0.7.10",
     "lodash": "^4.17.21",
-    "mongodb": "^4.8.0",
+    "mongodb": "^4.8.1",
     "node-cron": "^3.0.1",
     "node-fetch": "^3.2.9",
     "node-google-tts-api": "^1.1.1",
