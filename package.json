@@ -2,14 +2,14 @@
   "name": "parallax",
   "version": "1.0.0",
   "description": "A multi-purpose Discord bot for gaming.",
-  "main": "dist/main.js",
+  "main": "build/main.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "clean": "is-ci || rimraf {dist,*.mp3}",
+    "build:docker": "docker build . -t jklorenzo/parallax",
+    "clean": "is-ci || rimraf build",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "postinstall": "npm run clean && npm run build",
     "prepare": "is-ci || husky install",
     "prettier": "prettier --check **/*.{json,yml,yaml}",
     "prettier:fix": "prettier --write **/*.{json,yml,yaml}",
@@ -24,8 +24,10 @@
   },
   "keywords": [
     "nodejs",
-    "discord-bot",
-    "qg-discord"
+    "typescript",
+    "docker",
+    "heroku",
+    "discord-bot"
   ],
   "author": "Juruel Keanu Lorenzo <keanulorenzo32@gmail.com>",
   "license": "AGPL-3.0-only",

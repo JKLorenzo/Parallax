@@ -21,29 +21,42 @@ const _components = new Collection<string, Component>();
 export async function initInteraction(): Promise<void> {
   try {
     // Load components
-    const components_dir = join(process.cwd(), 'dist/components');
+    const components_dir = join(process.cwd(), 'build/components');
     for (const component_path of getFiles(components_dir)) {
-      if (component_path.endsWith('.map')) continue;
+      if (!component_path.endsWith('.js')) continue;
       const file_path = pathToFileURL(component_path).href;
       const { default: MessageComponent } = await import(file_path);
       const component = new MessageComponent() as Component;
       _components.set(component.name, component);
+      console.log(`component ${component.name} loaded`);
     }
+    console.log(`A total of ${_components.size} components were loaded`);
 
     // Load commands
-    const commands_dir = join(process.cwd(), 'dist/commands');
+    const commands_dir = join(process.cwd(), 'build/commands');
     for (const command_path of getFiles(commands_dir)) {
-      if (command_path.endsWith('.map')) continue;
+      if (!command_path.endsWith('.js')) continue;
       const file_path = pathToFileURL(command_path).href;
       const { default: ApplicationCommand } = await import(file_path);
       const command = new ApplicationCommand() as Command;
       _commands.set(command.data.name, command);
+      console.log(
+        `${command.scope} ${`${command.data.type}`.toLowerCase()} command ${
+          command.data.name
+        } loaded`,
+      );
     }
+    console.log(`A total of ${_commands.size} commands were loaded`);
 
     // Initialize commands
     await client.application?.commands.fetch();
     for (const command of _commands.values()) {
       await command.init();
+      console.log(
+        `${command.scope} ${`${command.data.type}`.toLowerCase()} command ${
+          command.data.name
+        } initialized`,
+      );
     }
 
     // Delete invalid commands
@@ -64,12 +77,18 @@ export async function initInteraction(): Promise<void> {
       if (command.guildId) {
         logMessage(
           'Interaction Manager',
-          `Guild Command ${command.name} deleted on ${command.guild}`,
+          `guild ${`${command.type}`.toLowerCase()} command ${command.name} deleted on ${
+            command.guild
+          }`,
         );
       } else {
-        logMessage('Interaction Manager', `Global Command ${command.name} deleted`);
+        logMessage(
+          'Interaction Manager',
+          `global ${`${command.type}`.toLowerCase()} ${command.name} deleted`,
+        );
       }
     }
+    console.log(`A total of ${deleted_commands.length} commands were deleted`);
   } catch (error) {
     logError('Interaction Manager', 'Initialize', error);
   }
