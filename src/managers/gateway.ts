@@ -33,27 +33,19 @@ export async function initGateway(): Promise<void> {
   }
 
   client.on('inviteCreate', invite => {
-    queuer.queue(async () => {
-      await processInviteCreate(invite);
-    });
+    queuer.queue(() => processInviteCreate(invite));
   });
 
   client.on('inviteDelete', invite => {
-    queuer.queue(async () => {
-      await processInviteDelete(invite);
-    });
+    queuer.queue(() => processInviteDelete(invite));
   });
 
   client.on('guildMemberAdd', member => {
-    queuer.queue(async () => {
-      await processMemberAdd(member);
-    });
+    queuer.queue(() => processMemberAdd(member));
   });
 
   client.on('guildMemberUpdate', (oldMember, newMember) => {
-    queuer.queue(async () => {
-      await processMemberUpdate(oldMember, newMember);
-    });
+    queuer.queue(() => processMemberUpdate(oldMember, newMember));
   });
 }
 

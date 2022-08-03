@@ -11,20 +11,14 @@ export function createRole(guild: Guild, data: CreateRoleOptions): Promise<Role 
   });
 }
 
-export function deleteRole(role: Role): Promise<void> {
-  return queuerOf(role.guild.id).queue(async () => {
-    await role.delete();
-  });
+export function deleteRole(role: Role): Promise<Role> {
+  return queuerOf(role.guild.id).queue(() => role.delete());
 }
 
-export function addRole(member: GuildMember, role: Role | Role[]): Promise<void> {
-  return queuerOf(member.guild.id).queue(async () => {
-    await member.roles.add(role);
-  });
+export function addRole(member: GuildMember, role: Role | Role[]): Promise<GuildMember> {
+  return queuerOf(member.guild.id).queue(() => member.roles.add(role));
 }
 
-export function removeRole(member: GuildMember, role: Role | Role[]): Promise<void> {
-  return queuerOf(member.guild.id).queue(async () => {
-    await member.roles.remove(role);
-  });
+export function removeRole(member: GuildMember, role: Role | Role[]): Promise<GuildMember> {
+  return queuerOf(member.guild.id).queue(() => member.roles.remove(role));
 }

@@ -69,9 +69,7 @@ export async function initGame(): Promise<void> {
   await clearExpired();
 
   client.on('presenceUpdate', (oldPresence, newPresence) => {
-    _presenceQueuer.queue(async () => {
-      await processPresence(oldPresence, newPresence);
-    });
+    _presenceQueuer.queue(() => processPresence(oldPresence, newPresence));
   });
 }
 

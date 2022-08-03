@@ -6,11 +6,9 @@ import { sleep } from './functions.js';
 const _queuers = new Map<string, Queuer>();
 
 type queue_item = {
-  function: Function;
-  promise: {
-    resolve: Function;
-    reject: Function;
-  };
+  exec: () => unknown;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
 };
 
 export function queuerOf(guildId: Snowflake): Queuer {
@@ -34,12 +32,13 @@ export class Queuer {
 
     while (this.queued.length > 0) {
       const this_queue = this.queued.shift();
+      if (!this_queue) continue;
 
       try {
-        const promise = await Promise.race([this_queue?.function()]);
-        this_queue?.promise.resolve(promise);
+        const promise = await Promise.race([this_queue.exec()]);
+        this_queue.resolve(promise);
       } catch (error) {
-        this_queue?.promise.reject(error);
+        this_queue.reject(error);
       } finally {
         if (this.timeout > 0) await sleep(this.timeout);
       }
@@ -48,20 +47,16 @@ export class Queuer {
     this.running = false;
   }
 
-  queue<T>(func: Function): Promise<T> {
-    const this_queue = { function: func } as queue_item;
-    const promise = new Promise<T>((res, rej) => {
-      this_queue.promise = {
-        resolve: res,
-        reject: rej,
-      };
+  queue<T>(exec: () => T | PromiseLike<T>): Promise<T> {
+    const this_queue = { exec } as queue_item;
+    const promise = new Promise<T>((resolve, reject) => {
+      this_queue.resolve = value => resolve(value as T);
+      this_queue.reject = reject;
     });
 
     this.queued.push(this_queue);
 
-    if (!this.running) {
-      this.run();
-    }
+    if (!this.running) this.run();
 
     return promise;
   }

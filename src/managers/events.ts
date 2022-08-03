@@ -7,15 +7,11 @@ const queuer = new Queuer();
 
 export function initEvents(): void {
   client.on('guildScheduledEventUserAdd', (event, user) => {
-    queuer.queue(async () => {
-      await processUserAdd(event, user);
-    });
+    queuer.queue(() => processUserAdd(event, user));
   });
 
   client.on('guildScheduledEventUserRemove', (event, user) => {
-    queuer.queue(async () => {
-      await processUserRemove(event, user);
-    });
+    queuer.queue(() => processUserRemove(event, user));
   });
 }
 
