@@ -101,8 +101,7 @@ export function searchImage(name: string, options: ImageOptions): Promise<string
       for (const result of results) {
         if (!result || !result.url) continue;
         const probe_result = await probe(result.url, {
-          timeout: 10000,
-          retries: 3,
+          timeout: 100,
           // eslint-disable-next-line @typescript-eslint/no-empty-function
         }).catch(() => {});
         if (!probe_result) continue;

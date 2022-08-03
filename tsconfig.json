@@ -3,8 +3,9 @@
     "allowSyntheticDefaultImports": true,
     "module": "ESNext",
     "moduleResolution": "Node",
-    "outDir": "dist",
+    "outDir": "build",
     "rootDir": "src",
+    "sourceMap": true,
     "strict": true,
     "target": "ES2021"
   }

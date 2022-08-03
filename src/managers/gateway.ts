@@ -4,9 +4,10 @@ import { client } from '../main.js';
 import { getGatewayConfig, setMemberData } from '../modules/database.js';
 import { compareDate, parseMention } from '../utils/functions.js';
 import { Queuer } from '../utils/queuer.js';
+import { CachedInvite } from '../utils/types.js';
 
 const queuer = new Queuer();
-const _invites = new Collection<string, Collection<string, Invite>>();
+const _invites = new Collection<string, Collection<string, CachedInvite>>();
 
 export async function initGateway(): Promise<void> {
   for (const guild of client.guilds.cache.values()) {
@@ -14,7 +15,21 @@ export async function initGateway(): Promise<void> {
     if (!config?.enabled) continue;
 
     const invites = await guild.invites.fetch();
-    _invites.set(guild.id, invites);
+    _invites.set(
+      guild.id,
+      new Collection(
+        invites.map(invite => [
+          invite.code,
+          {
+            code: invite.code,
+            expiresTimestamp: invite.expiresTimestamp,
+            inviter: invite.inviter,
+            maxUses: invite.maxUses,
+            uses: invite.uses,
+          },
+        ]),
+      ),
+    );
   }
 
   client.on('inviteCreate', invite => {
@@ -48,7 +63,15 @@ async function processInviteCreate(invite: Invite): Promise<void> {
   if (!config?.enabled) return;
 
   const invites = _invites.get(guild.id) ?? new Collection();
-  invites.set(invite.code, invite);
+  const cachedInvite: CachedInvite = {
+    code: invite.code,
+    expiresTimestamp: invite.expiresTimestamp,
+    inviter: invite.inviter,
+    maxUses: invite.maxUses,
+    uses: invite.uses,
+  };
+
+  invites.set(invite.code, cachedInvite);
   _invites.set(guild.id, invites);
 }
 
@@ -60,10 +83,11 @@ async function processInviteDelete(invite: Invite): Promise<void> {
   const invites = _invites.get(invite.guild!.id);
   if (!invites) return;
 
-  if (invites.get(invite.code)) invite = invites.get(invite.code)!;
+  const cachedInvite = invites.get(invite.code);
+  if (!cachedInvite) return;
 
-  if (invite.maxUses !== 1 || Date.now() >= (invite.expiresTimestamp ?? 0)) {
-    invites.delete(invite.code);
+  if (cachedInvite.maxUses !== 1 || Date.now() >= (cachedInvite.expiresTimestamp ?? 0)) {
+    invites.delete(cachedInvite.code);
     _invites.set(guild.id, invites);
   }
 }
@@ -85,21 +109,45 @@ async function processMemberAdd(member: GuildMember): Promise<void> {
     .difference(invites)
     .filter(i => (i.expiresTimestamp ?? 0) > Date.now() && i.maxUses === 1);
 
-  let inviteUsed: Invite | undefined;
+  let cachedInviteUsed: CachedInvite | undefined;
 
   if (difference.size === 1) {
-    inviteUsed = difference.first()!;
-    invites.delete(inviteUsed.code);
+    // Direct Invite
+    const invite = difference.first()!;
+
+    cachedInviteUsed = {
+      code: invite.code,
+      expiresTimestamp: invite.expiresTimestamp,
+      inviter: invite.inviter,
+      maxUses: invite.maxUses,
+      uses: invite.uses,
+    };
+
+    invites.delete(invite.code);
+    _invites.set(guild.id, invites);
   } else {
+    // Guild Invite
     for (const invite of currentInvites.values()) {
       const this_invite = invites.get(invite.code);
-      if (!this_invite || (this_invite && Date.now() > (this_invite.expiresTimestamp ?? 0))) {
+
+      if (Date.now() > (this_invite?.expiresTimestamp ?? 0)) {
         continue;
       }
-      if ((invite.uses ?? 0) <= (this_invite.uses ?? 0)) {
+
+      if ((invite.uses ?? 0) <= (this_invite?.uses ?? 0)) {
         continue;
       }
-      inviteUsed = invite;
+
+      cachedInviteUsed = {
+        code: invite.code,
+        expiresTimestamp: invite.expiresTimestamp,
+        inviter: invite.inviter,
+        maxUses: invite.maxUses,
+        uses: invite.uses,
+      };
+
+      invites.set(invite.code, cachedInviteUsed);
+      _invites.set(guild.id, invites);
       break;
     }
   }
@@ -113,7 +161,7 @@ async function processMemberAdd(member: GuildMember): Promise<void> {
     );
   });
 
-  const inviter = inviteUsed?.inviter;
+  const inviter = cachedInviteUsed?.inviter;
 
   await setMemberData(guild.id, {
     id: member.id,

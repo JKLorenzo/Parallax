@@ -49,6 +49,30 @@ export default class Gateway extends Component {
     const embed = message.embeds[0];
     const member = guild.members.cache.get(parseMention(embed.fields[0].value));
     const moderator = interaction.member as GuildMember;
+    const messages = await message.channel.messages.fetch();
+    const ping_messages = messages.filter(
+      msg => msg.content.startsWith(embed.fields[0].value) && msg.embeds.length === 0,
+    );
+
+    await (message.channel as TextChannel).bulkDelete(ping_messages);
+
+    let feedback: string | undefined;
+    if (customId === 'approve') {
+      feedback = [
+        `Hooraaay! 🥳 Your membership request has been approved! Welcome to **${guild.name}**!`,
+        '',
+        [
+          'You can view the commands supported by this server by typing `/`',
+          "in any of the server's text channels.",
+        ].join(' '),
+      ].join('\n');
+    } else if (customId === 'kick') {
+      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied.`;
+    } else if (customId === 'ban') {
+      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied indefinitely.`;
+    }
+
+    if (feedback) await member?.send(feedback);
 
     if (member) {
       switch (customId) {
@@ -87,31 +111,5 @@ export default class Gateway extends Component {
       embeds: [embed],
       components: [],
     });
-
-    const messages = await message.channel.messages.fetch();
-    const ping_messages = messages.filter(
-      msg => msg.content.startsWith(embed.fields[0].value) && msg.embeds.length === 0,
-    );
-    await (message.channel as TextChannel).bulkDelete(ping_messages);
-
-    let feedback: string | undefined;
-    if (customId === 'approve') {
-      feedback = [
-        `Hooraaay! 🥳 Your membership request has been approved! Welcome to **${guild.name}**!`,
-        '',
-        [
-          'You can view the commands supported by this server by typing `/`',
-          "in any of the server's text channels.",
-        ].join(' '),
-      ].join('\n');
-    } else if (customId === 'kick') {
-      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied.`;
-    } else if (customId === 'ban') {
-      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied indefinitely.`;
-    }
-
-    if (feedback) {
-      await member?.send(feedback);
-    }
   }
 }
