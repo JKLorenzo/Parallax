@@ -102,8 +102,7 @@ export function searchImage(name: string, options: ImageOptions): Promise<string
         if (!result || !result.url) continue;
         const probe_result = await probe(result.url, {
           timeout: 100,
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-        }).catch(() => {});
+        }).catch(console.warn);
         if (!probe_result) continue;
         const width = probe_result.width;
         if (options.minWidth && width < options.minWidth) continue;
