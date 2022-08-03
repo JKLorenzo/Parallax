@@ -10,6 +10,7 @@ import {
   updateGame,
   updateUserGame,
   getUserGames,
+  getGatewayConfig,
 } from '../modules/database.js';
 import { addRole, createRole, deleteRole, removeRole } from '../modules/role.js';
 import { logError } from '../modules/telemetry.js';
@@ -80,6 +81,17 @@ async function processPresence(oldPresence: Presence | null, newPresence: Presen
     const member = newPresence.member;
 
     if (!guild || !member || member.user.bot) return;
+
+    // Dont add roles if gateway is enabled and member doesnt have the member role
+    const gatewayConfig = await getGatewayConfig(guild.id);
+    if (
+      gatewayConfig?.enabled &&
+      gatewayConfig.role &&
+      !member.roles.cache.has(gatewayConfig.role)
+    ) {
+      return;
+    }
+
     const config = await getGameConfig(guild.id);
 
     const _old = new Collection<string, ActivityData>();
