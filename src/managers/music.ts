@@ -81,8 +81,7 @@ export function deleteSubscription(guild_id: Snowflake): void {
   _subscriptions.delete(guild_id);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function processVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
+async function processVoiceStateUpdate(oldState: VoiceState): Promise<void> {
   const bot_channel = oldState.guild.me?.voice.channel;
   const member_channel = oldState.channel;
 
