@@ -12,9 +12,7 @@ type queue_item = {
 };
 
 export function queuerOf(guildId: Snowflake): Queuer {
-  if (!_queuers.has(guildId)) {
-    _queuers.set(guildId, new Queuer(500));
-  }
+  if (!_queuers.has(guildId)) _queuers.set(guildId, new Queuer());
   return _queuers.get(guildId)!;
 }
 
