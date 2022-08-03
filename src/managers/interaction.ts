@@ -84,7 +84,7 @@ export async function initInteraction(): Promise<void> {
       } else {
         logMessage(
           'Interaction Manager',
-          `global ${`${command.type}`.toLowerCase()} ${command.name} deleted`,
+          `global ${`${command.type}`.toLowerCase()} command ${command.name} deleted`,
         );
       }
     }
