@@ -1,17 +1,19 @@
 {
+  "env": {
+    "es2021": true,
+    "node": true
+  },
   "extends": [
     "eslint:recommended",
     "plugin:prettier/recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "plugins": ["import", "prettier", "@typescript-eslint"],
-  "env": {
-    "node": true,
-    "es6": true
-  },
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2021
+    "ecmaVersion": "latest",
+    "sourceType": "module"
   },
+  "plugins": ["import", "prettier", "@typescript-eslint"],
   "rules": {
     "import/order": [
       "error",
