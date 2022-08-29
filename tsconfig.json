@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "outDir": "build",
-    "rootDir": "src",
+    /* Visit https://aka.ms/tsconfig.json to read more about this file */
+    "rootDir": "./src",
     "sourceMap": true,
-    "strict": true,
-    "target": "ES2021"
-  }
+    "outDir": "./build",
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "extends": "@tsconfig/node16-strictest-esm/tsconfig.json"
 }
