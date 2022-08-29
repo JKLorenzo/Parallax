@@ -1,24 +1,17 @@
-import { Activity, Guild, Snowflake, User } from 'discord.js';
+import type { Activity, Guild, Snowflake, User } from 'discord.js';
+import type { CommandScope } from './Enums';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
-  | 'BotInviteLink'
   | 'ControlServerId'
   | 'TelemetryWebhookURL'
   | 'GameScreeningChannelId'
   | 'GuildMaxRoles';
 
 export type CommandOptions = {
-  scope: 'global' | 'guild';
+  scope: CommandScope;
+  // eslint-disable-next-line no-unused-vars
   guilds?(guild: Guild): Promise<boolean> | boolean;
-};
-
-export type GuildConfig = {
-  free_game?: FreeGameConfig;
-  game?: GameConfig;
-  play?: PlayConfig;
-  music?: MusicConfig;
-  gateway?: GatewayConfig;
 };
 
 export type FreeGameConfig = {
@@ -56,15 +49,23 @@ export type GatewayConfig = {
   role?: Snowflake;
 };
 
+export type GuildConfig = {
+  free_game?: FreeGameConfig;
+  game?: GameConfig;
+  play?: PlayConfig;
+  music?: MusicConfig;
+  gateway?: GatewayConfig;
+};
+
 export type GameData = {
   name: string;
   status: 'approved' | 'denied' | 'pending';
 };
 
 export type ImageData = {
-  name?: string;
-  iconUrl?: string;
-  bannerUrl?: string;
+  name: string;
+  iconUrl?: string | undefined;
+  bannerUrl?: string | undefined;
 };
 
 export type ImageOptions = {

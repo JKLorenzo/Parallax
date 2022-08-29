@@ -1,137 +1,100 @@
-import {
-  ApplicationCommandData,
-  ClientApplication,
-  CommandInteraction,
-  ContextMenuInteraction,
-  Guild,
-} from 'discord.js';
-import _ from 'lodash';
-import { client } from '../main.js';
-import { logMessage } from '../modules/telemetry.js';
-import { CommandOptions } from '../utils/types.js';
+import { ApplicationCommandData, ClientApplication, CommandInteraction, Guild } from 'discord.js';
+import type Manager from './Manager';
+import type { CommandOptions } from '../utils/Types';
+import type Bot from './Bot';
 
 export default abstract class Command {
-  private _data: ApplicationCommandData;
-  private _options: CommandOptions;
+  bot: Bot;
+  data: ApplicationCommandData;
+  options: CommandOptions;
 
-  constructor(data: ApplicationCommandData, options: CommandOptions) {
-    this._data = {} as ApplicationCommandData;
-    this._options = options;
-
-    this.patch(data);
+  constructor(bot: Bot, data: ApplicationCommandData, options: CommandOptions) {
+    this.bot = bot;
+    this.data = data;
+    this.options = options;
   }
 
-  patch(data: ApplicationCommandData): void {
-    switch (data.type) {
-      case 'USER':
-      case 'MESSAGE':
-        this._data = {
-          type: data.type,
-          name: data.name,
-          defaultPermission: data.defaultPermission,
-        };
-        break;
-      case 'CHAT_INPUT':
-        this._data = {
-          type: data.type,
-          name: data.name,
-          description: data.description,
-          defaultPermission: data.defaultPermission,
-          options: data.options,
-        };
-        break;
-      default:
-        throw new TypeError(
-          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
-            data.name
-          } has unknown type`,
-        );
+  async init(manager: Manager, guild?: Guild) {
+    const { client, managers } = manager.bot;
+    const { telemetry } = managers;
+
+    let context;
+    if (this.options.scope === 'global') {
+      context = client.application;
+    } else if (this.options.scope === 'guild') {
+      if (typeof guild === 'undefined') {
+        context = [...client.guilds.cache.values()];
+      } else {
+        context = [guild];
+      }
     }
-  }
-
-  async init(guild?: Guild): Promise<unknown> {
-    const context =
-      this.scope === 'guild'
-        ? guild
-          ? [guild]
-          : [...client.guilds.cache.values()]
-        : client.application;
-
     if (!context) return;
 
     if (context instanceof ClientApplication) {
-      let this_command = client.application?.commands.cache.find(
+      const command = context.commands.cache.find(
         c => c.name === this.data.name && c.type === this.data.type,
       );
 
+      let status: string | undefined;
+
       // Create
-      if (!this_command) {
-        this_command = await client.application?.commands.create(this.data);
-        logMessage(
-          'Command',
-          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} created`,
-        );
+      if (!command) {
+        await context.commands.create(this.data);
+        status = 'created';
+      } else if (!command.equals(this.data)) {
+        await command.edit(this.data);
+        status = 'updated';
       }
 
-      // Update data
-      if (this_command && !this_command.equals(this.data)) {
-        await this_command.edit(this.data);
-        logMessage(
-          'Command',
-          `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${this.data.name} updated`,
+      if (status) {
+        telemetry.logMessage(
+          manager,
+          'Initialize',
+          `${this.options.scope} ${`${this.data.type}`.toLowerCase()} command ${
+            this.data.name
+          } ${status}`,
         );
       }
     } else {
-      for (const this_guild of context) {
-        await this_guild.commands.fetch();
-        const hasFilter = typeof this._options?.guilds === 'function';
-        let this_command = this_guild.commands.cache.find(
+      await Promise.all(context.map(e => e.commands.fetch()));
+
+      context.forEach(async e => {
+        const isFiltered =
+          typeof this.options.guilds !== 'undefined' &&
+          !(await Promise.race([this.options.guilds(e)]));
+
+        const command = e.commands.cache.find(
           c => c.name === this.data.name && c.type === this.data.type,
         );
 
-        if (!hasFilter || (await Promise.race([this._options?.guilds!(this_guild)]))) {
-          // Create
-          if (!this_command) {
-            this_command = await this_guild.commands.create(this.data);
-            logMessage(
-              'Command',
-              `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
-                this.data.name
-              } created on ${this_guild}`,
-            );
-          }
+        let status: string | undefined;
 
-          // Update data
-          if (this_command && !this_command.equals(this.data)) {
-            await this_command.edit(this.data);
-            logMessage(
-              'Command',
-              `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
-                this.data.name
-              } updated on ${this_guild}`,
-            );
+        if (!isFiltered) {
+          if (!command) {
+            await e.commands.create(this.data);
+            status = 'created';
+          } else if (!command.equals(this.data)) {
+            await command.edit(this.data);
+            status = 'updated';
           }
-        } else if (this_command && hasFilter) {
-          // Delete
-          await this_command.delete();
-          logMessage(
-            'Command',
-            `${this.scope} ${`${this.data.type}`.toLowerCase()} command ${
+        } else if (command) {
+          await command.delete();
+          status = 'deleted';
+        }
+
+        if (status) {
+          telemetry.logMessage(
+            manager,
+            'Initialize',
+            `${this.options.scope} ${`${this.data.type}`.toLowerCase()} command ${
               this.data.name
-            } deleted on ${this_guild}`,
+            } ${status} on ${e}`,
           );
         }
-      }
+      });
     }
   }
 
-  abstract exec(interaction: CommandInteraction | ContextMenuInteraction): Promise<unknown>;
-
-  get data(): ApplicationCommandData {
-    return _.cloneDeep(this._data);
-  }
-
-  get scope(): 'guild' | 'global' {
-    return this._options.scope;
-  }
+  // eslint-disable-next-line no-unused-vars
+  abstract exec(interaction: CommandInteraction): Promise<unknown>;
 }

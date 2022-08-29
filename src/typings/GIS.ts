@@ -1,6 +1,14 @@
+/* eslint-disable no-unused-vars */
+
 declare module 'g-i-s' {
   export default function gis(
-    query: string,
+    query:
+      | string
+      | {
+          searchTerm: string;
+          queryStringAddition?: string;
+          filterOutDomains?: string[];
+        },
     callback: (
       error: Error,
       results: {
@@ -10,11 +18,4 @@ declare module 'g-i-s' {
       }[],
     ) => void,
   ): void;
-}
-
-declare module 'node-google-tts-api' {
-  export default class googleTTS {
-    constructor();
-    get(options: { text: string; lang: 'en'; limit_bypass: boolean }): Promise<Buffer>;
-  }
 }

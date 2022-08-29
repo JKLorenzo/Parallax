@@ -1,43 +1,38 @@
-/* eslint-disable @typescript-eslint/ban-types */
+import { sleep } from './Functions';
 
-import { Snowflake } from 'discord.js';
-import { sleep } from './functions.js';
-
-const _queuers = new Map<string, Queuer>();
-
-type queue_item = {
+type QueueItem = {
   exec: () => unknown;
+  // eslint-disable-next-line no-unused-vars
   resolve: (value: unknown) => void;
+  // eslint-disable-next-line no-unused-vars
   reject: (reason?: unknown) => void;
 };
 
-export function queuerOf(guildId: Snowflake): Queuer {
-  if (!_queuers.has(guildId)) _queuers.set(guildId, new Queuer());
-  return _queuers.get(guildId)!;
-}
-
-export class Queuer {
+export default class Queuer {
   private timeout: number;
-  private running = false;
-  private queued = [] as queue_item[];
+  private running: boolean;
+  private queued: QueueItem[];
 
   constructor(timeout = 0) {
     this.timeout = timeout;
+    this.running = false;
+    this.queued = [];
   }
 
   private async run(): Promise<void> {
     this.running = true;
 
     while (this.queued.length > 0) {
-      const this_queue = this.queued.shift();
-      if (!this_queue) continue;
+      const thisQueue = this.queued.shift()!;
 
       try {
-        const promise = await Promise.race([this_queue.exec()]);
-        this_queue.resolve(promise);
+        // eslint-disable-next-line no-await-in-loop
+        const promise = await Promise.race([thisQueue.exec()]);
+        thisQueue.resolve(promise);
       } catch (error) {
-        this_queue.reject(error);
+        thisQueue.reject(error);
       } finally {
+        // eslint-disable-next-line no-await-in-loop
         if (this.timeout > 0) await sleep(this.timeout);
       }
     }
@@ -46,13 +41,13 @@ export class Queuer {
   }
 
   queue<T>(exec: () => T | PromiseLike<T>): Promise<T> {
-    const this_queue = { exec } as queue_item;
+    const thisQueue = { exec } as QueueItem;
     const promise = new Promise<T>((resolve, reject) => {
-      this_queue.resolve = value => resolve(value as T);
-      this_queue.reject = reject;
+      thisQueue.resolve = value => resolve(value as T);
+      thisQueue.reject = reject;
     });
 
-    this.queued.push(this_queue);
+    this.queued.push(thisQueue);
 
     if (!this.running) this.run();
 
