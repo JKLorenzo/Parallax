@@ -66,6 +66,7 @@ export default class Purge extends Command {
         await channel.bulkDelete(messages_to_delete, true).then(messages => {
           for (const this_message of messages.values()) {
             deleted_count++;
+            if (!this_message) continue;
             const author = authors.get(this_message.id);
             if (!author) continue;
             const msgs = deleted.get(author) ?? 0;
