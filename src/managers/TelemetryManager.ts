@@ -1,5 +1,13 @@
-import { Colors, EmbedBuilder, escapeMarkdown, WebhookClient } from 'discord.js';
-import Manager from '../structures/Manager';
+import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
+import TelemetryNode from '../modules/TelemetryNode.js';
+import Manager from '../structures/Manager.js';
+
+type logOptions = {
+  broadcast: boolean;
+  origin: string;
+  section: string;
+  value: unknown;
+};
 
 export default class TelemetryManager extends Manager {
   webhook?: WebhookClient;
@@ -11,49 +19,59 @@ export default class TelemetryManager extends Manager {
     process.on('uncaughtException', this.logUnhandledException);
   }
 
-  logMessage(manager: Manager, section: string, value: unknown) {
-    console.log({ manager: manager.constructor.name, section, value });
-    this.webhook?.send({
-      username: manager.constructor.name,
-      embeds: [
-        new EmbedBuilder()
-          .setTitle(section)
-          .setDescription(escapeMarkdown(`${value}`, { codeBlock: true }))
-          .setColor(Colors.Blurple),
-      ],
-    });
+  node(manager: Manager, section: string, broadcast = true) {
+    return new TelemetryNode(this, manager.constructor.name, section, broadcast);
   }
 
-  logError(manager: Manager, section: string, value: unknown) {
-    console.warn({ manager: manager.constructor.name, section, value });
-    this.webhook?.send({
-      username: manager.constructor.name,
-      embeds: [
-        new EmbedBuilder()
-          .setTitle(section)
-          .setDescription(escapeMarkdown(`${value}`, { codeBlock: true }))
-          .setColor(Colors.Fuchsia),
-      ],
-    });
+  logMessage(options: logOptions) {
+    console.log(`[${options.origin}] ${options.section}: ${options.value}`);
+
+    if (options.broadcast) {
+      this.webhook?.send({
+        username: options.origin,
+        embeds: [
+          new EmbedBuilder()
+            .setTitle(options.section)
+            .setDescription(
+              typeof options.value === 'string'
+                ? options.value
+                : `\`\`\`js\n${options.value}\n\`\`\``,
+            )
+            .setColor(Colors.Blurple),
+        ],
+      });
+    }
+  }
+
+  logError(options: logOptions) {
+    console.warn(`[${options.origin}] ${options.section}: ${options.value}`);
+
+    if (options.broadcast) {
+      this.webhook?.send({
+        username: options.section,
+        embeds: [
+          new EmbedBuilder()
+            .setTitle(options.section)
+            .setDescription(
+              typeof options.value === 'string'
+                ? options.value
+                : `\`\`\`js\n${options.value}\n\`\`\``,
+            )
+            .setColor(Colors.Fuchsia),
+        ],
+      });
+    }
   }
 
   logUnhandledException(origin: string, value: unknown) {
-    console.error({ origin, value });
+    console.error(`[${origin}] Uncaught Exception: ${value}`);
+
     this.webhook?.send({
-      username: 'Telemetry Manager',
+      username: origin,
       embeds: [
         new EmbedBuilder()
           .setTitle('Uncaught Exception')
-          .addFields([
-            {
-              name: 'Origin',
-              value: escapeMarkdown(origin, { codeBlock: true }),
-            },
-            {
-              name: 'Error',
-              value: escapeMarkdown(`${value}`, { codeBlock: true }),
-            },
-          ])
+          .setDescription(typeof value === 'string' ? value : `\`\`\`js\n${value}\n\`\`\``)
           .setColor(Colors.Red),
       ],
     });

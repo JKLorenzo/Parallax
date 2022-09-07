@@ -1,4 +1,4 @@
-import type Bot from './Bot';
+import type Bot from '../modules/Bot.js';
 
 export default abstract class Manager {
   bot: Bot;

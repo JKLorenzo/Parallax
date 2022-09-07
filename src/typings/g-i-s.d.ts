@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 declare module 'g-i-s' {
   export default function gis(
     query:

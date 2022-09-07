@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { pathToFileURL } from 'url';
 import {
   ActionRowData,
   ApplicationCommand,
@@ -7,14 +9,11 @@ import {
   MessageActionRowComponentData,
   MessageComponentInteraction,
 } from 'discord.js';
-import { join } from 'path';
-import { pathToFileURL } from 'url';
-import type Bot from '../structures/Bot';
-import type Command from '../structures/Command';
-import type Component from '../structures/Component';
-import Manager from '../structures/Manager';
-import TelemetryNode from '../structures/TelemetryNode';
-import { getFiles } from '../utils/Functions';
+import type Bot from '../modules/Bot.js';
+import type Command from '../structures/Command.js';
+import type Component from '../structures/Component.js';
+import Manager from '../structures/Manager.js';
+import { getFiles } from '../utils/Helpers.js';
 
 export default class InteractionManager extends Manager {
   private commands: Collection<string, Command>;
@@ -28,7 +27,7 @@ export default class InteractionManager extends Manager {
   }
 
   async init() {
-    const initTelemetry = new TelemetryNode(this, 'Initialize');
+    const initTelemetry = this.bot.managers.telemetry.node(this, 'init', false);
 
     try {
       // Load components
@@ -105,12 +104,17 @@ export default class InteractionManager extends Manager {
     });
 
     this.bot.client.on('guildCreate', guild => {
-      const guildCreateTelemetry = new TelemetryNode(this, 'Initialize Command on Guild Create');
+      const guildCreateTelemetry = this.bot.managers.telemetry.node(
+        this,
+        'Initialize Command on Guild Create',
+      );
 
       this.commands.forEach(command => {
         command.init(this, guild).catch(guildCreateTelemetry.logError);
       });
     });
+
+    initTelemetry.logMessage('Initialized', true);
   }
 
   private async processCommand(interaction: CommandInteraction) {
@@ -120,7 +124,7 @@ export default class InteractionManager extends Manager {
     try {
       await thisCommand.exec(interaction);
     } catch (error) {
-      const processCommandTelemetry = new TelemetryNode(this, 'Process Command');
+      const processCommandTelemetry = this.bot.managers.telemetry.node(this, 'Process Command');
       processCommandTelemetry.logError(error);
     }
   }
@@ -135,7 +139,7 @@ export default class InteractionManager extends Manager {
     try {
       await thisComponent.exec(interaction, customId);
     } catch (error) {
-      const processComponentTelemetry = new TelemetryNode(this, 'Process Component');
+      const processComponentTelemetry = this.bot.managers.telemetry.node(this, 'Process Component');
       processComponentTelemetry.logError(error);
     }
   }

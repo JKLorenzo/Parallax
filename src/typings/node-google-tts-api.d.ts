@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 declare module 'node-google-tts-api' {
   export default class googleTTS {
     constructor();

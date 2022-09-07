@@ -1,24 +1,24 @@
 import type { Snowflake } from 'discord.js';
-import mongodb, { MongoClient } from 'mongodb';
-import type Bot from '../structures/Bot';
-import Manager from '../structures/Manager';
-import type { BotConfigKeys, GuildConfig, MusicConfig } from '../utils/Types';
+import { MongoClient } from 'mongodb';
+import type Bot from '../modules/Bot.js';
+import Manager from '../structures/Manager.js';
+import type { BotConfigKeys, GuildConfig, MusicConfig } from '../utils/Types.js';
 
 export default class DatabaseManager extends Manager {
-  private mongoClient: MongoClient;
+  private mongoClient!: MongoClient;
   private botConfigCache: Map<string, string>;
   private guildConfigCache: Map<string, GuildConfig>;
 
   constructor(bot: Bot) {
     super(bot);
 
-    this.mongoClient = new mongodb.MongoClient(bot.managers.environment.get('dbUri'));
-
     this.botConfigCache = new Map();
     this.guildConfigCache = new Map();
   }
 
   async init() {
+    this.mongoClient = new MongoClient(this.bot.managers.environment.get('dbUri'));
+
     await this.mongoClient.connect();
   }
 

@@ -1,4 +1,4 @@
-import { sleep } from './Functions';
+import { sleep } from '../utils/Helpers.js';
 
 type QueueItem = {
   exec: () => unknown;

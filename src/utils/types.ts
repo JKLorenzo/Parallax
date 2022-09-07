@@ -1,5 +1,5 @@
 import type { Activity, Guild, Snowflake, User } from 'discord.js';
-import type { CommandScope } from './Enums';
+import type { CommandScope } from './Enums.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
@@ -11,7 +11,7 @@ export type BotConfigKeys =
 export type CommandOptions = {
   scope: CommandScope;
   // eslint-disable-next-line no-unused-vars
-  guilds?(guild: Guild): Promise<boolean> | boolean;
+  guilds?(guild: Guild): boolean | PromiseLike<boolean>;
 };
 
 export type FreeGameConfig = {

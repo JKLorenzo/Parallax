@@ -1,7 +1,7 @@
 import { ApplicationCommandData, ClientApplication, CommandInteraction, Guild } from 'discord.js';
-import type Manager from './Manager';
-import type { CommandOptions } from '../utils/Types';
-import type Bot from './Bot';
+import type Manager from './Manager.js';
+import type Bot from '../modules/Bot.js';
+import type { CommandOptions } from '../utils/Types.js';
 
 export default abstract class Command {
   bot: Bot;
@@ -16,7 +16,7 @@ export default abstract class Command {
 
   async init(manager: Manager, guild?: Guild) {
     const { client, managers } = manager.bot;
-    const { telemetry } = managers;
+    const initTelemetry = managers.telemetry.node(this, 'init');
 
     let context;
     if (this.options.scope === 'global') {
@@ -47,9 +47,7 @@ export default abstract class Command {
       }
 
       if (status) {
-        telemetry.logMessage(
-          manager,
-          'Initialize',
+        initTelemetry.logMessage(
           `${this.options.scope} ${`${this.data.type}`.toLowerCase()} command ${
             this.data.name
           } ${status}`,
@@ -83,9 +81,7 @@ export default abstract class Command {
         }
 
         if (status) {
-          telemetry.logMessage(
-            manager,
-            'Initialize',
+          initTelemetry.logMessage(
             `${this.options.scope} ${`${this.data.type}`.toLowerCase()} command ${
               this.data.name
             } ${status} on ${e}`,
