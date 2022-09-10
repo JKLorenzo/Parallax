@@ -48,7 +48,7 @@ export default class TelemetryManager extends Manager {
 
     if (options.broadcast) {
       this.webhook?.send({
-        username: options.section,
+        username: options.origin,
         embeds: [
           new EmbedBuilder()
             .setTitle(options.section)
