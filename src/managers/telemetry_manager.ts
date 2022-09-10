@@ -76,7 +76,7 @@ export default class TelemetryManager extends Manager {
           new EmbedBuilder({
             title: 'Uncaught Exception',
             description: e,
-            color: Colors.Fuchsia,
+            color: Colors.Red,
           }),
       ),
     });
