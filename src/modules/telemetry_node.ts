@@ -1,4 +1,4 @@
-import type TelemetryManager from '../managers/TelemetryManager.js';
+import type TelemetryManager from '../managers/telemetry_manager.js';
 
 export default class TelemetryNode {
   telemetry: TelemetryManager;

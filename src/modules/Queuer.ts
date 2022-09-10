@@ -1,12 +1,8 @@
-import { sleep } from '../utils/Helpers.js';
+import type { Awaitable } from 'discord.js';
+import Utils from './utils.js';
+import type { QueueItem } from '../schemas/types.js';
 
-type QueueItem = {
-  exec: () => unknown;
-  // eslint-disable-next-line no-unused-vars
-  resolve: (value: unknown) => void;
-  // eslint-disable-next-line no-unused-vars
-  reject: (reason?: unknown) => void;
-};
+const utils = new Utils();
 
 export default class Queuer {
   private timeout: number;
@@ -26,21 +22,19 @@ export default class Queuer {
       const thisQueue = this.queued.shift()!;
 
       try {
-        // eslint-disable-next-line no-await-in-loop
         const promise = await Promise.race([thisQueue.exec()]);
         thisQueue.resolve(promise);
       } catch (error) {
         thisQueue.reject(error);
       } finally {
-        // eslint-disable-next-line no-await-in-loop
-        if (this.timeout > 0) await sleep(this.timeout);
+        if (this.timeout > 0) await utils.sleep(this.timeout);
       }
     }
 
     this.running = false;
   }
 
-  queue<T>(exec: () => T | PromiseLike<T>): Promise<T> {
+  queue<T>(exec: () => Awaitable<T>): Promise<T> {
     const thisQueue = { exec } as QueueItem;
     const promise = new Promise<T>((resolve, reject) => {
       thisQueue.resolve = value => resolve(value as T);

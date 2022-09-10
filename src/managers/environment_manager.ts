@@ -1,5 +1,5 @@
-import type Bot from '../modules/Bot.js';
-import Manager from '../structures/Manager.js';
+import type Bot from '../modules/bot.js';
+import Manager from '../structures/manager.js';
 
 const EnvKeys = {
   botToken: 'BOT_TOKEN',

@@ -1,9 +1,9 @@
-import { ApplicationCommandType, CacheType, CommandInteraction } from 'discord.js';
-import type Bot from '../../modules/Bot.js';
-import Command from '../../structures/Command.js';
-import { CommandScope } from '../../utils/Enums.js';
+import { ApplicationCommandType, CacheType, ChatInputCommandInteraction } from 'discord.js';
+import type Bot from '../../../modules/bot.js';
+import { CommandScope } from '../../../schemas/enums.js';
+import SlashCommand from '../../../structures/command_slash.js';
 
-export default class Ping extends Command {
+export default class Ping extends SlashCommand {
   constructor(bot: Bot) {
     super(
       bot,
@@ -18,7 +18,7 @@ export default class Ping extends Command {
     );
   }
 
-  async exec(interaction: CommandInteraction<CacheType>) {
+  async exec(interaction: ChatInputCommandInteraction<CacheType>) {
     const ping = Math.round(interaction.client.ws.ping);
 
     await interaction.reply({

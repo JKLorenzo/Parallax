@@ -1,5 +1,5 @@
-import type { Activity, Guild, Snowflake, User } from 'discord.js';
-import type { CommandScope } from './Enums.js';
+import type { Activity, Awaitable, Guild, Snowflake, User } from 'discord.js';
+import type { CommandScope } from './enums.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
@@ -10,8 +10,7 @@ export type BotConfigKeys =
 
 export type CommandOptions = {
   scope: CommandScope;
-  // eslint-disable-next-line no-unused-vars
-  guilds?(guild: Guild): boolean | PromiseLike<boolean>;
+  guilds?(guild: Guild): Awaitable<boolean>;
 };
 
 export type FreeGameConfig = {
@@ -115,4 +114,10 @@ export type CachedInvite = {
   inviter: User | null;
   maxUses: number | null;
   uses: number | null;
+};
+
+export type QueueItem = {
+  exec: () => unknown;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
 };

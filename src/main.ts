@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { ActivityType, GatewayIntentBits } from 'discord.js';
-import Bot from './modules/Bot.js';
+import Bot from './modules/bot.js';
 
 const bot = new Bot({
   allowedMentions: {

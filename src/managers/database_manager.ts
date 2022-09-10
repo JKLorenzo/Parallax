@@ -1,8 +1,8 @@
 import type { Snowflake } from 'discord.js';
 import { MongoClient } from 'mongodb';
-import type Bot from '../modules/Bot.js';
-import Manager from '../structures/Manager.js';
-import type { BotConfigKeys, GuildConfig, MusicConfig } from '../utils/Types.js';
+import type Bot from '../modules/bot.js';
+import type { BotConfigKeys, GuildConfig, MusicConfig } from '../schemas/types.js';
+import Manager from '../structures/manager.js';
 
 export default class DatabaseManager extends Manager {
   private mongoClient!: MongoClient;

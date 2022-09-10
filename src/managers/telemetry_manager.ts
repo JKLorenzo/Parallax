@@ -1,6 +1,6 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
-import TelemetryNode from '../modules/TelemetryNode.js';
-import Manager from '../structures/Manager.js';
+import TelemetryNode from '../modules/telemetry_node.js';
+import Manager from '../structures/manager.js';
 
 type logOptions = {
   broadcast: boolean;
@@ -63,17 +63,22 @@ export default class TelemetryManager extends Manager {
     }
   }
 
-  logUnhandledException(origin: string, value: unknown) {
-    console.error(`[${origin}] Uncaught Exception: ${value}`);
+  logUnhandledException(error: unknown) {
+    console.error(`[TelemetryManager] Uncaught Exception: ${error}`);
+
+    const inspected = this.bot.utils.inspect(error);
+    const split = this.bot.utils.splitString(inspected);
 
     this.webhook?.send({
-      username: origin,
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Uncaught Exception')
-          .setDescription(typeof value === 'string' ? value : `\`\`\`js\n${value}\n\`\`\``)
-          .setColor(Colors.Red),
-      ],
+      username: 'TelemetryManager',
+      embeds: split.map(
+        e =>
+          new EmbedBuilder({
+            title: 'Uncaught Exception',
+            description: e,
+            color: Colors.Fuchsia,
+          }),
+      ),
     });
   }
 }

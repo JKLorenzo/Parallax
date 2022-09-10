@@ -1,4 +1,4 @@
-import type Bot from '../modules/Bot.js';
+import type Bot from '../modules/bot.js';
 
 declare module 'discord.js' {
   interface Client {
