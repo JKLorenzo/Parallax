@@ -47,12 +47,11 @@ export default class Sudo extends SlashCommand {
 
     let command = interaction.options.getString('command', true);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const lastResult = this._lastResult;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const callback = (value: unknown) => this._callback(interaction, value);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const followup = (value: unknown) => this._followup(interaction, value);
+    /* eslint-enable @typescript-eslint/no-unused-vars */
 
     if (command.startsWith('```') && command.endsWith('```')) {
       command = command.replace(/(^.*?\s)|(\n.*$)/g, '');
