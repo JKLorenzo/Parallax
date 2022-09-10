@@ -26,20 +26,7 @@ export default abstract class BaseCommand<
     const { client, managers } = this.bot;
     const initTelemetry = managers.telemetry.node(this, 'Initialize');
 
-    let strType;
-    switch (this.data.type) {
-      case ApplicationCommandType.ChatInput:
-        strType = 'chat input';
-        break;
-      case ApplicationCommandType.Message:
-        strType = 'message context';
-        break;
-      case ApplicationCommandType.User:
-        strType = 'user context';
-        break;
-      default:
-        strType = `UNKNOWN (type ${this.data.type})`;
-    }
+    const type = ApplicationCommandType[this.data.type!].toLowerCase();
 
     if (this.options.scope === CommandScope.Global) {
       const command = client.application?.commands.cache.find(
@@ -58,7 +45,7 @@ export default abstract class BaseCommand<
       }
 
       if (status) {
-        initTelemetry.logMessage(`global ${strType} command ${this.data.name} ${status}`);
+        initTelemetry.logMessage(`global ${type} command ${this.data.name} ${status}`);
       }
     } else if (this.options.scope === CommandScope.Guild) {
       const guilds = guild ? [guild] : [...client.guilds.cache.values()];
@@ -90,7 +77,7 @@ export default abstract class BaseCommand<
 
         if (status) {
           initTelemetry.logMessage(
-            `guild ${strType} command ${this.data.name} ${status} on ${thisGuild.name}`,
+            `guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`,
           );
         }
       }

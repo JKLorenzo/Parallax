@@ -3,6 +3,7 @@ import { pathToFileURL } from 'url';
 import {
   ActionRowComponentData,
   ActionRowData,
+  ApplicationCommandType,
   Collection,
   CommandInteraction,
   MessageActionRowComponent,
@@ -102,9 +103,8 @@ export default class InteractionManager extends Manager {
         .forEach(command =>
           deleteCommands.push(
             command.delete().then(() => {
-              initTelemetry.logMessage(
-                `global ${`${command.type}`.toLowerCase()} command ${command.name} deleted`,
-              );
+              const type = ApplicationCommandType[command.type].toLowerCase();
+              initTelemetry.logMessage(`global ${type} command ${command.name} deleted`);
             }),
           ),
         );
@@ -122,10 +122,9 @@ export default class InteractionManager extends Manager {
           .forEach(command =>
             deleteCommands.push(
               command.delete().then(() => {
+                const type = ApplicationCommandType[command.type].toLowerCase();
                 initTelemetry.logMessage(
-                  `guild ${`${command.type}`.toLowerCase()} command ${command.name} deleted on ${
-                    guild.name
-                  }`,
+                  `guild ${type} command ${command.name} deleted on ${guild.name}`,
                 );
               }),
             ),
