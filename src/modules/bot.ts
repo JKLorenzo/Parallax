@@ -37,4 +37,8 @@ export default class Bot {
 
     await this.client.login(this.managers.environment.get('botToken'));
   }
+
+  get guild() {
+    return this.client.guilds.cache.get(this.utils.constants.CONTROL_SERVER_ID);
+  }
 }
