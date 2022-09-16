@@ -16,7 +16,9 @@ export default class TelemetryManager extends Manager {
     const telemetryUrl = await this.bot.managers.database.botConfig('TelemetryWebhookURL');
     if (telemetryUrl) this.webhook = new WebhookClient({ url: telemetryUrl });
 
-    process.on('uncaughtException', this.logUnhandledException);
+    process.on('uncaughtException', error => {
+      this.logUnhandledException(error);
+    });
   }
 
   node(manager: Manager, section: string, broadcast = true) {
@@ -64,21 +66,18 @@ export default class TelemetryManager extends Manager {
   }
 
   logUnhandledException(error: unknown) {
-    console.error(`[TelemetryManager] Uncaught Exception: ${error}`);
-
-    const inspected = this.bot.utils.inspect(error);
-    const split = this.bot.utils.splitString(inspected);
+    console.error(`[TelemetryManager] Unhandled Exception`);
+    console.error(error);
 
     this.webhook?.send({
       username: 'TelemetryManager',
-      embeds: split.map(
-        e =>
-          new EmbedBuilder({
-            title: 'Uncaught Exception',
-            description: e,
-            color: Colors.Red,
-          }),
-      ),
+      embeds: [
+        new EmbedBuilder({
+          title: 'Unhandled Exception',
+          description: String(error),
+          color: Colors.Red,
+        }),
+      ],
     });
   }
 }
