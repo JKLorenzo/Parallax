@@ -81,7 +81,7 @@ export default class InteractionManager extends Manager {
 
       // Initialize commands
       await this.bot.client.application?.commands.fetch();
-      const initCommands = [...this.commands.values()].map(command => command.init());
+      const initCommands = this.commands.map(command => command.init());
       await Promise.all(initCommands);
       initTelemetry.logMessage(
         `A total of ${initCommands.length} commands were initialized`,
