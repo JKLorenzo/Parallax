@@ -1,20 +1,20 @@
 import type {
-  ActionRowComponentData,
   ActionRowData,
   Awaitable,
+  MessageActionRowComponentData,
   MessageComponentInteraction,
 } from 'discord.js';
 import type Bot from '../modules/bot.js';
 
 type ComponentOptions = {
   name: string;
-  data: ActionRowData<ActionRowComponentData>[];
+  data: ActionRowData<MessageActionRowComponentData>[];
 };
 
 export default abstract class Component {
   bot: Bot;
   name: string;
-  data: ActionRowData<ActionRowComponentData>[];
+  data: ActionRowData<MessageActionRowComponentData>[];
 
   constructor(bot: Bot, options: ComponentOptions) {
     this.bot = bot;

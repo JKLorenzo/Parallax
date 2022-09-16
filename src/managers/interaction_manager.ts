@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import {
-  ActionRowComponentData,
   ActionRowData,
   ApplicationCommandType,
   Collection,
   CommandInteraction,
   MessageActionRowComponent,
+  MessageActionRowComponentData,
   MessageComponentInteraction,
   ModalComponentData,
   ModalSubmitInteraction,
@@ -197,7 +197,7 @@ export default class InteractionManager extends Manager {
     }
   }
 
-  componentData(name: string): ActionRowData<ActionRowComponentData>[] | undefined {
+  componentData(name: string): ActionRowData<MessageActionRowComponentData>[] | undefined {
     return this.components.get(name)?.data.map(row => ({
       ...row,
       components: row.components.map(component => ({
