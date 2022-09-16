@@ -7,6 +7,8 @@ const EnvKeys = {
   soundcloudId: 'SOUNDCLOUD_ID',
   spotifyId: 'SPOTIFY_ID',
   spotifySecret: 'SPOTIFY_SECRET',
+  spotifyRefresh: 'SPOTIFY_REFRESH',
+  userAgent: 'USER_AGENT',
 };
 
 export default class EnvironmentManager extends Manager {
