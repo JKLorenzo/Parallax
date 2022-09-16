@@ -3,7 +3,6 @@ import type { CommandScope } from './enums.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
-  | 'ControlServerId'
   | 'TelemetryWebhookURL'
   | 'GameScreeningChannelId'
   | 'GuildMaxRoles';

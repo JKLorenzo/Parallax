@@ -2,8 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import util from 'util';
 import _ from 'lodash';
+import Constants from './constants.js';
 
 export default class Utils {
+  constants = new Constants();
+
   sleep(ms: number): Promise<void> {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
