@@ -45,7 +45,7 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const modalPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(modalPath);
-          const modal = new Interaction() as Modal;
+          const modal = new Interaction(this.bot) as Modal;
           this.modals.set(modal.data.customId, modal);
         });
       await Promise.all(loadModals);
@@ -59,7 +59,7 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const componentPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(componentPath);
-          const component = new Interaction() as Component;
+          const component = new Interaction(this.bot) as Component;
           this.components.set(component.name, component);
         });
       await Promise.all(loadComponents);
