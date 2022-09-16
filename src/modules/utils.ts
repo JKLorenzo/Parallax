@@ -69,4 +69,19 @@ export default class Utils {
 
     return messages.concat(msg + footer);
   }
+
+  hasAny(base: string, part: string | string[]): boolean {
+    const parts = Array.isArray(part) ? part : [part];
+    for (const this_part of parts) {
+      if (base.indexOf(this_part) !== -1) return true;
+    }
+    return false;
+  }
+
+  hasAll(base: string, parts: string[]): boolean {
+    for (const this_part of parts) {
+      if (!this.hasAny(base, this_part)) return false;
+    }
+    return true;
+  }
 }
