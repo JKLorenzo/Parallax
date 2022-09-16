@@ -11,8 +11,8 @@ import { CommandScope } from '../../../schemas/enums.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
 export default class SudoSlashCommand extends SlashCommand {
-  _lastResult?: unknown;
-  _hrStart?: [number, number];
+  private _lastResult?: unknown;
+  private _hrStart?: [number, number];
 
   constructor(bot: Bot) {
     super(
@@ -36,6 +36,74 @@ export default class SudoSlashCommand extends SlashCommand {
         guilds: guild => guild.id === bot.guild?.id,
       },
     );
+  }
+
+  private _callback(interacton: ChatInputCommandInteraction, value: unknown): void {
+    const hrDiff = process.hrtime(this._hrStart);
+    const isError = value instanceof Error;
+    const result = this._makeResult(value);
+
+    interacton.editReply({
+      embeds: result.map(
+        r =>
+          new EmbedBuilder({
+            description: r,
+            footer: {
+              text: `Callback executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${
+                hrDiff[1] / 1000000
+              } ms.`,
+            },
+            color: isError ? Colors.Fuchsia : Colors.Blurple,
+          }),
+      ),
+    });
+  }
+
+  private _followup(interacton: ChatInputCommandInteraction, value: unknown): void {
+    const hrDiff = process.hrtime(this._hrStart);
+    const isError = value instanceof Error;
+    const result = this._makeResult(value);
+
+    interacton.editReply({
+      embeds: result.map(
+        r =>
+          new EmbedBuilder({
+            description: r,
+            footer: {
+              text: `Followup executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${
+                hrDiff[1] / 1000000
+              } ms.`,
+            },
+            color: isError ? Colors.Fuchsia : Colors.Blurple,
+          }),
+      ),
+    });
+  }
+
+  private _makeResult(data: unknown): string[] {
+    const inspected = this.bot.utils.inspect(data);
+    const last = inspected.length - 1;
+    const splitInspected = inspected.split('\n');
+
+    const prependPart =
+      inspected[0] !== '{' && inspected[0] !== '[' && inspected[0] !== "'"
+        ? splitInspected[0]
+        : inspected[0];
+
+    const appendPart =
+      inspected[last] !== '}' && inspected[last] !== ']' && inspected[last] !== "'"
+        ? splitInspected[splitInspected.length - 1]
+        : inspected[last];
+
+    const result = this.bot.utils.splitString(inspected, {
+      header: '```js\n',
+      footer: '\n```',
+      append: appendPart,
+      prepend: prependPart,
+      maxLength: 4096,
+    });
+
+    return result;
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
@@ -81,73 +149,5 @@ export default class SudoSlashCommand extends SlashCommand {
           }),
       ),
     });
-  }
-
-  _callback(interacton: ChatInputCommandInteraction, value: unknown): void {
-    const hrDiff = process.hrtime(this._hrStart);
-    const isError = value instanceof Error;
-    const result = this._makeResult(value);
-
-    interacton.editReply({
-      embeds: result.map(
-        r =>
-          new EmbedBuilder({
-            description: r,
-            footer: {
-              text: `Callback executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${
-                hrDiff[1] / 1000000
-              } ms.`,
-            },
-            color: isError ? Colors.Fuchsia : Colors.Blurple,
-          }),
-      ),
-    });
-  }
-
-  _followup(interacton: ChatInputCommandInteraction, value: unknown): void {
-    const hrDiff = process.hrtime(this._hrStart);
-    const isError = value instanceof Error;
-    const result = this._makeResult(value);
-
-    interacton.editReply({
-      embeds: result.map(
-        r =>
-          new EmbedBuilder({
-            description: r,
-            footer: {
-              text: `Followup executed in ${hrDiff[0] > 0 ? `${hrDiff[0]}s ` : ''}${
-                hrDiff[1] / 1000000
-              } ms.`,
-            },
-            color: isError ? Colors.Fuchsia : Colors.Blurple,
-          }),
-      ),
-    });
-  }
-
-  _makeResult(data: unknown): string[] {
-    const inspected = this.bot.utils.inspect(data);
-    const last = inspected.length - 1;
-    const splitInspected = inspected.split('\n');
-
-    const prependPart =
-      inspected[0] !== '{' && inspected[0] !== '[' && inspected[0] !== "'"
-        ? splitInspected[0]
-        : inspected[0];
-
-    const appendPart =
-      inspected[last] !== '}' && inspected[last] !== ']' && inspected[last] !== "'"
-        ? splitInspected[splitInspected.length - 1]
-        : inspected[last];
-
-    const result = this.bot.utils.splitString(inspected, {
-      header: '```js\n',
-      footer: '\n```',
-      append: appendPart,
-      prepend: prependPart,
-      maxLength: 4096,
-    });
-
-    return result;
   }
 }
