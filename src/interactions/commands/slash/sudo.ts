@@ -33,11 +33,7 @@ export default class SudoSlashCommand extends SlashCommand {
       },
       {
         scope: CommandScope.Guild,
-        guilds: async guild => {
-          const { database } = bot.managers;
-          const constrolServerId = await database.botConfig('ControlServerId');
-          return constrolServerId === guild.id;
-        },
+        guilds: guild => guild.id === bot.guild?.id,
       },
     );
   }
