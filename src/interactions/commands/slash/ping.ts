@@ -3,7 +3,7 @@ import type Bot from '../../../modules/bot.js';
 import { CommandScope } from '../../../schemas/enums.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
-export default class Ping extends SlashCommand {
+export default class PingSlashCommand extends SlashCommand {
   constructor(bot: Bot) {
     super(
       bot,

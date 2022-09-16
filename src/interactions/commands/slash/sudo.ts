@@ -10,7 +10,7 @@ import type Bot from '../../../modules/bot.js';
 import { CommandScope } from '../../../schemas/enums.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
-export default class Sudo extends SlashCommand {
+export default class SudoSlashCommand extends SlashCommand {
   _lastResult?: unknown;
   _hrStart?: [number, number];
 
