@@ -151,44 +151,33 @@ export default class Subscription {
 
   async onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
     // Ignore if guild is not for this subscription
-    console.log(this.guild.id !== newState.guild.id);
     if (this.guild.id !== newState.guild.id) return;
 
     // Ignore when not in guild
     const me = newState.guild.members.me;
-    console.log(me);
     if (!me) return;
 
     // Ignore when not connected
     const botVoiceChannel = newState.guild.members.me?.voice.channel;
-    console.log(botVoiceChannel);
     if (!botVoiceChannel) return;
 
     // Ignore if state change is not a channel change
-    console.log(newState.channelId === oldState.channelId);
     if (newState.channelId === oldState.channelId) return;
 
     if (newState.id === me.id) {
       // State changes of this bot
-
-      console.log('me');
 
       // Wait for 5s
       await this.bot.utils.sleep(5000);
     } else if (botVoiceChannel.id !== oldState.channelId) {
       // State changes of others
 
-      console.log('others');
-
       // Ignore if different channel from the bot
       return;
     }
 
     // Ignore if members is not empty
-    console.log(botVoiceChannel.members.filter(m => !m.user.bot).size > 0);
     if (botVoiceChannel.members.filter(m => !m.user.bot).size > 0) return;
-
-    console.log('terminate');
 
     await this.terminate();
   }
