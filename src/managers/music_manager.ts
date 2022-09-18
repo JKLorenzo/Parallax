@@ -6,6 +6,7 @@ import {
 } from '@discordjs/voice';
 import {
   Collection,
+  GuildChannel,
   PermissionFlagsBits,
   TextBasedChannel,
   User,
@@ -322,9 +323,12 @@ export default class MusicManager extends Manager {
     if (this.disabled) return constants.MUSIC_DISABLED;
     if (!options.query?.length) return constants.MUSIC_QUERY_EMPTY;
 
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
@@ -360,20 +364,23 @@ export default class MusicManager extends Manager {
     return data.info;
   }
 
-  skip(options: { user: User; skipCount?: number | null }) {
+  skip(options: { user: User; textChannel?: TextBasedChannel | null; skipCount?: number | null }) {
     if (typeof options.skipCount === 'number' && options.skipCount <= 0) {
       return constants.MUSIC_SKIPCOUNT_INVALID;
     }
 
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -386,16 +393,19 @@ export default class MusicManager extends Manager {
     } from the queue.`;
   }
 
-  stop(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  stop(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -408,16 +418,19 @@ export default class MusicManager extends Manager {
     } removed from the queue.`;
   }
 
-  pause(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  pause(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -429,16 +442,19 @@ export default class MusicManager extends Manager {
     return `${member} paused the playback.`;
   }
 
-  resume(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  resume(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -450,16 +466,19 @@ export default class MusicManager extends Manager {
     return `${member} resumed the playback.`;
   }
 
-  pauseplay(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  pauseplay(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -484,16 +503,19 @@ export default class MusicManager extends Manager {
     return result;
   }
 
-  list(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  list(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -512,16 +534,19 @@ export default class MusicManager extends Manager {
     return `**Now Playing:**\n${resource.metadata.title}\n\n**On Queue: ${subscription.tracks.length}**\n${list}`;
   }
 
-  async disconnect(options: { user: User }) {
-    const guild = this.bot.client.guilds.cache.find(
-      g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
-    );
+  async disconnect(options: { user: User; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
     const member = guild?.members.resolve(options.user);
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
     if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return constants.MUSIC_CONTROLS_DENY;
+      return checkResult;
     }
 
     const subscription = this.subscriptions.get(guild.id);

@@ -88,6 +88,7 @@ export default class MusicSlashCommand extends SlashCommand {
     const { music } = this.bot.managers;
     const user = interaction.user;
     const command = interaction.options.getSubcommand(true);
+    let textChannel = interaction.channel;
 
     await interaction.deferReply();
 
@@ -96,41 +97,42 @@ export default class MusicSlashCommand extends SlashCommand {
     switch (command) {
       case 'play': {
         const query = interaction.options.getString('query', true).replaceAll('  ', ' ').trim();
-        let textChannel = interaction.channel;
 
         if (!textChannel || textChannel.isDMBased()) {
           textChannel = await user.createDM();
         }
 
-        result = await music.play({ query, user, textChannel });
+        result = await music.play({ user, textChannel, query });
         break;
       }
       case 'skip': {
-        result = music.skip({ user, skipCount: interaction.options.getInteger('position', false) });
+        const position = interaction.options.getInteger('position', false);
+
+        result = music.skip({ user, textChannel, skipCount: position });
         break;
       }
       case 'stop': {
-        result = music.stop({ user });
+        result = music.stop({ user, textChannel });
         break;
       }
       case 'queue': {
-        result = music.list({ user });
+        result = music.list({ user, textChannel });
         break;
       }
       case 'pause': {
-        result = music.pause({ user });
+        result = music.pause({ user, textChannel });
         break;
       }
       case 'resume': {
-        result = music.resume({ user });
+        result = music.resume({ user, textChannel });
         break;
       }
       case 'pauseplay': {
-        result = music.pauseplay({ user });
+        result = music.pauseplay({ user, textChannel });
         break;
       }
       case 'disconnect': {
-        result = await music.disconnect({ user });
+        result = await music.disconnect({ user, textChannel });
         break;
       }
       default: {

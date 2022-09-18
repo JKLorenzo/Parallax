@@ -6,8 +6,6 @@ export default class Constants {
   readonly MUSIC_QUERY_EMPTY =
     'Search query is empty. Please try again by entering the link or the title of a song.';
   readonly MUSIC_QUERY_NO_RESULT = 'No match found for this query.';
-  readonly MUSIC_CONTROLS_DENY =
-    "You must be on the same channel where I'm currently active to perform this action.";
   readonly MUSIC_SKIPCOUNT_INVALID =
     'Invalid skip count. Please try again by enter a number not less than or equal to 0.';
   readonly MUSIC_NOT_ACTIVE = "I'm currently not playing any music on this server.";
