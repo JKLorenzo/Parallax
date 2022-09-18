@@ -29,7 +29,7 @@ export default class MusicComponent extends Component {
               emoji: bot.guild?.emojis.cache.find(e => e.name === 'stop')?.toString(),
             },
             {
-              customId: 'queue',
+              customId: 'list',
               type: ComponentType.Button,
               style: ButtonStyle.Secondary,
               emoji: bot.guild?.emojis.cache.find(e => e.name === 'queue')?.toString(),
@@ -68,7 +68,7 @@ export default class MusicComponent extends Component {
         result = music.stop({ user });
         break;
       }
-      case 'queue': {
+      case 'list': {
         result = music.list({ user });
         break;
       }

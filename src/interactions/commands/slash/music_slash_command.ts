@@ -51,7 +51,7 @@ export default class MusicSlashCommand extends SlashCommand {
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
-            name: 'queue',
+            name: 'list',
             description:
               'Shows the title of the current song and the first 5 queued songs, if any.',
             type: ApplicationCommandOptionType.Subcommand,
@@ -115,7 +115,7 @@ export default class MusicSlashCommand extends SlashCommand {
         result = music.stop({ user, textChannel });
         break;
       }
-      case 'queue': {
+      case 'list': {
         result = music.list({ user, textChannel });
         break;
       }
