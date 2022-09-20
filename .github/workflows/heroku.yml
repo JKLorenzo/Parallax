@@ -23,4 +23,6 @@ jobs:
           HD_DB_URI: ${{secrets.DB_URI}}
           HD_SPOTIFY_ID: ${{secrets.SPOTIFY_ID}}
           HD_SPOTIFY_SECRET: ${{secrets.SPOTIFY_SECRET}}
+          HD_SPOTIFY_REFRESH: ${{secrets.SPOTIFY_REFRESH}}
           HD_SOUNDCLOUD_ID: ${{secrets.SOUNDCLOUD_ID}}
+          HD_USER_AGENT: ${{secrets.USER_AGENT}}
