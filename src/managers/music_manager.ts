@@ -6,7 +6,10 @@ import {
 } from '@discordjs/voice';
 import {
   Collection,
+  Colors,
+  EmbedBuilder,
   GuildChannel,
+  MessageOptions,
   PermissionFlagsBits,
   TextBasedChannel,
   User,
@@ -15,6 +18,9 @@ import {
 } from 'discord.js';
 import playdl from 'play-dl';
 import type Bot from '../modules/bot.js';
+import AlbumInfo from '../modules/info_album.js';
+import PlaylistInfo from '../modules/info_playlist.js';
+import TrackInfo from '../modules/info_track.js';
 import Subscription from '../modules/subscription.js';
 import Track from '../modules/track.js';
 import Utils from '../modules/utils.js';
@@ -66,15 +72,21 @@ export default class MusicManager extends Manager {
     channel: TextBasedChannel;
     subscription: Subscription;
   }): Promise<QueryLookupResult> {
-    const result: QueryLookupResult = {
-      info: constants.MUSIC_QUERY_NO_RESULT,
-      tracks: [] as Track[],
-    };
+    const result: Track[] = [];
+    const embed = new EmbedBuilder({
+      description: constants.MUSIC_QUERY_NO_RESULT,
+      color: Colors.Fuchsia,
+    });
     const queryType = await playdl.validate(options.query);
 
     if (playdl.is_expired()) {
-      await playdl.refreshToken();
-      console.log('Token Refreshed');
+      const tokenTelemetry = this.bot.managers.telemetry.node(this, 'PlayDL Token Refresh');
+      try {
+        await playdl.refreshToken();
+        tokenTelemetry.logMessage('Token refreshed successfully.');
+      } catch (error) {
+        tokenTelemetry.logError(error);
+      }
     }
 
     if (queryType === 'search') {
@@ -82,15 +94,20 @@ export default class MusicManager extends Manager {
         const data = await playdl.search(options.query, { limit: 1, source: { deezer: 'track' } });
 
         if (data.length > 0) {
-          const title = `${data[0].title} by ${data[0].artist.name}`;
-          const track = new Track(title, {
+          const info = new TrackInfo({
+            track: { name: data[0].title, url: data[0].url },
+            artists: [{ name: data[0].artist.name, url: data[0].artist.url }],
+          });
+
+          const track = new Track({
+            info,
             channel: options.channel,
             subscription: options.subscription,
             imageUrl: data[0].album.cover.medium,
           });
 
-          result.info = `Enqueued ${title}.`;
-          result.tracks.push(track);
+          embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+          result.push(track);
         }
       } else if (options.query.toLowerCase().startsWith('sc ')) {
         const data = await playdl.search(options.query, {
@@ -99,93 +116,158 @@ export default class MusicManager extends Manager {
         });
 
         if (data.length > 0) {
-          const title = `${data[0].name} by ${data[0].user.name}`;
-          const track = new Track(title, {
+          const info = new TrackInfo({
+            track: { name: data[0].name, url: data[0].url },
+            artists: [{ name: data[0].user.name, url: data[0].user.url }],
+          });
+
+          const track = new Track({
+            info,
             channel: options.channel,
             subscription: options.subscription,
             audioUrl: data[0].url,
             imageUrl: data[0].thumbnail,
           });
 
-          result.info = `Enqueued ${title}.`;
-          result.tracks.push(track);
+          embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+          result.push(track);
         }
       } else if (options.query.toLowerCase().startsWith('sp ')) {
         const data = await playdl.search(options.query, { limit: 1, source: { spotify: 'track' } });
 
         if (data.length > 0) {
-          const title = `${data[0].name} by ${data[0].artists.map(e => e.name).join(', ')}`;
-          const track = new Track(title, {
+          const info = new TrackInfo({
+            track: { name: data[0].name, url: data[0].url },
+            artists: data[0].artists.map(e => ({ name: e.name, url: e.url })),
+          });
+
+          const track = new Track({
+            info,
             channel: options.channel,
             subscription: options.subscription,
             imageUrl: data[0].thumbnail?.url,
           });
 
-          result.info = `Enqueued ${title}.`;
-          result.tracks.push(track);
+          embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+          result.push(track);
         }
       } else {
         const data = await playdl.search(options.query, { limit: 1, source: { youtube: 'video' } });
 
         if (data.length > 0) {
-          const title = `${data[0].title} by ${data[0].channel?.name}`;
-          const track = new Track(title, {
+          const info = new TrackInfo({
+            track: { name: data[0].title ?? 'Unknown Title', url: data[0].url },
+            artists: [
+              { name: data[0].channel?.name ?? 'Unknown Channel', url: data[0].channel?.url },
+            ],
+          });
+
+          const track = new Track({
+            info,
             channel: options.channel,
             subscription: options.subscription,
             audioUrl: data[0].url,
             imageUrl: data[0].thumbnails[0]?.url,
           });
 
-          result.info = `Enqueued ${title}.`;
-          result.tracks.push(track);
+          embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+          result.push(track);
         }
       }
     } else if (queryType === 'dz_album') {
       const data = (await playdl.deezer(options.query)) as playdl.DeezerAlbum;
       const all_tracks = await data.all_tracks();
+
+      const album = new AlbumInfo({
+        track: { name: data.title, url: data.url },
+        artists: [{ name: data.artist.name, url: data.artist.url }],
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.title} by ${e.artist.name}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.title, url: e.url },
+          artists: [{ name: e.artist.name, url: e.artist.url }],
+        });
+
+        return new Track({
+          info,
+          album,
           channel: options.channel,
           subscription: options.subscription,
           imageUrl: e.album.cover.medium,
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${data.title} album by ${data.artist.name}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(`Enqueued **${tracks.length}** tracks from ${album.toFormattedString()}.`);
+      result.push(...tracks);
     } else if (queryType === 'dz_playlist') {
       const data = (await playdl.deezer(options.query)) as playdl.DeezerPlaylist;
       const all_tracks = await data.all_tracks();
+
+      const playlist = new PlaylistInfo({
+        track: { name: data.title, url: data.url },
+        artists: [{ name: data.creator.name }],
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.title} by ${e.artist.name}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.title, url: e.url },
+          artists: [{ name: e.artist.name, url: e.artist.url }],
+        });
+
+        return new Track({
+          info,
+          playlist,
           channel: options.channel,
           subscription: options.subscription,
           imageUrl: e.album.cover.medium,
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${data.title} playlist by ${data.creator.name}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(
+          `Enqueued **${tracks.length}** tracks from ${playlist.toFormattedString()}.`,
+        );
+      result.push(...tracks);
     } else if (queryType === 'dz_track') {
       const data = (await playdl.deezer(options.query)) as playdl.DeezerTrack;
       await data.fetch();
-      const title = `${data.title} by ${data.artist.name}`;
-      const track = new Track(title, {
+
+      const info = new TrackInfo({
+        track: { name: data.title, url: data.url },
+        artists: [{ name: data.artist.name, url: data.artist.url }],
+      });
+
+      const track = new Track({
+        info,
         channel: options.channel,
         subscription: options.subscription,
         imageUrl: data.album.cover.medium,
       });
 
-      result.info = `Enqueued ${title}.`;
-      result.tracks.push(track);
+      embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+      result.push(track);
     } else if (queryType === 'so_playlist') {
       const data = (await playdl.soundcloud(options.query)) as playdl.SoundCloudPlaylist;
       const all_tracks = await data.all_tracks();
+
+      const playlist = new PlaylistInfo({
+        track: { name: data.name, url: data.url },
+        artists: [{ name: data.user.name, url: data.user.url }],
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.name} by ${e.user.name}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.name, url: e.url },
+          artists: [{ name: e.user.name, url: e.user.url }],
+        });
+
+        return new Track({
+          info,
+          playlist,
           channel: options.channel,
           subscription: options.subscription,
           audioUrl: e.url,
@@ -193,67 +275,123 @@ export default class MusicManager extends Manager {
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${data.name} playlist by ${data.user.name}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(
+          `Enqueued **${tracks.length}** tracks from *${playlist.toFormattedString()}.`,
+        );
+      result.push(...tracks);
     } else if (queryType === 'so_track') {
       const data = (await playdl.soundcloud(options.query)) as playdl.SoundCloudTrack;
-      const title = `${data.name} by ${data.user.name}`;
-      const track = new Track(title, {
+
+      const info = new TrackInfo({
+        track: { name: data.name, url: data.url },
+        artists: [{ name: data.user.name, url: data.user.url }],
+      });
+
+      const track = new Track({
+        info,
         channel: options.channel,
         subscription: options.subscription,
         audioUrl: data.url,
         imageUrl: data.thumbnail,
       });
 
-      result.info = `Enqueued ${title}.`;
-      result.tracks.push(track);
+      embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+      result.push(track);
     } else if (queryType === 'sp_album') {
       const data = (await playdl.spotify(options.query)) as playdl.SpotifyAlbum;
       const all_tracks = await data.all_tracks();
+
+      const album = new AlbumInfo({
+        track: { name: data.name, url: data.url },
+        artists: data.artists.map(a => ({ name: a.name, url: a.url })),
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.name} by ${e.artists.map(a => a.name).join(', ')}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.name, url: e.url },
+          artists: e.artists.map(a => ({ name: a.name, url: a.url })),
+        });
+
+        return new Track({
+          info,
+          album,
           channel: options.channel,
           subscription: options.subscription,
           imageUrl: e.thumbnail?.url,
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${data.name} album by ${data.artists
-        .map(e => e.name)
-        .join(', ')}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(`Enqueued **${tracks.length}** tracks from ${album.toFormattedString()}.`);
+      result.push(...tracks);
     } else if (queryType === 'sp_playlist') {
       const data = (await playdl.spotify(options.query)) as playdl.SpotifyPlaylist;
       const all_tracks = await data.all_tracks();
+
+      const playlist = new PlaylistInfo({
+        track: { name: data.name, url: data.url },
+        artists: [{ name: data.owner.name, url: data.owner.url }],
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.name} by ${e.artists.map(a => a.name).join(', ')}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.name, url: e.url },
+          artists: e.artists.map(a => ({ name: a.name, url: a.url })),
+        });
+
+        return new Track({
+          info,
+          playlist,
           channel: options.channel,
           subscription: options.subscription,
           imageUrl: e.thumbnail?.url,
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${data.name} playlist by ${data.owner.name}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(
+          `Enqueued **${tracks.length}** tracks from ${playlist.toFormattedString()}.`,
+        );
+      result.push(...tracks);
     } else if (queryType === 'sp_track') {
       const data = (await playdl.spotify(options.query)) as playdl.SpotifyTrack;
-      const title = `${data.name} by ${data.artists.map(e => e.name).join(', ')}`;
-      const track = new Track(title, {
+
+      const info = new TrackInfo({
+        track: { name: data.name, url: data.url },
+        artists: data.artists.map(e => ({ name: e.name, url: e.url })),
+      });
+
+      const track = new Track({
+        info,
         channel: options.channel,
         subscription: options.subscription,
         imageUrl: data.thumbnail?.url,
       });
 
-      result.info = `Enqueued ${title}.`;
-      result.tracks.push(track);
+      embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+      result.push(track);
     } else if (queryType === 'yt_playlist') {
       const data = await playdl.playlist_info(options.query);
       const all_tracks = await data.all_videos();
+
+      const playlist = new PlaylistInfo({
+        track: { name: data.title ?? 'Unknown Playlist', url: data.url },
+        artists: [{ name: data.channel?.name ?? 'Unknown Channel', url: data.channel?.url }],
+      });
+
       const tracks = all_tracks.map(e => {
-        const title = `${e.title} by ${e.channel?.name}`;
-        return new Track(title, {
+        const info = new TrackInfo({
+          track: { name: e.title ?? 'Unknown Title', url: e.url },
+          artists: [{ name: e.channel?.name ?? 'Unknown Artist', url: e.channel?.url }],
+        });
+
+        return new Track({
+          info,
+          playlist,
           channel: options.channel,
           subscription: options.subscription,
           audioUrl: e.url,
@@ -261,28 +399,41 @@ export default class MusicManager extends Manager {
         });
       });
 
-      result.info = `Enqueued ${tracks.length} tracks from ${
-        data.title ?? 'No Title'
-      } playlist by ${data.channel?.name ?? 'No Name'}.`;
-      result.tracks.push(...tracks);
+      embed
+        .setColor(Colors.Aqua)
+        .setDescription(
+          `Enqueued **${tracks.length}** tracks from ${playlist.toFormattedString()}.`,
+        );
+      result.push(...tracks);
     } else if (queryType === 'yt_video') {
       const data = await playdl.video_info(options.query);
-      const title = `${data.video_details.title} by ${data.video_details.channel?.name}`;
-      const track = new Track(title, {
+
+      const info = new TrackInfo({
+        track: { name: data.video_details.title ?? 'Unknown Title', url: data.video_details.url },
+        artists: [
+          {
+            name: data.video_details.channel?.name ?? 'Unknown Channel',
+            url: data.video_details.channel?.url,
+          },
+        ],
+      });
+
+      const track = new Track({
+        info,
         channel: options.channel,
         subscription: options.subscription,
         audioUrl: data.video_details.url,
         imageUrl: data.video_details.thumbnails[0]?.url,
       });
 
-      result.info = `Enqueued ${title}.`;
-      result.tracks.push(track);
+      embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
+      result.push(track);
     }
 
-    return result;
+    return { tracks: result, info: { embeds: [embed] } };
   }
 
-  private checkChannel(voiceChannel?: VoiceBasedChannel | null) {
+  private checkChannel(voiceChannel?: VoiceBasedChannel | null): MessageOptions | undefined {
     const messages = [];
 
     if (!voiceChannel) {
@@ -316,12 +467,28 @@ export default class MusicManager extends Manager {
       }
     }
 
-    return messages.map(m => `🔸${m}`).join('\n');
+    if (messages.length === 0) return;
+
+    const embed = new EmbedBuilder({
+      description: messages.map(m => `🔸${m}`).join('\n'),
+      color: Colors.Fuchsia,
+    });
+
+    return { embeds: [embed] };
   }
 
-  async play(options: { user: User; textChannel: TextBasedChannel; query?: string }) {
-    if (this.disabled) return constants.MUSIC_DISABLED;
-    if (!options.query?.length) return constants.MUSIC_QUERY_EMPTY;
+  async play(options: {
+    user: User;
+    textChannel: TextBasedChannel;
+    query?: string;
+  }): Promise<MessageOptions> {
+    if (this.disabled) {
+      return { embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_DISABLED }] };
+    }
+
+    if (!options.query?.length) {
+      return { embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_QUERY_EMPTY }] };
+    }
 
     const guild =
       options.textChannel instanceof GuildChannel
@@ -333,8 +500,12 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     let subscription = this.subscriptions.get(guild.id);
@@ -346,7 +517,9 @@ export default class MusicManager extends Manager {
       try {
         await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 10000);
       } catch (_) {
-        return constants.MUSIC_JOIN_CHANNEL_FAILED;
+        return {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_JOIN_CHANNEL_FAILED }],
+        };
       }
 
       // Update subscriptions
@@ -364,9 +537,15 @@ export default class MusicManager extends Manager {
     return data.info;
   }
 
-  skip(options: { user: User; textChannel?: TextBasedChannel | null; skipCount?: number | null }) {
+  skip(options: {
+    user: User;
+    textChannel?: TextBasedChannel | null;
+    skipCount?: number | null;
+  }): MessageOptions {
     if (typeof options.skipCount === 'number' && options.skipCount <= 0) {
-      return constants.MUSIC_SKIPCOUNT_INVALID;
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_SKIPCOUNT_INVALID }],
+      };
     }
 
     const guild =
@@ -379,21 +558,36 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
     const skippedTracks = subscription.stop({ skipCount: options.skipCount ?? 1 });
 
-    return `${member.toString()} skipped ${skippedTracks} track${
-      skippedTracks > 1 ? 's' : ''
-    } from the queue.`;
+    return {
+      embeds: [
+        {
+          color: Colors.Aqua,
+          description: `${member.toString()} skipped ${skippedTracks} track${
+            skippedTracks > 1 ? 's' : ''
+          } from the queue.`,
+        },
+      ],
+    };
   }
 
-  stop(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  stop(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -404,21 +598,36 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
     const removedTracks = subscription.stop() ?? 0;
 
-    return `${member.toString()} stopped the playback and ${removedTracks} track${
-      removedTracks > 1 ? 's were' : ' was'
-    } removed from the queue.`;
+    return {
+      embeds: [
+        {
+          color: Colors.Aqua,
+          description: `${member.toString()} stopped the playback and **${removedTracks}** track${
+            removedTracks > 1 ? 's were' : ' was'
+          } removed from the queue.`,
+        },
+      ],
+    };
   }
 
-  pause(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  pause(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -429,20 +638,34 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
     const paused = subscription.audioPlayer.pause();
-    if (!paused) return constants.MUSIC_PLAYER_PAUSE_FAILED;
+    if (!paused) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_PAUSE_FAILED }],
+      };
+    }
 
-    return `${member} paused the playback.`;
+    return {
+      embeds: [{ color: Colors.Aqua, description: `${member} paused the playback.` }],
+    };
   }
 
-  resume(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  resume(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -453,20 +676,34 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
     const resumed = subscription.audioPlayer.unpause();
-    if (!resumed) return constants.MUSIC_PLAYER_RESUME_FAILED;
+    if (!resumed) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_RESUME_FAILED }],
+      };
+    }
 
-    return `${member} resumed the playback.`;
+    return {
+      embeds: [{ color: Colors.Aqua, description: `${member} resumed the playback.` }],
+    };
   }
 
-  pauseplay(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  pauseplay(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -477,14 +714,22 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
-    let result: string;
+    let result;
 
     switch (subscription.audioPlayer.state.status) {
       case AudioPlayerStatus.Paused: {
@@ -496,14 +741,16 @@ export default class MusicManager extends Manager {
         break;
       }
       default: {
-        result = constants.MUSIC_PLAYER_PAUSEPLAY_FAILED;
+        result = {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_PAUSEPLAY_FAILED }],
+        };
       }
     }
 
     return result;
   }
 
-  list(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  list(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -514,27 +761,51 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
-    if (!subscription) return constants.MUSIC_NOT_ACTIVE;
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
 
     if (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle) {
-      return constants.MUSIC_PLAYER_IDLE;
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_IDLE }],
+      };
     }
 
     const resource = subscription.audioPlayer.state.resource as AudioResource<Track>;
-    const list = subscription.tracks
+
+    const nowPlaying = resource.metadata.info.toFormattedString();
+    const onQueue = subscription.tracks
       .slice(0, 10)
-      .map((track, index) => `${index + 1}) ${track.title}`)
+      .map((t, i) => `${i + 1}) ${t.info.toFormattedString()}`)
       .join('\n');
 
-    return `**Now Playing:**\n${resource.metadata.title}\n\n**On Queue: ${subscription.tracks.length}**\n${list}`;
+    let formatted = `**Now Playing**:\n${nowPlaying}`;
+    if (onQueue) formatted += `\n\n**On Queue: ${subscription.tracks.length}**\n${onQueue}`;
+
+    const embed = new EmbedBuilder({
+      author: { name: 'Parallax Music Player: Music List' },
+      description: formatted,
+      color: Colors.Aqua,
+    });
+
+    return { embeds: [embed] };
   }
 
-  async disconnect(options: { user: User; textChannel?: TextBasedChannel | null }) {
+  async disconnect(options: {
+    user: User;
+    textChannel?: TextBasedChannel | null;
+  }): Promise<MessageOptions> {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -545,8 +816,12 @@ export default class MusicManager extends Manager {
     const voiceChannel = member?.voice.channel;
     const checkResult = this.checkChannel(voiceChannel);
 
-    if (!guild || !member || !voiceChannel || checkResult.length > 0) {
-      return checkResult;
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
     }
 
     const subscription = this.subscriptions.get(guild.id);
@@ -557,6 +832,8 @@ export default class MusicManager extends Manager {
       guild.members.me?.voice.disconnect();
     }
 
-    return `${member} turned off the player.`;
+    return {
+      embeds: [{ color: Colors.Aqua, description: `${member} turned off the player.` }],
+    };
   }
 }

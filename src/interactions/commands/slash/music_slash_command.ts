@@ -92,7 +92,7 @@ export default class MusicSlashCommand extends SlashCommand {
 
     await interaction.deferReply();
 
-    let result: string;
+    let result;
 
     switch (command) {
       case 'play': {

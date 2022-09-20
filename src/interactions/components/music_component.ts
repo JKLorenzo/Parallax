@@ -37,7 +37,6 @@ export default class MusicComponent extends Component {
             {
               customId: 'disconnect',
               type: ComponentType.Button,
-              label: 'Disconnect',
               style: ButtonStyle.Danger,
               emoji: bot.guild?.emojis.cache.find(e => e.name === 'power')?.toString(),
             },
@@ -51,7 +50,7 @@ export default class MusicComponent extends Component {
     const { music } = this.bot.managers;
     const user = interaction.user;
 
-    let result: string;
+    let result;
 
     await interaction.deferReply();
 
