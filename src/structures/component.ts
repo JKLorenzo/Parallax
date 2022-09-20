@@ -1,40 +1,27 @@
-import {
-  BaseMessageComponentOptions,
-  MessageActionRow,
-  MessageActionRowComponent,
-  MessageActionRowOptions,
+import type {
+  ActionRowData,
+  Awaitable,
+  MessageActionRowComponentData,
   MessageComponentInteraction,
 } from 'discord.js';
+import type Bot from '../modules/bot.js';
 
-type ComponentData = {
+type ComponentOptions = {
   name: string;
-  options: (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[];
+  data: ActionRowData<MessageActionRowComponentData>[];
 };
 
 export default abstract class Component {
-  private _name: string;
-  private _options: (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[];
+  bot: Bot;
+  name: string;
+  data: ActionRowData<MessageActionRowComponentData>[];
 
-  constructor(data: ComponentData) {
-    this._name = data.name;
-    this._options = data.options;
+  constructor(bot: Bot, options: ComponentOptions) {
+    this.bot = bot;
+    this.name = options.name;
+    this.data = options.data;
   }
 
-  abstract exec(interaction: MessageComponentInteraction, customId: string): Promise<unknown>;
-
-  get name(): string {
-    return this._name;
-  }
-
-  get options(): (Required<BaseMessageComponentOptions> & MessageActionRowOptions)[] {
-    return this._options.map(
-      action_row =>
-        new MessageActionRow({
-          components: action_row.components.map(component => ({
-            ...component,
-            customId: `${this.name}__${(component as MessageActionRowComponent).customId}`,
-          })) as MessageActionRowComponent[],
-        }),
-    );
-  }
+  // eslint-disable-next-line no-unused-vars
+  abstract exec(interaction: MessageComponentInteraction, customId: string): Awaitable<unknown>;
 }
