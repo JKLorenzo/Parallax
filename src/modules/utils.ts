@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import util from 'util';
+import humanizeDuration from 'humanize-duration';
 import _ from 'lodash';
 import Constants from './constants.js';
 
@@ -83,5 +84,22 @@ export default class Utils {
       if (!this.hasAny(base, this_part)) return false;
     }
     return true;
+  }
+
+  compareDate(date: Date) {
+    const today = new Date();
+    const diffMs = today.valueOf() - date.valueOf();
+
+    return {
+      days: Math.floor(diffMs / 86400000),
+      hours: Math.floor((diffMs % 86400000) / 3600000),
+      minutes: Math.round(((diffMs % 86400000) % 3600000) / 60000),
+      totalMinutes: Math.round(diffMs / 60000),
+      humanized: humanizeDuration(diffMs, { largest: 1, round: true }),
+    };
+  }
+
+  parseMention(mention: string) {
+    return String(mention).replace(/\W/g, '');
   }
 }

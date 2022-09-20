@@ -8,14 +8,15 @@ const bot = new Bot({
     repliedUser: true,
   },
   intents: [
-    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildEmojisAndStickers,
     GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildScheduledEvents,
-    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.Guilds,
     GatewayIntentBits.MessageContent,
   ],
   presence: {

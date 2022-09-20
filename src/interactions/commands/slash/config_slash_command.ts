@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';
 import { CommandScope } from '../../../schemas/enums.js';
-import type { MusicConfig } from '../../../schemas/types.js';
+import type { GatewayConfig, MusicConfig } from '../../../schemas/types.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
 export default class ConfigSlashCommand extends SlashCommand {
@@ -39,6 +39,29 @@ export default class ConfigSlashCommand extends SlashCommand {
                 description: 'The channel where chats are automatically added to the queue.',
                 type: ApplicationCommandOptionType.Channel,
                 channelTypes: [ChannelType.GuildText],
+              },
+            ],
+          },
+          {
+            name: 'gateway',
+            description: 'Gets or updates the gateway configuration of this server.',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: ApplicationCommandOptionType.Boolean,
+              },
+              {
+                name: 'channel',
+                description: 'The channel where gateway notifications will be be sent.',
+                type: ApplicationCommandOptionType.Channel,
+                channelTypes: [ChannelType.GuildText],
+              },
+              {
+                name: 'role',
+                description: 'The role that will be given to approved users.',
+                type: ApplicationCommandOptionType.Role,
               },
             ],
           },
@@ -99,6 +122,39 @@ export default class ConfigSlashCommand extends SlashCommand {
           `**Music Channel**: ${
             config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
           }`,
+        ].join('\n'),
+      );
+    } else if (command === 'gateway') {
+      const data = {} as GatewayConfig;
+      const config = (await database.gatewayConfig(guild.id)) ?? {};
+
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+      const role = interaction.options.getRole('role');
+
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (channel) config.channel = data.channel = channel.id;
+      if (role) config.role = data.role = role.id;
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
+          config.role = data.role = undefined;
+        }
+      }
+
+      await database.gatewayConfig(guild.id, data);
+
+      embed.setDescription(
+        [
+          `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
+          `**Channel**: ${
+            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
+          }`,
+          `**Role**: ${config.role ? guild.roles.cache.get(config.role) : 'Not Set' ?? 'Invalid'}`,
         ].join('\n'),
       );
     }
