@@ -40,7 +40,7 @@
     "@discordjs/voice": "^0.11.0",
     "color": "^4.2.3",
     "common-tags": "^1.8.2",
-    "discord.js": "^13.10.3",
+    "discord.js": "^14.3.0",
     "dotenv": "^16.0.2",
     "ffmpeg-static": "^5.1.0",
     "g-i-s": "^2.1.6",
@@ -57,18 +57,18 @@
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.0.3",
-    "@commitlint/config-conventional": "^17.0.3",
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
     "@types/color": "^3.0.3",
     "@types/common-tags": "^1.8.1",
     "@types/humanize-duration": "^3.27.1",
     "@types/lodash": "^4.14.184",
-    "@types/node-cron": "^3.0.2",
+    "@types/node-cron": "^3.0.4",
     "@types/probe-image-size": "^7.2.0",
     "@types/spotify-web-api-node": "^5.0.7",
-    "@typescript-eslint/eslint-plugin": "^5.33.1",
-    "@typescript-eslint/parser": "^5.33.1",
-    "eslint": "^8.22.0",
+    "@typescript-eslint/eslint-plugin": "^5.36.2",
+    "@typescript-eslint/parser": "^5.36.2",
+    "eslint": "^8.23.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -76,6 +76,6 @@
     "is-ci": "^3.0.1",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.3"
   }
 }
