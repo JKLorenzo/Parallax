@@ -17,6 +17,8 @@ export default class Constants {
   readonly MUSIC_PLAYER_RESUME_FAILED =
     'Failed to resume the music player. It is likely already playing.';
   readonly MUSIC_PLAYER_PAUSEPLAY_FAILED = 'Failed to pause or play the music player.';
+  readonly MUSIC_BOT_MSG_NOT_SUPPORTED = 'Messages sent by bots are not supported.';
+  readonly MUSIC_MSG_NOT_SUPPORTED = 'This message is not supported.';
 
   readonly VOICE_CHANNEL_FULL = 'Your current voice channel has a user limit and is already full.';
   readonly VOICE_CHANNEL_JOIN = 'Join a voice channel and then try that again.';
