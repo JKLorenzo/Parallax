@@ -16,6 +16,7 @@ const bot = new Bot({
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildScheduledEvents,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.MessageContent,
   ],
   presence: {
     activities: [

@@ -9,6 +9,7 @@ import {
   Colors,
   EmbedBuilder,
   GuildChannel,
+  Message,
   MessageOptions,
   PermissionFlagsBits,
   TextBasedChannel,
@@ -59,12 +60,53 @@ export default class MusicManager extends Manager {
     this.bot.client.on('voiceStateUpdate', (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState);
     });
+
+    this.bot.client.on('messageCreate', message => {
+      this.onMessageCreate(message);
+    });
   }
 
   private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
     const guildId = newState.guild.id;
     const subscription = this.subscriptions.get(guildId);
     subscription?.onVoiceStateUpdate(oldState, newState);
+  }
+
+  private async onMessageCreate(message: Message<boolean>) {
+    const { database } = this.bot.managers;
+
+    if (message.author.bot) return;
+
+    const guild = message.guild;
+    if (!guild) return;
+
+    const config = await database.musicConfig(guild.id);
+    if (!config?.enabled || message.channelId !== config.channel) return;
+
+    const query = message.content;
+    const textChannel = message.channel;
+
+    // Check if message is a command for other bots
+    const response = await Promise.race([
+      textChannel.awaitMessages({
+        filter: msg => msg.author.id !== this.bot.client.user?.id,
+        max: 1,
+        time: 2000,
+      }),
+      message.awaitReactions({
+        filter: reac => reac.users.cache.some(u => u.bot),
+        max: 1,
+        time: 2000,
+      }),
+    ]);
+    if (response.first()) return;
+
+    const user = message.member?.user;
+    if (!user) return;
+
+    const result = await this.play({ user, textChannel, query });
+
+    await message.reply(result);
   }
 
   private async queryLookup(options: {
