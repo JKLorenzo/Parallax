@@ -13,8 +13,5 @@ export default abstract class APIRoute {
     next();
   }
 
-  // Not Found (default)
-  exec(req: Request, res: Response) {
-    res.sendStatus(404);
-  }
+  abstract exec(req: Request, res: Response): void;
 }
