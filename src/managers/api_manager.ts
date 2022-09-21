@@ -31,7 +31,7 @@ export default class APIManager extends Manager {
     try {
       const router = Router();
       const routesPath = join(process.cwd(), 'build/routes');
-      const staticPath = join(process.cwd(), 'web/build/web');
+      const staticPath = join(process.cwd(), process.env.FLUTTER_DEPLOY_DIR ?? 'web/build/web');
 
       for (const routePath of this.bot.utils.getFiles(routesPath)) {
         if (!routePath.endsWith('.js')) continue;
