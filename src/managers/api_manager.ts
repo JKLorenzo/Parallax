@@ -29,6 +29,7 @@ export default class APIManager extends Manager {
     const initTelemetry = this.bot.managers.telemetry.node(this, 'Initialize');
 
     try {
+      let loaded = 0;
       const router = Router();
       const routesPath = join(process.cwd(), 'build/routes');
       const staticPath = join(process.cwd(), process.env.FLUTTER_DEPLOY_DIR ?? 'web/build/web');
@@ -71,6 +72,8 @@ export default class APIManager extends Manager {
           default:
             throw new Error(`HTTP ${method} method is not supported. At ${endpoint}.`);
         }
+
+        loaded++;
       }
 
       this.expressClient
@@ -78,7 +81,7 @@ export default class APIManager extends Manager {
         .use(express.static(staticPath))
         .listen(process.env.PORT ?? 3000);
 
-      initTelemetry.logMessage(`A total of ${router.length} routes were loaded`, false);
+      initTelemetry.logMessage(`A total of ${loaded} routes were loaded`, false);
     } catch (error) {
       initTelemetry.logError(error);
     }
