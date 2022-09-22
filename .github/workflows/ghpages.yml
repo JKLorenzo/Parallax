@@ -8,11 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Navigate to web
-        run: cd web
       - name: Setup the flutter environment
         uses: subosito/flutter-action@v2
         with:
