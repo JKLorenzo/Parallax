@@ -23,7 +23,8 @@ export default class APIManager extends Manager {
 
     this.expressClient = express()
       .use(json())
-      .use(urlencoded({ extended: false }));
+      .use(urlencoded({ extended: false }))
+      .use((req, res, next) => this.requireHttps(req, res, next));
   }
 
   async init() {
@@ -112,5 +113,15 @@ export default class APIManager extends Manager {
     } finally {
       setTimeout(() => this.keepAlive(), 30000);
     }
+  }
+
+  private requireHttps(req: Request, res: Response, next: NextFunction) {
+    const { environment } = this.bot.managers;
+
+    if (environment.isProduction() && !req.secure) {
+      return res.redirect(`https://${req.get('host')}${req.url}`);
+    }
+
+    next();
   }
 }
