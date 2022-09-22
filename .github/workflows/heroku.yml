@@ -26,3 +26,5 @@ jobs:
           HD_SPOTIFY_REFRESH: ${{secrets.SPOTIFY_REFRESH}}
           HD_SOUNDCLOUD_ID: ${{secrets.SOUNDCLOUD_ID}}
           HD_USER_AGENT: ${{secrets.USER_AGENT}}
+          HD_FLUTTER_SOURCE_DIR: 'web'
+          HD_FLUTTER_DEPLOY_DIR: 'build/web'

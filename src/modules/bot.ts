@@ -1,5 +1,6 @@
 import { Client, ClientOptions } from 'discord.js';
 import Utils from './utils.js';
+import APIManager from '../managers/api_manager.js';
 import DatabaseManager from '../managers/database_manager.js';
 import EnvironmentManager from '../managers/environment_manager.js';
 import GatewayManager from '../managers/gateway_manager.js';
@@ -10,6 +11,7 @@ import TelemetryManager from '../managers/telemetry_manager.js';
 export default class Bot {
   client: Client;
   managers: {
+    api: APIManager;
     database: DatabaseManager;
     environment: EnvironmentManager;
     gateway: GatewayManager;
@@ -23,6 +25,7 @@ export default class Bot {
     this.utils = new Utils();
     this.client = new Client(options);
     this.managers = {
+      api: new APIManager(this),
       database: new DatabaseManager(this),
       environment: new EnvironmentManager(this),
       gateway: new GatewayManager(this),
@@ -40,7 +43,11 @@ export default class Bot {
       await this.managers.database.init();
       await this.managers.telemetry.init();
       // Initialize other managers
-      await Promise.all([this.managers.gateway.init(), this.managers.music.init()]);
+      await Promise.all([
+        this.managers.api.init(),
+        this.managers.gateway.init(),
+        this.managers.music.init(),
+      ]);
       // Initialize interaction manager last to accept user commands
       await this.managers.interaction.init();
       console.log('Initialized');
