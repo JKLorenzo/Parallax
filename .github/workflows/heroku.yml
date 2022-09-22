@@ -19,6 +19,7 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           buildpack: 'https://github.com/heroku/heroku-buildpack-nodejs.git'
         env:
+          HD_APP_INSTANCE: 'production'
           HD_BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           HD_DB_URI: ${{secrets.DB_URI}}
           HD_SPOTIFY_ID: ${{secrets.SPOTIFY_ID}}

@@ -1,4 +1,4 @@
-import { join, relative } from 'path';
+import { relative } from 'path';
 import { pathToFileURL } from 'url';
 import express, {
   json,
@@ -31,8 +31,8 @@ export default class APIManager extends Manager {
     try {
       let loaded = 0;
       const router = Router();
-      const routesPath = join(process.cwd(), 'build/routes');
-      const staticPath = join(process.cwd(), process.env.FLUTTER_DEPLOY_DIR ?? 'web/build/web');
+      const routesPath = this.bot.managers.environment.routesPath();
+      const webPath = this.bot.managers.environment.webPath();
 
       for (const routePath of this.bot.utils.getFiles(routesPath)) {
         if (!routePath.endsWith('.js')) continue;
@@ -76,12 +76,15 @@ export default class APIManager extends Manager {
         loaded++;
       }
 
-      this.expressClient
-        .use(router)
-        .use(express.static(staticPath))
-        .listen(process.env.PORT ?? 3000);
-
+      this.expressClient.use(router).use(express.static(webPath));
       initTelemetry.logMessage(`A total of ${loaded} routes were loaded`, false);
+
+      this.expressClient.listen(this.bot.managers.environment.port(), () => {
+        initTelemetry.logMessage(
+          `Server is running on ${this.bot.managers.environment.url()}`,
+          false,
+        );
+      });
     } catch (error) {
       initTelemetry.logError(error);
     }

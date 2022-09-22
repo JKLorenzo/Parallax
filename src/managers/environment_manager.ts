@@ -1,3 +1,4 @@
+import { join } from 'path';
 import type Bot from '../modules/bot.js';
 import Manager from '../structures/manager.js';
 
@@ -32,5 +33,23 @@ export default class EnvironmentManager extends Manager {
 
   get(key: keyof typeof EnvKeys) {
     return this.environments.get(EnvKeys[key])!;
+  }
+
+  port() {
+    return process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  }
+
+  url() {
+    return process.env.APP_INSTANCE === 'production'
+      ? 'https://parallax-jkl.herokuapp.com'
+      : `http://127.0.0.1:${this.port()}`;
+  }
+
+  webPath() {
+    return join(process.cwd(), process.env.FLUTTER_DEPLOY_DIR ?? 'web/build/web');
+  }
+
+  routesPath() {
+    return join(process.cwd(), 'build/routes');
   }
 }
