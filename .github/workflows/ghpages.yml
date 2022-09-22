@@ -1,0 +1,30 @@
+name: GH Pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Navigate to web
+        run: cd web
+      - name: Setup the flutter environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Enable web configuration
+        run: flutter config --enable-web
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build
+        run: flutter build web --release --base-href '/${{ github.event.repository.name }}/'
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: build/web
