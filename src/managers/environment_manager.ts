@@ -35,12 +35,16 @@ export default class EnvironmentManager extends Manager {
     return this.environments.get(EnvKeys[key])!;
   }
 
+  isProduction() {
+    return process.env.APP_INSTANCE === 'production';
+  }
+
   port() {
     return process.env.PORT ? parseInt(process.env.PORT) : 3000;
   }
 
   url() {
-    return process.env.APP_INSTANCE === 'production'
+    return this.isProduction()
       ? 'https://parallax-jkl.herokuapp.com'
       : `http://127.0.0.1:${this.port()}`;
   }
