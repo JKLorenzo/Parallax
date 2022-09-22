@@ -9,6 +9,7 @@ import express, {
   Response,
   NextFunction,
 } from 'express';
+import fetch from 'node-fetch';
 import type Bot from '../modules/bot.js';
 import { APIMethod } from '../schemas/enums.js';
 import type APIRoute from '../structures/api_route.js';
@@ -87,6 +88,29 @@ export default class APIManager extends Manager {
       });
     } catch (error) {
       initTelemetry.logError(error);
+    }
+
+    await this.keepAlive();
+  }
+
+  private async keepAlive() {
+    const { environment, telemetry } = this.bot.managers;
+    const keepAliveTelemetry = telemetry.node(this, 'Keep Alive');
+
+    try {
+      const result = await fetch(`${environment.url()}/api/ping`);
+      if (!result.ok) throw new Error('Failed to communicate with the server');
+
+      const data = (await result.json()) as { ping: number };
+
+      keepAliveTelemetry.logMessage(
+        `My current ping to the discord server is ${data.ping} ms.`,
+        false,
+      );
+    } catch (error) {
+      keepAliveTelemetry.logError(error);
+    } finally {
+      setTimeout(() => this.keepAlive(), 30000);
     }
   }
 }
