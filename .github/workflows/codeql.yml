@@ -11,7 +11,7 @@ on:
     - cron: '0 16 * * 5'
 
 jobs:
-  analyze:
+  codeql:
     runs-on: ubuntu-latest
     permissions:
       actions: read

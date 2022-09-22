@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  compile:
+  tscompiler:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
