@@ -37,20 +37,34 @@ export default class Bot {
   }
 
   async start() {
-    this.client.once('ready', async client => {
-      console.log(`Online on ${client.guilds.cache.size} servers.`);
-      // Initialzie database first then telemetry
-      await this.managers.database.init();
-      await this.managers.telemetry.init();
-      // Initialize other managers
-      await Promise.all([
-        this.managers.api.init(),
-        this.managers.gateway.init(),
-        this.managers.music.init(),
-      ]);
-      // Initialize interaction manager last to accept user commands
-      await this.managers.interaction.init();
-      console.log('Initialized');
+    const { environment, telemetry } = this.managers;
+    const initTelemetry = telemetry.node('Bot', 'Startup', environment.isProduction());
+
+    this.client.once('ready', () => {
+      initTelemetry.logMessage('Connected to Discord. Initializing...');
+
+      // Delay manager initializiation for 5 seconds
+      setTimeout(async () => {
+        try {
+          // Initialzie database first then telemetry
+          await this.managers.database.init();
+          await this.managers.telemetry.init();
+
+          // Initialize other managers
+          await Promise.all([
+            this.managers.api.init(),
+            this.managers.gateway.init(),
+            this.managers.music.init(),
+          ]);
+
+          // Initialize interaction manager last to accept user commands
+          await this.managers.interaction.init();
+
+          initTelemetry.logMessage(`Online on ${this.client.guilds.cache.size} servers.`);
+        } catch (error) {
+          initTelemetry.logError(error);
+        }
+      }, 5000);
     });
 
     await this.client.login(this.managers.environment.get('botToken'));
