@@ -118,7 +118,7 @@ export default class APIManager extends Manager {
   private requireHttps(req: Request, res: Response, next: NextFunction) {
     const { environment } = this.bot.managers;
 
-    if (environment.isProduction() && !req.secure) {
+    if (environment.isProduction() && !req.secure && req.get('x-forwarded-proto') !== 'https') {
       return res.redirect(`https://${req.get('host')}${req.url}`);
     }
 
