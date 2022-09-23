@@ -75,7 +75,7 @@ export default class TelemetryManager extends Manager {
       embeds: [
         new EmbedBuilder({
           title: 'Unhandled Exception',
-          description: String(error),
+          description: typeof error === 'string' ? error : `\`\`\`js\n${error}\n\`\`\``,
           color: Colors.Red,
         }),
       ],
