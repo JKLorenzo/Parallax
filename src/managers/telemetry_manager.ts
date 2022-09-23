@@ -21,8 +21,9 @@ export default class TelemetryManager extends Manager {
     });
   }
 
-  node(manager: Manager, section: string, broadcast = true) {
-    return new TelemetryNode(this, manager.constructor.name, section, broadcast);
+  node(origin: string | Manager, section: string, broadcast = true) {
+    const _origin = typeof origin === 'string' ? origin : origin.constructor.name;
+    return new TelemetryNode(this, _origin, section, broadcast);
   }
 
   logMessage(options: logOptions) {
