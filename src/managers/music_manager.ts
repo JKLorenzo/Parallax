@@ -10,7 +10,7 @@ import {
   EmbedBuilder,
   GuildChannel,
   Message,
-  MessageOptions,
+  BaseMessageOptions,
   PermissionFlagsBits,
   TextBasedChannel,
   User,
@@ -475,7 +475,7 @@ export default class MusicManager extends Manager {
     return { tracks: result, info: { embeds: [embed] } };
   }
 
-  private checkChannel(voiceChannel?: VoiceBasedChannel | null): MessageOptions | undefined {
+  private checkChannel(voiceChannel?: VoiceBasedChannel | null): BaseMessageOptions | undefined {
     const messages = [];
 
     if (!voiceChannel) {
@@ -523,7 +523,7 @@ export default class MusicManager extends Manager {
     user: User;
     textChannel: TextBasedChannel;
     query?: string;
-  }): Promise<MessageOptions> {
+  }): Promise<BaseMessageOptions> {
     if (this.disabled) {
       return { embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_DISABLED }] };
     }
@@ -583,7 +583,7 @@ export default class MusicManager extends Manager {
     user: User;
     textChannel?: TextBasedChannel | null;
     skipCount?: number | null;
-  }): MessageOptions {
+  }): BaseMessageOptions {
     if (typeof options.skipCount === 'number' && options.skipCount <= 0) {
       return {
         embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_SKIPCOUNT_INVALID }],
@@ -629,7 +629,7 @@ export default class MusicManager extends Manager {
     };
   }
 
-  stop(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
+  stop(options: { user: User; textChannel?: TextBasedChannel | null }): BaseMessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -669,7 +669,7 @@ export default class MusicManager extends Manager {
     };
   }
 
-  pause(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
+  pause(options: { user: User; textChannel?: TextBasedChannel | null }): BaseMessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -707,7 +707,7 @@ export default class MusicManager extends Manager {
     };
   }
 
-  resume(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
+  resume(options: { user: User; textChannel?: TextBasedChannel | null }): BaseMessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -745,7 +745,7 @@ export default class MusicManager extends Manager {
     };
   }
 
-  pauseplay(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
+  pauseplay(options: { user: User; textChannel?: TextBasedChannel | null }): BaseMessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -792,7 +792,7 @@ export default class MusicManager extends Manager {
     return result;
   }
 
-  list(options: { user: User; textChannel?: TextBasedChannel | null }): MessageOptions {
+  list(options: { user: User; textChannel?: TextBasedChannel | null }): BaseMessageOptions {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild
@@ -847,7 +847,7 @@ export default class MusicManager extends Manager {
   async disconnect(options: {
     user: User;
     textChannel?: TextBasedChannel | null;
-  }): Promise<MessageOptions> {
+  }): Promise<BaseMessageOptions> {
     const guild =
       options.textChannel instanceof GuildChannel
         ? options.textChannel.guild

@@ -1,4 +1,4 @@
-import type { Activity, Awaitable, Guild, MessageOptions, Snowflake, User } from 'discord.js';
+import type { Activity, Awaitable, Guild, BaseMessageOptions, Snowflake, User } from 'discord.js';
 import type { CommandScope } from './enums.js';
 import type Track from '../modules/track.js';
 
@@ -123,7 +123,7 @@ export type QueueItem = {
 };
 
 export type QueryLookupResult = {
-  info: MessageOptions;
+  info: BaseMessageOptions;
   tracks: Track[];
 };
 
