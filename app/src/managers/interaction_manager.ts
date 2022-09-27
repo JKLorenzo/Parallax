@@ -18,8 +18,6 @@ import type Component from '../structures/component.js';
 import Manager from '../structures/manager.js';
 import type Modal from '../structures/modal.js';
 
-const interactionsRelPath = 'build/interactions';
-
 export default class InteractionManager extends Manager {
   private commands: Collection<string, Command>;
   private components: Collection<string, Component>;
@@ -37,8 +35,10 @@ export default class InteractionManager extends Manager {
     const initTelemetry = this.bot.managers.telemetry.node(this, 'Initialize');
 
     try {
+      const interactionsPath = this.bot.managers.environment.interactionsPath();
+
       // Load modals
-      const modalsPath = join(process.cwd(), `${interactionsRelPath}/modals`);
+      const modalsPath = join(interactionsPath, 'modals');
       const loadModals = this.bot.utils
         .getFiles(modalsPath)
         .filter(path => path.endsWith('.js'))
@@ -52,7 +52,7 @@ export default class InteractionManager extends Manager {
       initTelemetry.logMessage(`A total of ${loadModals.length} modals were loaded`, false);
 
       // Load components
-      const componentsPath = join(process.cwd(), `${interactionsRelPath}/components`);
+      const componentsPath = join(interactionsPath, 'components');
       const loadComponents = this.bot.utils
         .getFiles(componentsPath)
         .filter(path => path.endsWith('.js'))
@@ -66,7 +66,7 @@ export default class InteractionManager extends Manager {
       initTelemetry.logMessage(`A total of ${loadComponents.length} components were loaded`, false);
 
       // Load commands
-      const commandsPath = join(process.cwd(), `${interactionsRelPath}/commands`);
+      const commandsPath = join(interactionsPath, 'commands');
       const loadCommands = this.bot.utils
         .getFiles(commandsPath)
         .filter(path => path.endsWith('.js'))

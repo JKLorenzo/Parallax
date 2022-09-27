@@ -1,33 +1,41 @@
-FROM node:16 as builder
+FROM node:16 as appbuilder
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /home
 
-# Install global dependencies
-RUN npm install -g typescript ts-node
+COPY /app/package*.json .
 
-# Install app dependencies
-COPY package*.json ./
 RUN npm ci
 
-# Bundle app source
-COPY . .
+COPY /app .
 
-# Build app
 RUN npm run build
+
+
+FROM cirrusci/flutter:stable as webbuilder
+
+WORKDIR /home
+
+RUN flutter doctor
+
+RUN flutter config --enable-web
+
+COPY /web .
+
+RUN flutter clean
+
+RUN flutter build web
 
 
 FROM node:16 as runner
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /home
 
-# Install app dependencies
-COPY package*.json ./
-RUN npm ci
+COPY /app/package*.json .
 
-# Bundle app source
-COPY --from=builder /usr/src/app/build ./build
+RUN npm install --omit=dev
 
-# Start app
+COPY --from=appbuilder /home/build .
+
+COPY --from=webbuilder /home/build .
+
 CMD [ "npm", "start" ]

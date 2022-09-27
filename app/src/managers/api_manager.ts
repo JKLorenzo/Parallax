@@ -23,8 +23,7 @@ export default class APIManager extends Manager {
 
     this.expressClient = express()
       .use(json())
-      .use(urlencoded({ extended: false }))
-      .use((req, res, next) => this.requireHttps(req, res, next));
+      .use(urlencoded({ extended: false }));
   }
 
   async init() {
@@ -113,15 +112,5 @@ export default class APIManager extends Manager {
     } finally {
       setTimeout(() => this.keepAlive(), 30000);
     }
-  }
-
-  private requireHttps(req: Request, res: Response, next: NextFunction) {
-    const { environment } = this.bot.managers;
-
-    if (environment.isProduction() && !req.secure && req.get('x-forwarded-proto') !== 'https') {
-      return res.redirect(`https://${req.get('host')}${req.url}`);
-    }
-
-    next();
   }
 }

@@ -2,18 +2,20 @@
   "name": "parallax",
   "version": "1.0.0",
   "description": "A multi-purpose Discord bot for gaming.",
-  "main": "build/main.js",
+  "main": "app/build/main.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "build:docker": "docker build . -t jklorenzo/parallax",
-    "clean": "is-ci || rimraf build",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
+    "setup": "npm run setup:app && npm run setup:web",
+    "setup:app": "cd ./app && npm ci",
+    "setup:web": "cd ./web && flutter pub get && flutter config --enable-web",
+    "build": "npm run build:app && npm run build:web",
+    "build:app": "cd ./app && npm run build",
+    "build:web": "cd ./web && flutter build web",
+    "clean": "is-ci || npm run clean:app && npm run clean:web",
+    "clean:app": "cd ./app && npm run clean",
+    "clean:web": "cd ./web && flutter clean",
     "prepare": "is-ci || husky install",
-    "prettier": "prettier --check **/*.{json,yml,yaml}",
-    "prettier:fix": "prettier --write **/*.{json,yml,yaml}",
-    "start": "node ."
+    "deploy": "docker-compose up --build --detach"
   },
   "engines": {
     "node": "16.x"
@@ -25,6 +27,7 @@
   "keywords": [
     "nodejs",
     "typescript",
+    "flutter",
     "docker",
     "discord-bot"
   ],
@@ -34,49 +37,18 @@
     "url": "https://github.com/JKLorenzo/Parallax/issues"
   },
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
-  "dependencies": {
-    "@discordjs/opus": "^0.8.0",
-    "@discordjs/voice": "^0.11.0",
-    "color": "^4.2.3",
-    "common-tags": "^1.8.2",
-    "discord.js": "^14.5.0",
-    "dotenv": "^16.0.2",
-    "express": "^4.18.1",
-    "ffmpeg-static": "^5.1.0",
-    "g-i-s": "^2.1.6",
-    "humanize-duration": "^3.27.3",
-    "libsodium-wrappers": "^0.7.10",
-    "lodash": "^4.17.21",
-    "mongodb": "^4.10.0",
-    "node-cron": "^3.0.2",
-    "node-fetch": "^3.2.10",
-    "node-google-tts-api": "^1.1.1",
-    "play-dl": "^1.9.5",
-    "probe-image-size": "^7.2.3",
-    "soundcloud-scraper": "^5.0.3",
-    "spotify-web-api-node": "^5.0.2"
-  },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",
     "@commitlint/config-conventional": "^17.1.0",
-    "@types/color": "^3.0.3",
-    "@types/common-tags": "^1.8.1",
-    "@types/express": "^4.17.14",
-    "@types/humanize-duration": "^3.27.1",
-    "@types/lodash": "^4.14.185",
-    "@types/node-cron": "^3.0.4",
-    "@types/probe-image-size": "^7.2.0",
-    "@types/spotify-web-api-node": "^5.0.7",
+    "husky": "^8.0.1",
+    "is-ci": "^3.0.1",
+    "lint-staged": "^13.0.3",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.1",
-    "is-ci": "^3.0.1",
-    "lint-staged": "^13.0.3",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.3"
+    "prettier": "^2.7.1"
   }
 }

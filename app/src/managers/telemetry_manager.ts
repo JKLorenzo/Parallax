@@ -31,7 +31,7 @@ export default class TelemetryManager extends Manager {
 
     if (options.broadcast) {
       this.webhook?.send({
-        username: options.origin,
+        username: `${this.bot.client.user?.username ?? ''} - ${options.origin}`,
         embeds: [
           new EmbedBuilder()
             .setTitle(options.section)
@@ -51,7 +51,7 @@ export default class TelemetryManager extends Manager {
 
     if (options.broadcast) {
       this.webhook?.send({
-        username: options.origin,
+        username: `${this.bot.client.user?.username ?? ''} - ${options.origin}`,
         embeds: [
           new EmbedBuilder()
             .setTitle(options.section)
@@ -71,7 +71,7 @@ export default class TelemetryManager extends Manager {
     console.error(error);
 
     this.webhook?.send({
-      username: 'TelemetryManager',
+      username: `${this.bot.client.user?.username ?? ''} - TelemetryManager`,
       embeds: [
         new EmbedBuilder({
           title: 'Unhandled Exception',

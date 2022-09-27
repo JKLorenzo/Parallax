@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  app:
+    container_name: Parallax
+    image: jklorenzo/parallax
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - BOT_TOKEN=${BOT_TOKEN}
+      - DB_URI=${DB_URI}
+      - SOUNDCLOUD_ID=${SOUNDCLOUD_ID}
+      - SPOTIFY_ID=${SPOTIFY_ID}
+      - SPOTIFY_SECRET=${SPOTIFY_SECRET}
+      - SPOTIFY_REFRESH=${SPOTIFY_REFRESH}
+      - USER_AGENT=${USER_AGENT}
+    ports:
+      - 3000:3000
+    restart: 'unless-stopped'

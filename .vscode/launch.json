@@ -8,9 +8,9 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/build/main.js",
+      "program": "${workspaceFolder}/app/build/main.js",
       "preLaunchTask": "rebuild",
-      "outFiles": ["${workspaceFolder}/build/**/*.js"],
+      "outFiles": ["${workspaceFolder}/app/build/**/*.js"],
       "sourceMaps": true
     }
   ]

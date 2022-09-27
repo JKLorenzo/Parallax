@@ -36,7 +36,11 @@ export default class EnvironmentManager extends Manager {
   }
 
   isProduction() {
-    return process.env.APP_INSTANCE === 'production';
+    return process.env.NODE_ENV === 'production';
+  }
+
+  host() {
+    return this.isProduction() ? 'jklorenzo.tplinkdns.com' : '127.0.0.1';
   }
 
   port() {
@@ -44,16 +48,18 @@ export default class EnvironmentManager extends Manager {
   }
 
   url() {
-    return this.isProduction()
-      ? 'https://parallax-jkl.herokuapp.com'
-      : `http://127.0.0.1:${this.port()}`;
+    return `http://${this.host()}:${this.port()}`;
   }
 
   webPath() {
-    return join(process.cwd(), process.env.FLUTTER_DEPLOY_DIR ?? 'web/build/web');
+    return join(process.cwd(), this.isProduction() ? 'web' : 'web/build/web');
   }
 
   routesPath() {
-    return join(process.cwd(), 'build/routes');
+    return join(process.cwd(), this.isProduction() ? 'routes' : 'app/build/routes');
+  }
+
+  interactionsPath() {
+    return join(process.cwd(), this.isProduction() ? 'interactions' : 'app/build/interactions');
   }
 }
