@@ -11,10 +11,13 @@ on:
 jobs:
   tscompiler:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install dependencies
-        run: npm ci
+        run: npm install --omit=dev
       - name: Run compiler
         run: npm run build
