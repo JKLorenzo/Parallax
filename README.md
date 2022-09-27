@@ -9,7 +9,6 @@
   
   [![License](https://img.shields.io/github/license/JKLorenzo/Parallax)](https://github.com/JKLorenzo/Parallax/blob/master/LICENSE)
   [![Docker](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml)
-  [![Heroku](https://github.com/JKLorenzo/Parallax/actions/workflows/heroku.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/heroku.yml)
   [![GH Pages](https://github.com/JKLorenzo/Parallax/actions/workflows/ghpages.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/ghpages.yml)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Parallax?project_id=29783)
   
