@@ -21,8 +21,6 @@ RUN flutter config --enable-web
 
 COPY /web .
 
-RUN flutter clean
-
 RUN flutter build web --base-href '/parallax/'
 
 
