@@ -8,7 +8,7 @@ RUN npm ci
 
 COPY /app .
 
-RUN npm run build  --base-href '/parallax/'
+RUN npm run build
 
 
 FROM cirrusci/flutter:stable as webbuilder
@@ -23,7 +23,7 @@ COPY /web .
 
 RUN flutter clean
 
-RUN flutter build web
+RUN flutter build web --base-href '/parallax/'
 
 
 FROM node:16 as runner
