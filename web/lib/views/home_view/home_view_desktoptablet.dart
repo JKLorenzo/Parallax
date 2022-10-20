@@ -32,7 +32,7 @@ class HomeViewDesktopTablet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 800),
+                  constraints: const BoxConstraints(maxWidth: 800),
                   child: Image.asset('images/parallax.png'),
                 ),
                 const SizedBox(height: 40),
