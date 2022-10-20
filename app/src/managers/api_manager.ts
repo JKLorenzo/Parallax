@@ -1,5 +1,6 @@
 import { relative } from 'path';
 import { pathToFileURL } from 'url';
+import cors from 'cors';
 import express, {
   json,
   urlencoded,
@@ -23,6 +24,7 @@ export default class APIManager extends Manager {
 
     this.expressClient = express()
       .use(json())
+      .use(cors())
       .use(urlencoded({ extended: false }));
   }
 
