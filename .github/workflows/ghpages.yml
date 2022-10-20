@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build
-        run: flutter build web --release --base-href '/${{ github.event.repository.name }}/'
+        run: flutter build web --release --base-href '/${{ github.event.repository.name }}/' --dart-define=URL=${{ secrets.URL }}
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
