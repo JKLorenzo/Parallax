@@ -19,6 +19,6 @@ COPY /app/package*.json .
 
 RUN npm install --omit=dev
 
-COPY --from=appbuilder /home/build .
+COPY --from=builder /home/build .
 
 CMD [ "npm", "start" ]
