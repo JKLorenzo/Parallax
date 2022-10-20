@@ -33,7 +33,6 @@ export default class APIManager extends Manager {
       let loaded = 0;
       const router = Router();
       const routesPath = this.bot.managers.environment.routesPath();
-      const webPath = this.bot.managers.environment.webPath();
 
       for (const routePath of this.bot.utils.getFiles(routesPath)) {
         if (!routePath.endsWith('.js')) continue;
@@ -41,7 +40,7 @@ export default class APIManager extends Manager {
         const filePath = pathToFileURL(routePath).href;
         const relPath = relative(routesPath, routePath);
         const sections = relPath.replace(/\\/g, '/').split('/');
-        const endpoint = `/api/${sections
+        const endpoint = `/${sections
           .slice(0, sections.length - 1)
           .map(section => {
             if (!section.startsWith('_')) return section;
@@ -77,7 +76,7 @@ export default class APIManager extends Manager {
         loaded++;
       }
 
-      this.expressClient.use(router).use(express.static(webPath));
+      this.expressClient.use('/api', router);
       initTelemetry.logMessage(`A total of ${loaded} routes were loaded`, false);
 
       this.expressClient.listen(this.bot.managers.environment.port(), () => {

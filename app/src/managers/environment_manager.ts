@@ -52,10 +52,6 @@ export default class EnvironmentManager extends Manager {
     return url;
   }
 
-  webPath() {
-    return join(process.cwd(), this.isProduction() ? 'web' : 'web/build/web');
-  }
-
   routesPath() {
     return join(process.cwd(), this.isProduction() ? 'routes' : 'app/build/routes');
   }
