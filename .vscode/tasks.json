@@ -2,25 +2,25 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build:app",
       "type": "npm",
-      "script": "build",
+      "script": "build:app",
       "presentation": {
         "reveal": "always"
       }
     },
     {
-      "label": "clean",
+      "label": "clean:app",
       "type": "npm",
-      "script": "clean",
+      "script": "clean:app",
       "presentation": {
         "reveal": "always"
       }
     },
     {
-      "label": "rebuild",
+      "label": "rebuild:app",
       "dependsOrder": "sequence",
-      "dependsOn": ["clean", "build"]
+      "dependsOn": ["clean:app", "build:app"]
     }
   ]
 }

@@ -7,11 +7,18 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch Node",
       "program": "${workspaceFolder}/app/build/main.js",
-      "preLaunchTask": "rebuild",
+      "preLaunchTask": "rebuild:app",
       "outFiles": ["${workspaceFolder}/app/build/**/*.js"],
       "sourceMaps": true
+    },
+    {
+      "type": "dart",
+      "request": "launch",
+      "name": "Launch Flutter",
+      "program": "${workspaceFolder}/web/lib/main.dart",
+      "toolArgs": ["--dart-define", "PORT=3000"]
     }
   ]
 }
