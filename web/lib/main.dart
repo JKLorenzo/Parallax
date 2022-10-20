@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:parallax/modules/managers.dart';
+import 'package:parallax/models/ping.dart';
+import 'package:parallax/views/home_view.dart';
 import 'package:provider/provider.dart';
-import 'package:web/providers/counter_provider.dart';
-import 'package:web/views/home_view.dart';
 
-void main() {
+final managers = Managers();
+
+Future<void> main() async {
+  await managers.init();
+
   runApp(MultiProvider(
     providers: [
-      ChangeNotifierProvider(create: (_) => CounterProvider()),
+      StreamProvider<Ping>.value(value: Ping.stream(), initialData: Ping()),
     ],
     child: const MyApp(),
   ));
@@ -19,10 +24,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/',
+      theme: ThemeData.light(),
+      initialRoute: 'home',
       routes: {
-        '/': (context) => const HomeView(),
+        'home': (_) => const HomeView(),
       },
     );
   }
