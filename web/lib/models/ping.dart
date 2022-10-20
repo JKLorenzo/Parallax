@@ -5,17 +5,16 @@ class Ping {
 
   Ping({this.value});
 
-  String get ping {
-    return value.toString();
-  }
-
   static Stream<Ping> stream() async* {
-    int ping;
-
     while (true) {
-      ping = await managers.api.getPing();
-      yield Ping(value: ping);
+      yield Ping(value: await managers.api.getPing());
       await Future.delayed(const Duration(seconds: 5));
     }
+  }
+
+  @override
+  String toString() {
+    if (value == null) return 'Offline';
+    return '$value ms';
   }
 }

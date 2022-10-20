@@ -61,7 +61,7 @@ class HomeViewMobile extends StatelessWidget {
             Positioned(
               bottom: 10,
               child: Text(
-                'Current ping to the Discord Server: ${Provider.of<Ping>(context).ping} ms',
+                'Current ping to the Discord Server: ${Provider.of<Ping>(context).toString()}',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
             )

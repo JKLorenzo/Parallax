@@ -14,16 +14,14 @@ class APIManager {
     domain = managers.environment.url();
   }
 
-  Future<int> getPing() async {
+  Future<int?> getPing() async {
     try {
       final uri = Uri.parse('$domain/api/ping');
       final response = await http.get(uri);
-      if (response.statusCode != 200) {
-        throw HttpException(response.body, uri: uri);
-      }
+      if (response.statusCode != 200) return null;
       return jsonDecode(response.body)['ping'];
-    } catch (e) {
-      return 999;
+    } catch (_) {
+      return null;
     }
   }
 }
