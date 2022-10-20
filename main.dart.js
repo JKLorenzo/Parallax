@@ -50293,10 +50293,10 @@ A.mf.prototype={
 O(a){return B.CL}}
 A.yU.prototype={
 O(a){var s=null,r=t.E
-return A.a8s(A.LJ(s,A.t1(B.an,A.a([A.a6M(A.a([new A.iG(B.tU,A.a7m("parallax.png"),s),B.DT,A.i6(u.d,B.dh,B.ac,s),B.aR,A.i6(u.f,B.dh,B.ac,s),B.aR,A.i6(u.a,B.dh,B.ac,s),B.aR,A.i6("For personal use only.",B.dh,B.ac,s)],r),B.pE),A.AJ(10,A.i6("Current ping to the Discord Server: "+J.cK(A.a8d(a,t.o8).a)+" ms",B.t9,s,s),s,s,s,s,s,s)],r),B.t_),s,B.je,s,B.ki,s))}}
+return A.a8s(A.LJ(s,A.t1(B.an,A.a([A.a6M(A.a([new A.iG(B.tU,A.a7m("assets/parallax.png"),s),B.DT,A.i6(u.d,B.dh,B.ac,s),B.aR,A.i6(u.f,B.dh,B.ac,s),B.aR,A.i6(u.a,B.dh,B.ac,s),B.aR,A.i6("For personal use only.",B.dh,B.ac,s)],r),B.pE),A.AJ(10,A.i6("Current ping to the Discord Server: "+J.cK(A.a8d(a,t.o8).a)+" ms",B.t9,s,s),s,s,s,s,s,s)],r),B.t_),s,B.je,s,B.ki,s))}}
 A.yV.prototype={
 O(a){var s=null,r=t.E
-return A.a8s(A.LJ(s,A.t1(B.an,A.a([A.a6M(A.a([A.a7m("parallax.png"),B.aR,A.i6(u.d,B.di,B.ac,s),B.aR,A.i6(u.f,B.di,B.ac,s),B.aR,A.i6(u.a,B.di,B.ac,s),B.aR,A.i6("For personal use only.",B.di,B.ac,s)],r),B.pE),A.AJ(10,A.i6("Current ping to the Discord Server: "+J.cK(A.a8d(a,t.o8).a)+" ms",B.t9,s,s),s,s,s,s,s,s)],r),B.t_),s,B.je,s,B.ki,s))}}
+return A.a8s(A.LJ(s,A.t1(B.an,A.a([A.a6M(A.a([A.a7m("assets/parallax.png"),B.aR,A.i6(u.d,B.di,B.ac,s),B.aR,A.i6(u.f,B.di,B.ac,s),B.aR,A.i6(u.a,B.di,B.ac,s),B.aR,A.i6("For personal use only.",B.di,B.ac,s)],r),B.pE),A.AJ(10,A.i6("Current ping to the Discord Server: "+J.cK(A.a8d(a,t.o8).a)+" ms",B.t9,s,s),s,s,s,s,s,s)],r),B.t_),s,B.je,s,B.ki,s))}}
 A.LK.prototype={
 OQ(a,b){var s,r,q=t.yH
 A.aar("absolute",A.a([b,null,null,null,null,null,null],q))
