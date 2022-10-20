@@ -31,7 +31,7 @@ class HomeViewMobile extends StatelessWidget {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('images/parallax.png'),
+                Image.asset('parallax.png'),
                 const SizedBox(height: 20),
                 Text(
                   'Parallax is a multi-purpose Discord bot that features passive role automations for gaming purposes.',
