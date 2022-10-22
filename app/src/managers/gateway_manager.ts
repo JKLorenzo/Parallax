@@ -143,7 +143,7 @@ export default class GatewayManager extends Manager {
       }
     }
 
-    const message = messages.find(thisMessage => {
+    let message = messages.find(thisMessage => {
       const thisMember = guild.members.cache.get(thisMessage.embeds[0]?.fields[0]?.value);
       return (
         thisMember?.id === member.id &&
@@ -190,21 +190,17 @@ export default class GatewayManager extends Manager {
 
     if (message) {
       await message.edit({
-        content: member.pending
-          ? null
-          : `${member} completed the membership verification gate and is awaiting approval. @here`,
         embeds: [embed],
         components: member.pending ? [] : interaction.componentData('gateway'),
       });
     } else {
-      await channel.send({
-        content: member.pending
-          ? undefined
-          : `${member} completed the membership verification gate and is awaiting approval. @here`,
+      message = await channel.send({
         embeds: [embed],
         components: member.pending ? [] : interaction.componentData('gateway'),
       });
     }
+
+    if (!member.pending) await message.reply(`${member} wants to join the server @here.`);
 
     try {
       await member.send({
@@ -255,22 +251,12 @@ export default class GatewayManager extends Manager {
       .setColor(Colors.Yellow);
 
     const action_message = await message.edit({
-      content: null,
       embeds: [embed],
       components: interaction.componentData('gateway'),
     });
 
-    await action_message.reply({
-      content: `${newMember} wants to join the server, @here.`,
-      allowedMentions: {
-        parse: ['everyone'],
-      },
-    });
-
-    await newMember.send({
-      content:
-        `Hey there, ${newMember}! **${guild.name}** uses a membership verification system. ` +
-        'Please hang tight while the admins of this server reviews your membership application.',
-    });
+    await action_message.reply(
+      `${newMember} completed the membership verification gate and is awating approval @here.`,
+    );
   }
 }
