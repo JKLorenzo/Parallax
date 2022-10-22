@@ -107,7 +107,7 @@ export default class SudoSlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     let command = interaction.options.getString('command', true);
 
