@@ -64,7 +64,7 @@ export default class SudoSlashCommand extends SlashCommand {
     const isError = value instanceof Error;
     const result = this._makeResult(value);
 
-    interacton.editReply({
+    interacton.followUp({
       embeds: result.map(
         r =>
           new EmbedBuilder({
