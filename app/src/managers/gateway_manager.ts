@@ -206,12 +206,14 @@ export default class GatewayManager extends Manager {
       });
     }
 
-    if (!member.pending) {
+    try {
       await member.send({
         content:
           `Hey there, ${member}! **${guild.name}** uses a membership verification system. ` +
           'Please hang tight while the admins of this server reviews your membership application.',
       });
+    } catch (_) {
+      // Ignore if member doesn't accept messages
     }
   }
 

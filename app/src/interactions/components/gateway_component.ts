@@ -88,6 +88,12 @@ export default class GatewayComponent extends Component {
     }
 
     if (member) {
+      try {
+        if (feedback) await member.send(feedback);
+      } catch (_) {
+        // Ignore if member doesn't accept messages
+      }
+
       switch (customId) {
         case 'approve':
           await member.roles.add(role);
@@ -118,8 +124,6 @@ export default class GatewayComponent extends Component {
         .spliceFields(3, 1, { name: 'Status:', value: 'User not found' })
         .setColor(Colors.LuminousVividPink);
     }
-
-    if (feedback) await member?.send(feedback);
 
     await interaction.update({
       content: null,
