@@ -102,4 +102,13 @@ export default class Utils {
   parseMention(mention: string) {
     return String(mention).replace(/\W/g, '');
   }
+
+  toSelectiveUpper(str: string, options?: { word?: 'first' | 'all'; seperator?: string }): string {
+    switch (options?.word) {
+      case 'all':
+        return `${str.split(options.seperator ?? ' ')}`;
+      default:
+        return `${str.charAt(0).toUpperCase()}${str.slice(1)}`;
+    }
+  }
 }
