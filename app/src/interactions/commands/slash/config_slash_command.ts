@@ -74,7 +74,7 @@ export default class ConfigSlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const { database } = this.bot.managers;
+    const { database, environment } = this.bot.managers;
     const command = interaction.options.getSubcommand();
     const guild = interaction.guild!;
 
@@ -161,7 +161,7 @@ export default class ConfigSlashCommand extends SlashCommand {
 
     await interaction.editReply({
       embeds: [embed],
-      files: [new AttachmentBuilder('./app/src/assets/settings.png')],
+      files: [new AttachmentBuilder(environment.assetPath('settings.png'))],
     });
   }
 }
