@@ -161,7 +161,7 @@ export default class ConfigSlashCommand extends SlashCommand {
 
     await interaction.editReply({
       embeds: [embed],
-      files: [new AttachmentBuilder('./src/assets/settings.png')],
+      files: [new AttachmentBuilder('./app/src/assets/settings.png')],
     });
   }
 }
