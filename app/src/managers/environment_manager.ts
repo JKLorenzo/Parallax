@@ -52,6 +52,10 @@ export default class EnvironmentManager extends Manager {
     return url;
   }
 
+  assetPath(path: string) {
+    return join(process.cwd(), this.isProduction() ? 'assets' : 'app/build/assets', path);
+  }
+
   routesPath() {
     return join(process.cwd(), this.isProduction() ? 'routes' : 'app/build/routes');
   }
