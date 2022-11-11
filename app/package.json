@@ -26,7 +26,7 @@
     "lodash": "^4.17.21",
     "mongodb": "^4.11.0",
     "node-cron": "^3.0.2",
-    "node-fetch": "^3.2.10",
+    "node-fetch": "^3.3.0",
     "node-google-tts-api": "^1.1.1",
     "play-dl": "^1.9.6",
     "probe-image-size": "^7.2.3",
