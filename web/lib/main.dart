@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:parallax/modules/managers.dart';
-import 'package:parallax/models/ping.dart';
 import 'package:parallax/views/home_view.dart';
-import 'package:provider/provider.dart';
 
 final managers = Managers();
 
 Future<void> main() async {
   await managers.init();
 
-  runApp(MultiProvider(
-    providers: [
-      StreamProvider<Ping>.value(value: Ping.stream(), initialData: Ping()),
-    ],
-    child: const MyApp(),
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:parallax/models/ping.dart';
-import 'package:provider/provider.dart';
 
 class HomeViewMobile extends StatelessWidget {
   const HomeViewMobile({super.key});
@@ -58,13 +56,6 @@ class HomeViewMobile extends StatelessWidget {
                 ),
               ],
             ),
-            Positioned(
-              bottom: 10,
-              child: Text(
-                'Current ping to the Discord Server: ${Provider.of<Ping>(context).toString()}',
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-            )
           ],
         ),
       ),
