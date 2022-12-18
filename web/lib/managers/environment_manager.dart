@@ -9,17 +9,4 @@ class EnvironmentManager {
   bool isProduction() {
     return kReleaseMode;
   }
-
-  int port() {
-    return const int.fromEnvironment('PORT', defaultValue: 3000);
-  }
-
-  String url() {
-    if (!isProduction()) return 'http://localhost:${port()}';
-
-    const hasURL = bool.hasEnvironment('URL');
-    if (hasURL == false) throw "Environment variable 'URL' not set.";
-
-    return const String.fromEnvironment('URL');
-  }
 }

@@ -39,19 +39,6 @@ export default class EnvironmentManager extends Manager {
     return process.env.NODE_ENV === 'production';
   }
 
-  port() {
-    return parseInt(process.env.PORT ?? '3000');
-  }
-
-  url() {
-    if (!this.isProduction()) return `http://localhost:${this.port()}`;
-
-    const url = process.env.URL;
-    if (!url) throw new Error("Environment variable 'URL' not set.");
-
-    return url;
-  }
-
   assetPath(path: string) {
     return join(process.cwd(), this.isProduction() ? 'assets' : 'app/build/assets', path);
   }
