@@ -42,8 +42,8 @@ const RESOURCES = {
 "assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
 "assets/assets/parallax.png": "b438ce8dab83081e793da05d800f5d6b",
 "assets/NOTICES": "586f0dec7ca72127191160e85319f7cc",
-"index.html": "3947b5656a7bf49c053b155e6a50371d",
-"/": "3947b5656a7bf49c053b155e6a50371d",
+"index.html": "369542b47f3dacfbed4373f17732e8e7",
+"/": "369542b47f3dacfbed4373f17732e8e7",
 "version.json": "39fce46b2cdf22ad877b0da7cad3cfd5"
 };
 
