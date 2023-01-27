@@ -3,10 +3,10 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
-  "flutter.js": "f85e6fb278b0fd20c349186fb46ae36d",
-"index.html": "7e80361f7510c85f73051b4284c7725e",
-"/": "7e80361f7510c85f73051b4284c7725e",
-"main.dart.js": "df780125f52949ce0c83aeccbe0c1c8b",
+  "flutter.js": "1cfe996e845b3a8a33f57607e8b09ee4",
+"index.html": "65781b2bcbb0eb2ec98d2364a2b22457",
+"/": "65781b2bcbb0eb2ec98d2364a2b22457",
+"main.dart.js": "7f23cf6d21f2bd991d6ebaaeb0513770",
 "manifest.json": "eb4bdadce82c5ed3cfc16cb78c17de5c",
 "favicon.ico": "ed891c2808e08e643294d4397fc0926a",
 "icons/android-icon-36x36.png": "a9fd802a06a76b5fe6cb6b85e8beef9e",
@@ -34,16 +34,15 @@ const RESOURCES = {
 "icons/favicon-96x96.png": "3d136762dc56e58d9323ab9bb2b3106b",
 "icons/apple-icon-precomposed.png": "12ee544fc9dd2fb6950485837cd1a6bb",
 "assets/FontManifest.json": "dc3d03800ccca4601324923c0b1d6d57",
-"assets/NOTICES": "586f0dec7ca72127191160e85319f7cc",
-"assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
-"assets/shaders/ink_sparkle.frag": "ab4751ef630837e294889ca64470bb70",
+"assets/NOTICES": "66339a2138d2fae54fe7bfe3c3f29332",
+"assets/fonts/MaterialIcons-Regular.otf": "e7069dfd19b331be16bed984668fe080",
 "assets/assets/parallax.png": "b438ce8dab83081e793da05d800f5d6b",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "6d342eb68f170c97609e9da345464e5e",
 "assets/AssetManifest.json": "47b0f49efd02284158788b3d2c7838b4",
-"canvaskit/canvaskit.wasm": "bf50631470eb967688cca13ee181af62",
-"canvaskit/canvaskit.js": "2bc454a691c631b07a9307ac4ca47797",
-"canvaskit/profiling/canvaskit.wasm": "95a45378b69e77af5ed2bc72b2209b94",
-"canvaskit/profiling/canvaskit.js": "38164e5a72bdad0faa4ce740c9b8e564",
+"canvaskit/canvaskit.wasm": "3de12d898ec208a5f31362cc00f09b9e",
+"canvaskit/canvaskit.js": "97937cb4c2c2073c968525a3e08c86a3",
+"canvaskit/profiling/canvaskit.wasm": "371bc4e204443b0d5e774d64a046eb99",
+"canvaskit/profiling/canvaskit.js": "c21852696bc1cc82e8894d851c01921a",
 "version.json": "39fce46b2cdf22ad877b0da7cad3cfd5"
 };
 
