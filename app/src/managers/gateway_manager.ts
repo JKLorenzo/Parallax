@@ -5,7 +5,7 @@ import {
   Guild,
   GuildMember,
   Invite,
-  PartialGuildMember,
+  type PartialGuildMember,
 } from 'discord.js';
 import type Bot from '../modules/bot.js';
 import Queuer from '../modules/queuer.js';

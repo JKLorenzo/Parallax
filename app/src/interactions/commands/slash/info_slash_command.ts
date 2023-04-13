@@ -1,11 +1,11 @@
 import {
   ChatInputCommandInteraction,
-  CacheType,
+  type CacheType,
   ApplicationCommandType,
   ApplicationCommandOptionType,
   GuildMember,
   ActivityType,
-  APIEmbedField,
+  type APIEmbedField,
   Colors,
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';

@@ -1,6 +1,6 @@
 import {
   ApplicationCommandType,
-  CacheType,
+  type CacheType,
   Colors,
   ContextMenuCommandInteraction,
 } from 'discord.js';

@@ -1,4 +1,4 @@
-import { Client, ClientOptions } from 'discord.js';
+import { Client, type ClientOptions } from 'discord.js';
 import Utils from './utils.js';
 import DatabaseManager from '../managers/database_manager.js';
 import EnvironmentManager from '../managers/environment_manager.js';
@@ -48,10 +48,7 @@ export default class Bot {
           await this.managers.telemetry.init();
 
           // Initialize other managers
-          await Promise.all([
-            this.managers.gateway.init(),
-            this.managers.music.init(),
-          ]);
+          await Promise.all([this.managers.gateway.init(), this.managers.music.init()]);
 
           // Initialize interaction manager last to accept user commands
           await this.managers.interaction.init();

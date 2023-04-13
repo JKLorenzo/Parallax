@@ -1,6 +1,6 @@
 import {
   MessageComponentInteraction,
-  CacheType,
+  type CacheType,
   ComponentType,
   ButtonStyle,
   Collection,

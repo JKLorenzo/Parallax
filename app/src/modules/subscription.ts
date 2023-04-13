@@ -3,11 +3,11 @@ import {
   joinVoiceChannel,
   createAudioPlayer,
   AudioPlayer,
-  AudioPlayerState,
+  type AudioPlayerState,
   AudioPlayerStatus,
   AudioResource,
   VoiceConnection,
-  VoiceConnectionState,
+  type VoiceConnectionState,
   VoiceConnectionStatus,
   VoiceConnectionDisconnectReason,
 } from '@discordjs/voice';

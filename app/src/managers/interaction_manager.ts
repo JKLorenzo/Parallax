@@ -1,14 +1,14 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import {
-  ActionRowData,
+  type ActionRowData,
   ApplicationCommandType,
   Collection,
   CommandInteraction,
-  MessageActionRowComponent,
-  MessageActionRowComponentData,
+  type MessageActionRowComponent,
+  type MessageActionRowComponentData,
   MessageComponentInteraction,
-  ModalComponentData,
+  type ModalComponentData,
   ModalSubmitInteraction,
 } from 'discord.js';
 import type Bot from '../modules/bot.js';

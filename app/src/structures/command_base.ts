@@ -1,7 +1,7 @@
 import {
-  ApplicationCommandData,
+  type ApplicationCommandData,
   ApplicationCommandType,
-  Awaitable,
+  type Awaitable,
   CommandInteraction,
   Guild,
 } from 'discord.js';

@@ -1,5 +1,5 @@
 import { createAudioResource } from '@discordjs/voice';
-import { Colors, EmbedBuilder, Message, TextBasedChannel } from 'discord.js';
+import { Colors, EmbedBuilder, Message, type TextBasedChannel } from 'discord.js';
 import playdl from 'play-dl';
 import type AlbumInfo from './info_album.js';
 import type PlaylistInfo from './info_playlist.js';

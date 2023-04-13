@@ -1,4 +1,9 @@
-import { MessageComponentInteraction, CacheType, ComponentType, ButtonStyle } from 'discord.js';
+import {
+  MessageComponentInteraction,
+  type CacheType,
+  ComponentType,
+  ButtonStyle,
+} from 'discord.js';
 import type Bot from '../../modules/bot.js';
 import Component from '../../structures/component.js';
 

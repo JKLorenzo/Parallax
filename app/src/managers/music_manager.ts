@@ -10,11 +10,11 @@ import {
   EmbedBuilder,
   GuildChannel,
   Message,
-  BaseMessageOptions,
+  type BaseMessageOptions,
   PermissionFlagsBits,
-  TextBasedChannel,
+  type TextBasedChannel,
   User,
-  VoiceBasedChannel,
+  type VoiceBasedChannel,
   VoiceState,
 } from 'discord.js';
 import playdl from 'play-dl';

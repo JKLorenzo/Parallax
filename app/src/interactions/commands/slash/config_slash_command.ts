@@ -1,6 +1,6 @@
 import {
   ChatInputCommandInteraction,
-  CacheType,
+  type CacheType,
   PermissionFlagsBits,
   ApplicationCommandType,
   ApplicationCommandOptionType,

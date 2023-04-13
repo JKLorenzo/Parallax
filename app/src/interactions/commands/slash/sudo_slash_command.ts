@@ -1,7 +1,7 @@
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
-  CacheType,
+  type CacheType,
   ChatInputCommandInteraction,
   Colors,
   EmbedBuilder,

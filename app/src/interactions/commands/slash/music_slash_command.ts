@@ -1,7 +1,7 @@
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
-  CacheType,
+  type CacheType,
   ChatInputCommandInteraction,
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';
