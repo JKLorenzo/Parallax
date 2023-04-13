@@ -14,8 +14,7 @@
     "clean": "is-ci || npm run clean:app && npm run clean:web",
     "clean:app": "cd ./app && npm run clean",
     "clean:web": "cd ./web && flutter clean",
-    "prepare": "is-ci || husky install",
-    "deploy": "docker-compose up --build --detach"
+    "prepare": "is-ci || husky install"
   },
   "engines": {
     "node": "18.x"
