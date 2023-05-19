@@ -40,7 +40,7 @@
     "@types/probe-image-size": "^7.2.0",
     "@types/spotify-web-api-node": "^5.0.7",
     "copyfiles": "^2.4.1",
-    "rimraf": "^5.0.0",
+    "rimraf": "^5.0.1",
     "typescript": "^5.0.4"
   }
 }
