@@ -16,7 +16,7 @@
     "color": "^4.2.3",
     "common-tags": "^1.8.2",
     "discord.js": "^14.11.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.1.0",
     "g-i-s": "^2.1.6",
     "humanize-duration": "^3.28.0",
