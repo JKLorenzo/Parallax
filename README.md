@@ -8,7 +8,7 @@
   
   [![License](https://img.shields.io/github/license/JKLorenzo/Parallax)](https://github.com/JKLorenzo/Parallax/blob/master/LICENSE)
   [![Docker](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml)
-  [![Depfu](https://badges.depfu.com/badges/41aab0ff42f460d43cd703252dee7191/count.svg)](https://depfu.com/github/JKLorenzo/Parallax?project_id=36877)
+  [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Parallax?project_id=29783)
   
   Parallax is a multi-purpose Discord bot that features passive role automations for gaming purposes.
   
