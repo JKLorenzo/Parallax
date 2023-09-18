@@ -14,7 +14,7 @@ FROM node:18 as runner
 WORKDIR /home
 
 COPY /package*.json .
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY --from=builder /home/build .
 CMD [ "npm", "start" ]
