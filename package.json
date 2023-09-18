@@ -2,7 +2,7 @@
   "name": "parallax",
   "version": "1.0.0",
   "description": "A multi-purpose Discord bot for gaming.",
-  "main": "build/main.js",
+  "main": "main.js",
   "type": "module",
   "scripts": {
     "start": "node .",
