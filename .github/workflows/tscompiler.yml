@@ -15,6 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install dependencies
-        run: npm ci --omit=dev
+        run: npm ci
       - name: Run compiler
         run: npm run build

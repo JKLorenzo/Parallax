@@ -3,7 +3,7 @@ FROM node:18 as builder
 WORKDIR /home
 
 COPY /*.json .
-RUN npm ci --omit=dev
+RUN npm ci
 
 COPY /src ./src
 RUN npm run build
