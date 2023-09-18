@@ -4,17 +4,15 @@
   
   [![ESLint](https://github.com/JKLorenzo/Parallax/actions/workflows/eslint.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/eslint.yml)
   [![CodeQL](https://github.com/JKLorenzo/Parallax/workflows/CodeQL/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/codeql.yml)
-  [![Flutter](https://github.com/JKLorenzo/Parallax/actions/workflows/flutter.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/flutter.yml)
   [![TSCompiler](https://github.com/JKLorenzo/Parallax/actions/workflows/tscompiler.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/tscompiler.yml)
   
   [![License](https://img.shields.io/github/license/JKLorenzo/Parallax)](https://github.com/JKLorenzo/Parallax/blob/master/LICENSE)
   [![Docker](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml)
-  [![GH Pages](https://github.com/JKLorenzo/Parallax/actions/workflows/ghpages.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/ghpages.yml)
   [![Depfu](https://badges.depfu.com/badges/41aab0ff42f460d43cd703252dee7191/count.svg)](https://depfu.com/github/JKLorenzo/Parallax?project_id=36877)
   
   Parallax is a multi-purpose Discord bot that features passive role automations for gaming purposes.
   
-  It automatically creates and assigns roles based on the user's gaming activity. 
+  It automatically creates and assigns roles based on the user's gaming activity.
   
   Playing tracks from Deezer, YouTube, Spotify, and SoundCloud.
   

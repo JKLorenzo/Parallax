@@ -40,14 +40,14 @@ export default class EnvironmentManager extends Manager {
   }
 
   assetPath(path: string) {
-    return join(process.cwd(), this.isProduction() ? 'assets' : 'app/build/assets', path);
+    return join(process.cwd(), this.isProduction() ? 'assets' : 'build/assets', path);
   }
 
   routesPath() {
-    return join(process.cwd(), this.isProduction() ? 'routes' : 'app/build/routes');
+    return join(process.cwd(), this.isProduction() ? 'routes' : 'build/routes');
   }
 
   interactionsPath() {
-    return join(process.cwd(), this.isProduction() ? 'interactions' : 'app/build/interactions');
+    return join(process.cwd(), this.isProduction() ? 'interactions' : 'build/interactions');
   }
 }
