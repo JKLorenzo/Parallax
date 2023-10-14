@@ -16,6 +16,14 @@ export default class TelemetryManager extends Manager {
     const telemetryUrl = await this.bot.managers.database.botConfig('TelemetryWebhookURL');
     if (telemetryUrl) this.webhook = new WebhookClient({ url: telemetryUrl });
 
+    this.bot.client.on('debug', msg => {
+      console.log(`[Client] ${msg}`);
+    });
+
+    this.bot.client.on('error', msg => {
+      console.error(`[Client] ${msg}`);
+    });
+
     process.on('uncaughtException', error => {
       this.logUnhandledException(error);
     });
