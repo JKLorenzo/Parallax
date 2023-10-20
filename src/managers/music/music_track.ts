@@ -1,45 +1,27 @@
 import { createAudioResource } from '@discordjs/voice';
-import { Colors, EmbedBuilder, Message, type TextBasedChannel } from 'discord.js';
+import { Colors, EmbedBuilder, Message } from 'discord.js';
 import playdl from 'play-dl';
-import type AlbumInfo from './info_album.js';
-import type PlaylistInfo from './info_playlist.js';
-import type TrackInfo from './info_track.js';
-import type Subscription from './subscription.js';
-import Utils from './utils.js';
+import type MusicHandler from './handlers/music_handler.js';
+import type TrackInfo from './infos/track_info.js';
+import Utils from '../../modules/utils.js';
 
 const utils = new Utils();
 
-export default class Track {
+export default class MusicTrack {
   private message?: Message;
-
-  channel: TextBasedChannel;
-  subscription: Subscription;
-
+  handler: MusicHandler;
   info: TrackInfo;
-  album?: AlbumInfo;
-  playlist?: PlaylistInfo;
-
   audioUrl?: string;
   imageUrl?: string;
 
   constructor(options: {
-    channel: TextBasedChannel;
-    subscription: Subscription;
-
+    handler: MusicHandler;
     info: TrackInfo;
-    album?: AlbumInfo;
-    playlist?: PlaylistInfo;
-
     audioUrl?: string;
     imageUrl?: string;
   }) {
-    this.channel = options.channel;
-    this.subscription = options.subscription;
-
+    this.handler = options.handler;
     this.info = options.info;
-    this.album = options.album;
-    this.playlist = options.playlist;
-
     this.audioUrl = options.audioUrl;
     this.imageUrl = options.imageUrl;
   }
@@ -70,13 +52,13 @@ export default class Track {
   }
 
   async onPlay() {
-    const { track, artists } = this.info;
-    const nextTrack = this.subscription.tracks.at(0);
+    const { info, artists } = this.info;
+    const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: 'Parallax Music Player: Now Playing' })
-      .setTitle(track.name)
-      .setURL(track.url ?? null)
+      .setTitle(info.name)
+      .setURL(info.url ?? null)
       .setThumbnail(this.imageUrl ?? null)
       .setFields([
         {
@@ -87,29 +69,32 @@ export default class Track {
       .setFooter(nextTrack ? { text: `Up next: ${nextTrack.info.toString()}` } : null)
       .setColor(Colors.Green);
 
-    if (this.playlist) {
-      embed.addFields([{ name: 'Playlist', value: this.playlist.toFormattedString() }]);
+    if (this.handler.playlistInfo) {
+      embed.addFields({ name: 'Playlist', value: this.handler.playlistInfo.toFormattedString() });
     }
 
-    if (this.album) {
-      embed.addFields([{ name: 'Album', value: this.album.toFormattedString() }]);
+    if (this.handler.albumInfo) {
+      embed.addFields({ name: 'Album', value: this.handler.albumInfo.toFormattedString() });
     }
 
-    const musicComponent = this.subscription.bot.managers.interaction.componentData('music');
+    embed.addFields({ name: 'Requested by', value: this.handler.requestedBy.toString() });
+
+    const musicComponent =
+      this.handler.subscription.bot.managers.interaction.componentData('music');
 
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed], components: musicComponent })
-      : this.channel.send({ embeds: [embed], components: musicComponent }));
+      : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
   }
 
   async onPause() {
-    const { track, artists } = this.info;
-    const nextTrack = this.subscription.tracks.at(0);
+    const { info, artists } = this.info;
+    const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: 'Parallax Music Player: Paused' })
-      .setTitle(track.name)
-      .setURL(track.url ?? null)
+      .setTitle(info.name)
+      .setURL(info.url ?? null)
       .setThumbnail(this.imageUrl ?? null)
       .setFields([
         {
@@ -120,29 +105,32 @@ export default class Track {
       .setFooter(nextTrack ? { text: `Up next: ${nextTrack.info.toString()}` } : null)
       .setColor(Colors.Yellow);
 
-    if (this.playlist) {
-      embed.addFields([{ name: 'Playlist', value: this.playlist.toFormattedString() }]);
+    if (this.handler.playlistInfo) {
+      embed.addFields({ name: 'Playlist', value: this.handler.playlistInfo.toFormattedString() });
     }
 
-    if (this.album) {
-      embed.addFields([{ name: 'Album', value: this.album.toFormattedString() }]);
+    if (this.handler.albumInfo) {
+      embed.addFields({ name: 'Album', value: this.handler.albumInfo.toFormattedString() });
     }
 
-    const musicComponent = this.subscription.bot.managers.interaction.componentData('music');
+    embed.addFields({ name: 'Requested by', value: this.handler.requestedBy.toString() });
+
+    const musicComponent =
+      this.handler.subscription.bot.managers.interaction.componentData('music');
 
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed], components: musicComponent })
-      : this.channel.send({ embeds: [embed], components: musicComponent }));
+      : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
   }
 
   async onFinish() {
-    const { track, artists } = this.info;
-    const nextTrack = this.subscription.tracks.at(0);
+    const { info, artists } = this.info;
+    const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: 'Parallax Music Player: Previously Played' })
-      .setTitle(track.name)
-      .setURL(track.url ?? null)
+      .setTitle(info.name)
+      .setURL(info.url ?? null)
       .setThumbnail(this.imageUrl ?? null)
       .setFields([
         {
@@ -153,17 +141,19 @@ export default class Track {
       .setFooter(nextTrack ? { text: `Up next: ${nextTrack.info.toString()}` } : null)
       .setColor(Colors.Blurple);
 
-    if (this.playlist) {
-      embed.addFields([{ name: 'Playlist', value: this.playlist.toFormattedString() }]);
+    if (this.handler.playlistInfo) {
+      embed.addFields({ name: 'Playlist', value: this.handler.playlistInfo.toFormattedString() });
     }
 
-    if (this.album) {
-      embed.addFields([{ name: 'Album', value: this.album.toFormattedString() }]);
+    if (this.handler.albumInfo) {
+      embed.addFields({ name: 'Album', value: this.handler.albumInfo.toFormattedString() });
     }
+
+    embed.addFields({ name: 'Requested by', value: this.handler.requestedBy.toString() });
 
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed], components: [] })
-      : this.channel.send({ embeds: [embed], components: [] }));
+      : this.handler.channel.send({ embeds: [embed], components: [] }));
 
     setTimeout(() => {
       if (this.message && this.message.deletable) this.message.delete().catch(() => null);
@@ -175,14 +165,14 @@ export default class Track {
     const strError = String(error);
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
 
-    if (!hasAny(strError, constants.PLAYDL_429_ERROR_PATTERN)) {
+    if (hasAny(strError, constants.PLAYDL_429_ERROR_PATTERN)) {
       embed.setDescription(`Failed to play ${this.info.toFormattedString()}.`);
-    } else if (!this.subscription.manager.disabled) {
+    } else if (this.handler.subscription.manager.disabled) {
       embed.setDescription(constants.MUSIC_DISABLED);
     }
 
     this.message = await (this.message
-      ? this.message.edit(constants.MUSIC_DISABLED)
-      : this.channel.send(constants.MUSIC_DISABLED));
+      ? this.message.edit({ embeds: [embed] })
+      : this.handler.channel.send({ embeds: [embed] }));
   }
 }

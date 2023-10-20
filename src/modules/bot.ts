@@ -4,7 +4,7 @@ import DatabaseManager from '../managers/database_manager.js';
 import EnvironmentManager from '../managers/environment_manager.js';
 import GatewayManager from '../managers/gateway_manager.js';
 import InteractionManager from '../managers/interaction_manager.js';
-import MusicManager from '../managers/music_manager.js';
+import MusicManager from '../managers/music/music_manager.js';
 import TelemetryManager from '../managers/telemetry_manager.js';
 
 export default class Bot {
