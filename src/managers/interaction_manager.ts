@@ -12,6 +12,7 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import type Bot from '../modules/bot.js';
+import Utils from '../modules/utils.js';
 import { CommandScope } from '../schemas/enums.js';
 import type Command from '../structures/command_base.js';
 import type Component from '../structures/component.js';
@@ -39,8 +40,7 @@ export default class InteractionManager extends Manager {
 
       // Load modals
       const modalsPath = join(interactionsPath, 'modals');
-      const loadModals = this.bot.utils
-        .getFiles(modalsPath)
+      const loadModals = Utils.getFiles(modalsPath)
         .filter(path => path.endsWith('.js'))
         .map(async path => {
           const modalPath = pathToFileURL(path).href;
@@ -53,8 +53,7 @@ export default class InteractionManager extends Manager {
 
       // Load components
       const componentsPath = join(interactionsPath, 'components');
-      const loadComponents = this.bot.utils
-        .getFiles(componentsPath)
+      const loadComponents = Utils.getFiles(componentsPath)
         .filter(path => path.endsWith('.js'))
         .map(async path => {
           const componentPath = pathToFileURL(path).href;
@@ -67,8 +66,7 @@ export default class InteractionManager extends Manager {
 
       // Load commands
       const commandsPath = join(interactionsPath, 'commands');
-      const loadCommands = this.bot.utils
-        .getFiles(commandsPath)
+      const loadCommands = Utils.getFiles(commandsPath)
         .filter(path => path.endsWith('.js'))
         .map(async path => {
           const commandPath = pathToFileURL(path).href;

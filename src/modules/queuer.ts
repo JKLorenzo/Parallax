@@ -2,8 +2,6 @@ import type { Awaitable } from 'discord.js';
 import Utils from './utils.js';
 import type { QueueItem } from '../schemas/types.js';
 
-const utils = new Utils();
-
 export default class Queuer {
   private timeout: number;
   private running: boolean;
@@ -27,7 +25,7 @@ export default class Queuer {
       } catch (error) {
         thisQueue.reject(error);
       } finally {
-        if (this.timeout > 0) await utils.sleep(this.timeout);
+        if (this.timeout > 0) await Utils.sleep(this.timeout);
       }
     }
 

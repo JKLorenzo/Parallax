@@ -10,6 +10,7 @@ import {
   Colors,
 } from 'discord.js';
 import type Bot from '../../modules/bot.js';
+import Utils from '../../modules/utils.js';
 import Component from '../../structures/component.js';
 
 export default class GatewayComponent extends Component {
@@ -46,7 +47,6 @@ export default class GatewayComponent extends Component {
 
   async exec(interaction: MessageComponentInteraction<CacheType>, customId: string) {
     const { database } = this.bot.managers;
-    const { parseMention } = this.bot.utils;
 
     const guild = interaction.guild;
     if (!guild) return;
@@ -59,7 +59,7 @@ export default class GatewayComponent extends Component {
 
     const message = interaction.message;
     const embed = new EmbedBuilder(message.embeds[0].data);
-    const memberId = parseMention(embed.data.fields?.at(0)?.value ?? '----');
+    const memberId = Utils.parseMention(embed.data.fields?.at(0)?.value ?? '----');
     const member = guild.members.cache.get(memberId);
     const moderator = interaction.member as GuildMember;
     const messages = await message.channel.messages.fetch();

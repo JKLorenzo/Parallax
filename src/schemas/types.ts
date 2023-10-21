@@ -1,6 +1,5 @@
-import type { Activity, Awaitable, Guild, BaseMessageOptions, Snowflake, User } from 'discord.js';
+import type { Activity, Awaitable, Guild, Snowflake, User } from 'discord.js';
 import type { CommandScope } from './enums.js';
-import type Track from '../modules/track.js';
 
 export type BotConfigKeys =
   | 'BotOwnerId'
@@ -120,14 +119,4 @@ export type QueueItem = {
   exec: () => unknown;
   resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
-};
-
-export type QueryLookupResult = {
-  info: BaseMessageOptions;
-  tracks: Track[];
-};
-
-export type BasicInfo = {
-  name: string;
-  url?: string;
 };
