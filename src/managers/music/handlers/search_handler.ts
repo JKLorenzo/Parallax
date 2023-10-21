@@ -32,7 +32,12 @@ export default class SearchHandler extends MusicHandler<SearchType> {
     const tracks = await Promise.all([soundcloudTrack, spotifyTrack, youtubeTrack]);
     this.track = tracks.at(0)?.at(0) ?? tracks.at(1)?.at(0) ?? tracks.at(2)?.at(0);
 
-    if (this.track instanceof playdl.SpotifyTrack) {
+    if (this.track instanceof playdl.SoundCloudTrack) {
+      this.trackInfo = new TrackInfo({
+        info: { name: this.track.name, url: this.track.url },
+        artists: [{ name: this.track.user.name, url: this.track.user.url }],
+      });
+    } else if (this.track instanceof playdl.SpotifyTrack) {
       this.trackInfo = new TrackInfo({
         info: { name: this.track.name, url: this.track.url },
         artists: this.track.artists.map(a => ({ name: a.name, url: a.url })),
