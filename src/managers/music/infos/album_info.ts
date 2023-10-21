@@ -1,4 +1,4 @@
-import MusicInfo from './music_info.js';
+import MusicInfo from '../music_info.js';
 
 export default class AlbumInfo extends MusicInfo {
   toString() {

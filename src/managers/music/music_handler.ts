@@ -1,12 +1,12 @@
 import type { TextBasedChannel, User } from 'discord.js';
-import type AlbumInfo from '../infos/album_info.js';
-import type PlaylistInfo from '../infos/playlist_info.js';
-import type TrackInfo from '../infos/track_info.js';
-import type { QueryOptions } from '../music_defs.js';
-import type MusicSubscription from '../music_subscription.js';
-import type MusicTrack from '../music_track.js';
+import type AlbumInfo from './infos/album_info.js';
+import type PlaylistInfo from './infos/playlist_info.js';
+import type TrackInfo from './infos/track_info.js';
+import type { MusicHandlerTypes, QueryOptions } from './music_defs.js';
+import type MusicSubscription from './music_subscription.js';
+import type MusicTrack from './music_track.js';
 
-export default abstract class MusicHandler<T = unknown> {
+export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHandlerTypes> {
   subscription: MusicSubscription;
   channel: TextBasedChannel;
   requestedBy: User;
@@ -40,5 +40,5 @@ export default abstract class MusicHandler<T = unknown> {
 
   abstract fetchInfo(): Promise<TrackInfo | undefined>;
 
-  abstract loadTracks(): Promise<void>;
+  abstract loadTracks(): Promise<void> | void;
 }

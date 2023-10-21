@@ -12,14 +12,13 @@ import {
   VoiceConnectionDisconnectReason,
 } from '@discordjs/voice';
 import type { Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
-import type MusicHandler from './handlers/music_handler.js';
+import type MusicHandler from './music_handler.js';
 import type MusicManager from './music_manager.js';
 import type MusicTrack from './music_track.js';
 import type Bot from '../../modules/bot.js';
 import Utils from '../../modules/utils.js';
 
 export default class MusicSubscription {
-  private utils: Utils;
   private queueLock: boolean;
   private readyLock: boolean;
 
@@ -31,7 +30,6 @@ export default class MusicSubscription {
   readonly voiceConnection: VoiceConnection;
 
   constructor(options: { bot: Bot; voiceChannel: VoiceBasedChannel; audioPlayer?: AudioPlayer }) {
-    this.utils = new Utils();
     this.queueLock = false;
     this.readyLock = false;
 
@@ -107,7 +105,7 @@ export default class MusicSubscription {
           this.voiceConnection.destroy();
         }
       } else if (this.voiceConnection.rejoinAttempts < 5) {
-        await this.utils.sleep((this.voiceConnection.rejoinAttempts + 1) * 5000);
+        await Utils.sleep((this.voiceConnection.rejoinAttempts + 1) * 5000);
         this.voiceConnection.rejoin();
       } else {
         this.voiceConnection.destroy();
@@ -215,7 +213,7 @@ export default class MusicSubscription {
       // State changes of this bot
 
       // Wait for 5s
-      await this.bot.utils.sleep(5000);
+      await Utils.sleep(5000);
     } else if (botVoiceChannel.id !== oldState.channelId) {
       // State changes of others
 

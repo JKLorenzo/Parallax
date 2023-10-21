@@ -35,4 +35,5 @@ export default class Constants {
     'I need to have the `View Channel` permission to join your current voice channel.';
 
   static readonly PLAYDL_429_ERROR_PATTERN = 'Got 429 from the request';
+  static readonly TIMEDOUT_ERROR_PATTERN = 'connect ETIMEDOUT';
 }

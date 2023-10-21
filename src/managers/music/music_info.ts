@@ -1,4 +1,4 @@
-import type { BasicInfo } from '../music_defs.js';
+import type { BasicInfo } from './music_defs.js';
 
 export default abstract class MusicInfo {
   info: BasicInfo;

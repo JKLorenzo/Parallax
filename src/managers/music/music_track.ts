@@ -1,11 +1,10 @@
 import { createAudioResource } from '@discordjs/voice';
 import { Colors, EmbedBuilder, Message } from 'discord.js';
 import playdl from 'play-dl';
-import type MusicHandler from './handlers/music_handler.js';
 import type TrackInfo from './infos/track_info.js';
+import type MusicHandler from './music_handler.js';
+import Constants from '../../modules/constants.js';
 import Utils from '../../modules/utils.js';
-
-const utils = new Utils();
 
 export default class MusicTrack {
   private message?: Message;
@@ -28,16 +27,12 @@ export default class MusicTrack {
 
   async createAudioResource() {
     if (!this.audioUrl) {
-      const data = await playdl.search(this.info.toString(), {
+      const track = await playdl.search(this.info.toString(), {
         limit: 1,
         source: { youtube: 'video' },
       });
 
-      if (data.length > 0) {
-        const info = await playdl.video_info(data[0].url);
-        const details = info.video_details;
-        this.audioUrl = details.url;
-      }
+      this.audioUrl = track.at(0)?.url;
     }
 
     if (!this.audioUrl) throw new Error('No match found for this query.');
@@ -161,14 +156,22 @@ export default class MusicTrack {
   }
 
   async onError(error: unknown) {
-    const { hasAny, constants } = utils;
     const strError = String(error);
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
 
-    if (hasAny(strError, constants.PLAYDL_429_ERROR_PATTERN)) {
-      embed.setDescription(`Failed to play ${this.info.toFormattedString()}.`);
+    if (Utils.hasAny(strError, Constants.PLAYDL_429_ERROR_PATTERN)) {
+      embed.setDescription(
+        `Failed to play ${this.info.toFormattedString()}. PLAYDL_429_ERROR_PATTERN`,
+      );
+      this.handler.subscription.manager.disabled = true;
+    } else if (Utils.hasAny(strError, Constants.TIMEDOUT_ERROR_PATTERN)) {
+      embed.setDescription(
+        `Failed to play ${this.info.toFormattedString()}. TIMEDOUT_ERROR_PATTERN`,
+      );
     } else if (this.handler.subscription.manager.disabled) {
-      embed.setDescription(constants.MUSIC_DISABLED);
+      embed.setDescription(Constants.MUSIC_DISABLED);
+    } else {
+      embed.setDescription(strError);
     }
 
     this.message = await (this.message

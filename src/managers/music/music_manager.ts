@@ -23,11 +23,9 @@ import MusicHandlerFactory from './music_handler_factory.js';
 import MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
 import type Bot from '../../modules/bot.js';
+import Constants from '../../modules/constants.js';
 import Queuer from '../../modules/queuer.js';
-import Utils from '../../modules/utils.js';
 import Manager from '../../structures/manager.js';
-
-const { constants } = new Utils();
 
 export default class MusicManager extends Manager {
   disabled: boolean;
@@ -112,7 +110,7 @@ export default class MusicManager extends Manager {
 
   private async queryLookup(queryOptions: QueryOptions): Promise<QueryLookupResult> {
     const embed = new EmbedBuilder({
-      description: constants.MUSIC_QUERY_NO_RESULT,
+      description: Constants.MUSIC_QUERY_NO_RESULT,
       color: Colors.Fuchsia,
     });
 
@@ -137,33 +135,33 @@ export default class MusicManager extends Manager {
     const messages = [];
 
     if (!voiceChannel) {
-      messages.push(constants.VOICE_CHANNEL_JOIN);
+      messages.push(Constants.VOICE_CHANNEL_JOIN);
     } else {
       const me = voiceChannel?.guild.members.me;
       const subscription = this.subscriptions.get(voiceChannel.guild.id);
 
       if (subscription && subscription.voiceChannel?.id !== voiceChannel.id) {
-        messages.push(constants.VOICE_CHANNEL_DIFF);
+        messages.push(Constants.VOICE_CHANNEL_DIFF);
       }
 
       if (!me?.permissionsIn(voiceChannel).has(PermissionFlagsBits.ViewChannel)) {
-        messages.push(constants.NO_PERM_VIEW_CHANNEL);
+        messages.push(Constants.NO_PERM_VIEW_CHANNEL);
       }
 
       if (!me?.permissionsIn(voiceChannel).has(PermissionFlagsBits.Connect)) {
-        messages.push(constants.NO_PERM_CONNECT);
+        messages.push(Constants.NO_PERM_CONNECT);
       }
 
       if (!me?.permissionsIn(voiceChannel).has(PermissionFlagsBits.Speak)) {
-        messages.push(constants.NO_PERM_SPEAK);
+        messages.push(Constants.NO_PERM_SPEAK);
       }
 
       if (!me?.permissionsIn(voiceChannel).has(PermissionFlagsBits.UseVAD)) {
-        messages.push(constants.NO_PERM_VAD);
+        messages.push(Constants.NO_PERM_VAD);
       }
 
       if (voiceChannel.full && !voiceChannel.joinable) {
-        messages.push(constants.VOICE_CHANNEL_FULL);
+        messages.push(Constants.VOICE_CHANNEL_FULL);
       }
     }
 
@@ -184,11 +182,11 @@ export default class MusicManager extends Manager {
   }): Promise<BaseMessageOptions> {
     return this.commandQueuer.queue(async () => {
       if (this.disabled) {
-        return { embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_DISABLED }] };
+        return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_DISABLED }] };
       }
 
       if (!options.query?.length) {
-        return { embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_QUERY_EMPTY }] };
+        return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_QUERY_EMPTY }] };
       }
 
       const guild =
@@ -204,7 +202,7 @@ export default class MusicManager extends Manager {
       if (!guild || !member || !voiceChannel || checkResult) {
         return (
           checkResult ?? {
-            embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+            embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
           }
         );
       }
@@ -219,7 +217,7 @@ export default class MusicManager extends Manager {
           await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20000);
         } catch (_) {
           return {
-            embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_JOIN_CHANNEL_FAILED }],
+            embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_JOIN_CHANNEL_FAILED }],
           };
         }
 
@@ -246,7 +244,7 @@ export default class MusicManager extends Manager {
   }): BaseMessageOptions {
     if (typeof options.skipCount === 'number' && options.skipCount <= 0) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_SKIPCOUNT_INVALID }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_SKIPCOUNT_INVALID }],
       };
     }
 
@@ -263,7 +261,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -271,7 +269,7 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
@@ -303,7 +301,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -311,7 +309,7 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
@@ -343,7 +341,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -351,14 +349,14 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
     const paused = subscription.audioPlayer.pause();
     if (!paused) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_PAUSE_FAILED }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_PLAYER_PAUSE_FAILED }],
       };
     }
 
@@ -381,7 +379,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -389,14 +387,14 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
     const resumed = subscription.audioPlayer.unpause();
     if (!resumed) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_RESUME_FAILED }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_PLAYER_RESUME_FAILED }],
       };
     }
 
@@ -419,7 +417,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -427,7 +425,7 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
@@ -444,7 +442,7 @@ export default class MusicManager extends Manager {
       }
       default: {
         result = {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_PAUSEPLAY_FAILED }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_PLAYER_PAUSEPLAY_FAILED }],
         };
       }
     }
@@ -466,7 +464,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }
@@ -474,13 +472,13 @@ export default class MusicManager extends Manager {
     const subscription = this.subscriptions.get(guild.id);
     if (!subscription) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_NOT_ACTIVE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
       };
     }
 
     if (subscription.audioPlayer.state.status === AudioPlayerStatus.Idle) {
       return {
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_PLAYER_IDLE }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_PLAYER_IDLE }],
       };
     }
 
@@ -508,19 +506,19 @@ export default class MusicManager extends Manager {
       }
     }
 
-    let formatted = '';
+    let description = `**Now Playing**:\n${nowPlaying}`;
     if (onQueue.length > 1) {
       let index = onQueue.length;
       do {
-        formatted = `**Now Playing**:\n${nowPlaying}\n\n**On Queue: ${trackCount - 1}**\n${onQueue
+        description = `**Now Playing**:\n${nowPlaying}\n\n**On Queue: ${trackCount - 1}**\n${onQueue
           .slice(1, index--)
           .join('\n')}`;
-      } while (formatted.length > 4096 && index > 0);
+      } while (description.length > 4096 && index > 0);
     }
 
     const embed = new EmbedBuilder({
       author: { name: 'Parallax Music Player: Music List' },
-      description: formatted,
+      description: description,
       color: Colors.Aqua,
     });
 
@@ -544,7 +542,7 @@ export default class MusicManager extends Manager {
     if (!guild || !member || !voiceChannel || checkResult) {
       return (
         checkResult ?? {
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_CONTROLS_DENY }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
         }
       );
     }

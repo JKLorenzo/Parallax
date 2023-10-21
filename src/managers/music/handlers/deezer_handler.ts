@@ -2,38 +2,38 @@ import playdl from 'play-dl';
 import AlbumInfo from '../infos/album_info.js';
 import PlaylistInfo from '../infos/playlist_info.js';
 import TrackInfo from '../infos/track_info.js';
-import type { SpotifyTypes } from '../music_defs.js';
+import type { DeezerTypes } from '../music_defs.js';
 import MusicHandler from '../music_handler.js';
 import MusicTrack from '../music_track.js';
 
-export default class SpotifyHandler extends MusicHandler<SpotifyTypes> {
-  album?: playdl.SpotifyAlbum;
-  playlist?: playdl.SpotifyPlaylist;
-  track?: playdl.SpotifyTrack;
+export default class DeezerHandler extends MusicHandler<DeezerTypes> {
+  album?: playdl.DeezerAlbum;
+  playlist?: playdl.DeezerPlaylist;
+  track?: playdl.DeezerTrack;
 
   async fetchInfo() {
     if (this.infoLoaded) return this.albumInfo ?? this.playlistInfo ?? this.trackInfo;
     this.infoLoaded = true;
 
-    if (this.type === 'sp_album') {
-      this.album = (await playdl.spotify(this.query)) as playdl.SpotifyAlbum;
+    if (this.type === 'dz_album') {
+      this.album = (await playdl.deezer(this.query)) as playdl.DeezerAlbum;
       this.albumInfo = new AlbumInfo({
-        info: { name: this.album.name, url: this.album.url },
-        artists: this.album.artists.map(a => ({ name: a.name, url: a.url })),
+        info: { name: this.album.title, url: this.album.url },
+        artists: [{ name: this.album.artist.name, url: this.album.artist.url }],
       });
       this.totalTracks = this.album.tracksCount;
-    } else if (this.type === 'sp_playlist') {
-      this.playlist = (await playdl.spotify(this.query)) as playdl.SpotifyPlaylist;
+    } else if (this.type === 'dz_playlist') {
+      this.playlist = (await playdl.deezer(this.query)) as playdl.DeezerPlaylist;
       this.playlistInfo = new PlaylistInfo({
-        info: { name: this.playlist.name, url: this.playlist.url },
-        artists: [{ name: this.playlist.owner.name, url: this.playlist.owner.url }],
+        info: { name: this.playlist.title, url: this.playlist.url },
+        artists: [{ name: this.playlist.creator.name }],
       });
       this.totalTracks = this.playlist.tracksCount;
-    } else if (this.type === 'sp_track') {
-      this.track = (await playdl.spotify(this.query)) as playdl.SpotifyTrack;
+    } else if (this.type === 'dz_track') {
+      this.track = (await playdl.deezer(this.query)) as playdl.DeezerTrack;
       this.trackInfo = new TrackInfo({
-        info: { name: this.track.name, url: this.track.url },
-        artists: this.track.artists.map(a => ({ name: a.name, url: a.url })),
+        info: { name: this.track.title, url: this.track.url },
+        artists: [{ name: this.track.artist.name, url: this.track.artist.url }],
       });
       this.totalTracks = 1;
     }
@@ -54,17 +54,17 @@ export default class SpotifyHandler extends MusicHandler<SpotifyTypes> {
     }
   }
 
-  private queueTrack(track: playdl.SpotifyTrack) {
+  private queueTrack(track: playdl.DeezerTrack) {
     const thisTrack = new MusicTrack({
       handler: this,
       info: new TrackInfo(
         {
-          info: { name: track.name, url: track.url },
-          artists: track.artists.map(a => ({ name: a.name, url: a.url })),
+          info: { name: track.title, url: track.url },
+          artists: [{ name: track.artist.name, url: track.artist.url }],
         },
         this.albumInfo ?? this.playlistInfo,
       ),
-      imageUrl: track.thumbnail?.url,
+      imageUrl: track.artist.picture?.small,
     });
     this.tracks.push(thisTrack);
   }
