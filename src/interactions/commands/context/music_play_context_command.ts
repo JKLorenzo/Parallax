@@ -5,6 +5,8 @@ import {
   ContextMenuCommandInteraction,
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';
+import Constants from '../../../modules/constants.js';
+import Utils from '../../../modules/utils.js';
 import { CommandScope } from '../../../schemas/enums.js';
 import ContextCommand from '../../../structures/command_context.js';
 
@@ -22,7 +24,6 @@ export default class MusicPlayContextCommand extends ContextCommand {
 
   async exec(interaction: ContextMenuCommandInteraction<CacheType>) {
     const { music } = this.bot.managers;
-    const { constants, hasAny } = this.bot.utils;
     const user = interaction.user;
     const message = interaction.options.getMessage('message', true);
     let query = message.content;
@@ -31,7 +32,7 @@ export default class MusicPlayContextCommand extends ContextCommand {
     // Decline messages sent by other bots
     if (message.author.bot && message.author.id !== this.bot.client.user?.id) {
       return interaction.reply({
-        embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_BOT_MSG_NOT_SUPPORTED }],
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_BOT_MSG_NOT_SUPPORTED }],
       });
     }
 
@@ -44,7 +45,7 @@ export default class MusicPlayContextCommand extends ContextCommand {
         query = embed.url;
       } else if (
         embed.description?.startsWith('Enqueued ') &&
-        hasAny(embed.description, '](http')
+        Utils.hasAny(embed.description, '](http')
       ) {
         // Handles Music Play command results
         query = embed.description
@@ -53,7 +54,7 @@ export default class MusicPlayContextCommand extends ContextCommand {
           .split(')')[0];
       } else {
         return interaction.reply({
-          embeds: [{ color: Colors.Fuchsia, description: constants.MUSIC_MSG_NOT_SUPPORTED }],
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_MSG_NOT_SUPPORTED }],
         });
       }
     }

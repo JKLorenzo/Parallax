@@ -1,5 +1,5 @@
 import { Client, type ClientOptions } from 'discord.js';
-import Utils from './utils.js';
+import Constants from './constants.js';
 import DatabaseManager from '../managers/database_manager.js';
 import EnvironmentManager from '../managers/environment_manager.js';
 import GatewayManager from '../managers/gateway_manager.js';
@@ -17,10 +17,8 @@ export default class Bot {
     music: MusicManager;
     telemetry: TelemetryManager;
   };
-  utils: Utils;
 
   constructor(options: ClientOptions) {
-    this.utils = new Utils();
     this.client = new Client(options);
     this.managers = {
       database: new DatabaseManager(this),
@@ -64,6 +62,6 @@ export default class Bot {
   }
 
   get guild() {
-    return this.client.guilds.cache.get(this.utils.constants.CONTROL_SERVER_ID);
+    return this.client.guilds.cache.get(Constants.CONTROL_SERVER_ID);
   }
 }

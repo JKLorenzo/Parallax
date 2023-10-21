@@ -9,6 +9,7 @@ import {
   Colors,
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';
+import Utils from '../../../modules/utils.js';
 import { CommandScope } from '../../../schemas/enums.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
@@ -35,7 +36,6 @@ export default class InfoSlashCommand extends SlashCommand {
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
     const { database } = this.bot.managers;
-    const { compareDate, toSelectiveUpper } = this.bot.utils;
 
     const guild = interaction.guild!;
     const member = interaction.options.getMember('user');
@@ -79,7 +79,7 @@ export default class InfoSlashCommand extends SlashCommand {
 
     fields.push({
       name: 'Status:',
-      value: toSelectiveUpper(member.presence?.status ?? 'Invisible or Offline'),
+      value: Utils.toSelectiveUpper(member.presence?.status ?? 'Invisible or Offline'),
     });
 
     if (member.presence) {
@@ -90,23 +90,23 @@ export default class InfoSlashCommand extends SlashCommand {
             switch (activity.type) {
               case ActivityType.Competing:
                 return `🔹Competing in ${activity.name} for ${
-                  compareDate(activity.createdAt).humanized
+                  Utils.compareDate(activity.createdAt).humanized
                 }`;
               case ActivityType.Listening:
                 return `🔹Listening to ${activity.name} for ${
-                  compareDate(activity.createdAt).humanized
+                  Utils.compareDate(activity.createdAt).humanized
                 }`;
               case ActivityType.Playing:
                 return `🔹Playing ${activity.name} for ${
-                  compareDate(activity.createdAt).humanized
+                  Utils.compareDate(activity.createdAt).humanized
                 }`;
               case ActivityType.Streaming:
                 return `🔹Streaming ${activity.name} for ${
-                  compareDate(activity.createdAt).humanized
+                  Utils.compareDate(activity.createdAt).humanized
                 }`;
               case ActivityType.Watching:
                 return `🔹Watching ${activity.name} for ${
-                  compareDate(activity.createdAt).humanized
+                  Utils.compareDate(activity.createdAt).humanized
                 }`;
               default:
                 return `🔹Custom Status`;
@@ -133,20 +133,20 @@ export default class InfoSlashCommand extends SlashCommand {
     }
 
     fields.push({
-      name: `Account Created: (${compareDate(user.createdAt).humanized} ago)`,
+      name: `Account Created: (${Utils.compareDate(user.createdAt).humanized} ago)`,
       value: user.createdAt.toString(),
     });
 
     if (member.joinedAt) {
       fields.push({
-        name: `Joined Guild: (${compareDate(member.joinedAt).humanized} ago)`,
+        name: `Joined Guild: (${Utils.compareDate(member.joinedAt).humanized} ago)`,
         value: member.joinedAt.toString(),
       });
     }
 
     if (member.premiumSince) {
       fields.push({
-        name: `Boosting Since: (${compareDate(member.premiumSince).humanized} ago)`,
+        name: `Boosting Since: (${Utils.compareDate(member.premiumSince).humanized} ago)`,
         value: member.premiumSince.toString(),
       });
     }

@@ -7,6 +7,7 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import type Bot from '../../../modules/bot.js';
+import Utils from '../../../modules/utils.js';
 import { CommandScope } from '../../../schemas/enums.js';
 import SlashCommand from '../../../structures/command_slash.js';
 
@@ -81,7 +82,7 @@ export default class SudoSlashCommand extends SlashCommand {
   }
 
   private _makeResult(data: unknown): string[] {
-    const inspected = this.bot.utils.inspect(data);
+    const inspected = Utils.inspect(data);
     const last = inspected.length - 1;
     const splitInspected = inspected.split('\n');
 
@@ -95,7 +96,7 @@ export default class SudoSlashCommand extends SlashCommand {
         ? splitInspected[splitInspected.length - 1]
         : inspected[last];
 
-    const result = this.bot.utils.splitString(inspected, {
+    const result = Utils.splitString(inspected, {
       header: '```js\n',
       footer: '\n```',
       append: appendPart,

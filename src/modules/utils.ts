@@ -8,13 +8,13 @@ import Constants from './constants.js';
 export default class Utils {
   constants = new Constants();
 
-  sleep(ms: number): Promise<void> {
+  static sleep(ms: number): Promise<void> {
     return new Promise(resolve => {
       setTimeout(resolve, ms);
     });
   }
 
-  getFiles(dir: string): string[] {
+  static getFiles(dir: string): string[] {
     if (!fs.existsSync(dir)) return [];
     return fs.readdirSync(dir).reduce<string[]>((list, file) => {
       const name = path.join(dir, file);
@@ -23,7 +23,7 @@ export default class Utils {
     }, []);
   }
 
-  inspect(data: unknown): string {
+  static inspect(data: unknown): string {
     const nlPattern = new RegExp('!!NL!!', 'g');
     const sensitivePattern = new RegExp(_.escapeRegExp(process.env.BOT_TOKEN), 'gi');
 
@@ -35,7 +35,7 @@ export default class Utils {
     return inspected;
   }
 
-  splitString(
+  static splitString(
     text: string,
     options?: {
       maxLength?: number;
@@ -71,7 +71,7 @@ export default class Utils {
     return messages.concat(msg + footer);
   }
 
-  hasAny(base: string, part: string | string[]): boolean {
+  static hasAny(base: string, part: string | string[]): boolean {
     const parts = Array.isArray(part) ? part : [part];
     for (const this_part of parts) {
       if (base.indexOf(this_part) !== -1) return true;
@@ -79,14 +79,14 @@ export default class Utils {
     return false;
   }
 
-  hasAll(base: string, parts: string[]): boolean {
+  static asAll(base: string, parts: string[]): boolean {
     for (const this_part of parts) {
       if (!this.hasAny(base, this_part)) return false;
     }
     return true;
   }
 
-  compareDate(date: Date) {
+  static compareDate(date: Date) {
     const today = new Date();
     const diffMs = today.valueOf() - date.valueOf();
 
@@ -99,11 +99,14 @@ export default class Utils {
     };
   }
 
-  parseMention(mention: string) {
+  static parseMention(mention: string) {
     return String(mention).replace(/\W/g, '');
   }
 
-  toSelectiveUpper(str: string, options?: { word?: 'first' | 'all'; seperator?: string }): string {
+  static toSelectiveUpper(
+    str: string,
+    options?: { word?: 'first' | 'all'; seperator?: string },
+  ): string {
     switch (options?.word) {
       case 'all':
         return `${str.split(options.seperator ?? ' ')}`;

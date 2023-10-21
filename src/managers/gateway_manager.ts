@@ -9,6 +9,7 @@ import {
 } from 'discord.js';
 import type Bot from '../modules/bot.js';
 import Queuer from '../modules/queuer.js';
+import Utils from '../modules/utils.js';
 import Manager from '../structures/manager.js';
 
 export default class GatewayManager extends Manager {
@@ -94,7 +95,6 @@ export default class GatewayManager extends Manager {
 
   private async onMemberAdd(member: GuildMember) {
     const { database, interaction } = this.bot.managers;
-    const { compareDate } = this.bot.utils;
 
     if (member.user.bot) return;
 
@@ -175,7 +175,7 @@ export default class GatewayManager extends Manager {
           value: inviter?.toString() ?? 'No information',
         },
         {
-          name: `Account Created: (${compareDate(createdAt).humanized} ago)`,
+          name: `Account Created: (${Utils.compareDate(createdAt).humanized} ago)`,
           value: new Date(createdAt).toString(),
         },
         { name: 'Status:', value: member.pending ? 'Pending' : 'Action Required' },
@@ -218,7 +218,6 @@ export default class GatewayManager extends Manager {
     newMember: GuildMember,
   ) {
     const { database, interaction } = this.bot.managers;
-    const { parseMention } = this.bot.utils;
 
     if (newMember.user.bot) return;
     if (newMember.pending) return;
@@ -234,7 +233,7 @@ export default class GatewayManager extends Manager {
     const messages = await channel.messages.fetch();
     const message = messages.find(thisMessage => {
       const thisMember = guild.members.cache.get(
-        parseMention(thisMessage.embeds[0]?.fields[0]?.value ?? ''),
+        Utils.parseMention(thisMessage.embeds[0]?.fields[0]?.value ?? ''),
       );
       return (
         thisMember?.id === newMember.id &&
