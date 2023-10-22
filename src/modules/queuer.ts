@@ -1,6 +1,11 @@
 import type { Awaitable } from 'discord.js';
-import Utils from './utils.js';
-import type { QueueItem } from '../schemas/types.js';
+import Utils from '../static/utils.js';
+
+type QueueItem = {
+  exec: () => unknown;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+};
 
 export default class Queuer {
   private timeout: number;

@@ -3,6 +3,7 @@ import type AlbumInfo from './infos/album_info.js';
 import type PlaylistInfo from './infos/playlist_info.js';
 import type TrackInfo from './infos/track_info.js';
 import type { MusicHandlerTypes, QueryOptions } from './music_defs.js';
+import type MusicInfo from './music_info.js';
 import type MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
 
@@ -34,7 +35,7 @@ export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHa
     this.totalTracks = 0;
   }
 
-  get loadedInfo() {
+  get loadedInfo(): MusicInfo | undefined {
     return this.albumInfo ?? this.playlistInfo ?? this.trackInfo;
   }
 

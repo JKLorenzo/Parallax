@@ -15,14 +15,17 @@ import type { Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
 import type MusicHandler from './music_handler.js';
 import type MusicManager from './music_manager.js';
 import type MusicTrack from './music_track.js';
+import Telemetry from '../../global/telemetry/telemetry.js';
 import type Bot from '../../modules/bot.js';
-import Utils from '../../modules/utils.js';
+import Queuer from '../../modules/queuer.js';
+import Utils from '../../static/utils.js';
 
-export default class MusicSubscription {
-  private queueLock: boolean;
+export default class MusicSubscription extends Telemetry {
   private readyLock: boolean;
+  private queuer: Queuer;
+  private processQueuer: Queuer;
 
-  bot: Bot;
+  readonly bot: Bot;
   handlers: MusicHandler[];
   readonly guild: Guild;
   readonly manager: MusicManager;
@@ -30,8 +33,11 @@ export default class MusicSubscription {
   readonly voiceConnection: VoiceConnection;
 
   constructor(options: { bot: Bot; voiceChannel: VoiceBasedChannel; audioPlayer?: AudioPlayer }) {
-    this.queueLock = false;
+    super();
+
     this.readyLock = false;
+    this.queuer = new Queuer();
+    this.processQueuer = new Queuer();
 
     this.bot = options.bot;
     this.handlers = [];
@@ -44,9 +50,6 @@ export default class MusicSubscription {
     });
 
     this.audioPlayer.on('error', error => {
-      const telemetry = this.bot.managers.telemetry.node(this, 'AudioResource Error', false);
-      telemetry.logError(error, false);
-
       const resource = error.resource as AudioResource<MusicTrack>;
       resource.metadata.onError(error);
     });
@@ -128,7 +131,7 @@ export default class MusicSubscription {
   }
 
   async checkNextTrack() {
-    const telemetry = this.bot.managers.telemetry.node(this, 'checkNextTrack()', false);
+    const logger = this.telemetry.start(this.checkNextTrack, false);
 
     let track = this.handlers.at(0)?.tracks.at(0);
     if (!track) {
@@ -136,58 +139,59 @@ export default class MusicSubscription {
       track = this.handlers.at(1)?.tracks.at(0);
     }
 
-    telemetry.logMessage(`Handler: ${track?.handler?.type} Track: ${track?.info.toString()}`);
+    logger.log(`Handler: ${track?.handler?.type} Track: ${track?.info.toString()}`);
 
+    logger.end();
     return track;
   }
 
-  private async processQueue(ignoreLock?: boolean): Promise<void> {
-    const telemetry = this.bot.managers.telemetry.node(this, 'processQueue()', false);
+  private async processQueue(highPriority?: boolean) {
+    const logger = this.telemetry.start(this.processQueue, false);
 
-    const isLocked = !ignoreLock && this.queueLock;
-    const isPlayerNotIdle = this.audioPlayer.state.status !== AudioPlayerStatus.Idle;
-    const isHandlerEmpty = this.handlers.length === 0;
+    logger.log(`Priority ${highPriority ? 'High' : 'Low'}`);
 
-    telemetry.logMessage(
-      `isLocked: ${isLocked} isPlayerNotIdle: ${isPlayerNotIdle} isHandlerEmpty: ${isHandlerEmpty}`,
-    );
+    const process = async () => {
+      const isPlayerNotIdle = this.audioPlayer.state.status !== AudioPlayerStatus.Idle;
+      const isHandlerEmpty = this.handlers.length === 0;
 
-    if (isLocked || isPlayerNotIdle || isHandlerEmpty) return;
+      logger.log(`isPlayerNotIdle: ${isPlayerNotIdle} isHandlerEmpty: ${isHandlerEmpty}`);
 
-    if (!this.queueLock) {
-      this.queueLock = true;
-      telemetry.logMessage('Queue Locked');
+      if (isPlayerNotIdle || isHandlerEmpty) return;
+
+      // Get current handler
+      const handler = this.handlers[0];
+      // Load tracks if not laoded
+      await handler.loadTracks();
+      // Get first track
+      const track = handler.tracks.shift();
+
+      if (!track) {
+        logger.log('Track Empty - Next Handler');
+        // Proceed to next handler
+        this.handlers.shift();
+        await this.processQueue(true);
+        return;
+      }
+
+      try {
+        const resource = await track.createAudioResource();
+        this.audioPlayer.play(resource);
+        logger.log('AudioPlayer play resource');
+      } catch (error) {
+        logger.log('AudioPlayer error - Next Track');
+        // Show error and proceed to next track
+        track.onError(error);
+        await this.processQueue(true);
+      }
+    };
+
+    if (highPriority) {
+      await process();
+    } else {
+      await this.processQueuer.queue(() => process());
     }
 
-    // Get current handler
-    const handler = this.handlers[0];
-    // Load tracks if not laoded
-    await handler.loadTracks();
-    // Get first track
-    const track = handler.tracks.shift();
-
-    if (!track) {
-      telemetry.logMessage('Track Empty - Next Handler');
-      // Proceed to next handler
-      this.handlers.shift();
-      await this.processQueue(true);
-      return;
-    }
-
-    try {
-      const resource = await track.createAudioResource();
-      this.audioPlayer.play(resource);
-      telemetry.logMessage('AudioPlayer play resource');
-    } catch (error) {
-      telemetry.logMessage('AudioPlayer error - Next Track');
-      // Show error and proceed to next track
-      track.onError(error);
-      await this.processQueue(true);
-      return;
-    }
-
-    this.queueLock = false;
-    telemetry.logMessage('Queue Unlocked');
+    logger.end();
   }
 
   get voiceChannel() {
@@ -234,9 +238,11 @@ export default class MusicSubscription {
   }
 
   queue(handler: MusicHandler) {
-    this.handlers.push(handler);
-    this.processQueue();
-    return this.handlers.length;
+    return this.queuer.queue(async () => {
+      this.handlers.push(handler);
+      await this.processQueue();
+      return this.handlers.length;
+    });
   }
 
   stop(options?: { skipCount?: number; force?: boolean }): number {

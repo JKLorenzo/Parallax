@@ -22,10 +22,11 @@ import type { QueryLookupResult, QueryOptions } from './music_defs.js';
 import MusicHandlerFactory from './music_handler_factory.js';
 import MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
+import DatabaseFacade from '../../global/database/database_facade.js';
 import type Bot from '../../modules/bot.js';
-import Constants from '../../modules/constants.js';
 import Queuer from '../../modules/queuer.js';
-import Manager from '../../structures/manager.js';
+import Constants from '../../static/constants.js';
+import Manager from '../manager.js';
 
 export default class MusicManager extends Manager {
   disabled: boolean;
@@ -41,19 +42,27 @@ export default class MusicManager extends Manager {
   }
 
   async init() {
-    const { environment } = this.bot.managers;
+    const db = DatabaseFacade.instance();
+    const soundcloudId = await playdl.getFreeClientID();
+    const spotifyId = await db.botConfig('SpotifyId');
+    const spotifySecret = await db.botConfig('SpotifySecret');
+    const spotifyRefresh = await db.botConfig('SpotifyRefresh');
+    const youtubeCookies = await db.botConfig('YouTubeCookies');
+    const userAgent = await db.botConfig('UserAgent');
 
     await playdl.setToken({
-      soundcloud: {
-        client_id: environment.get('soundcloudId'),
-      },
-      spotify: {
-        market: 'PH',
-        client_id: environment.get('spotifyId'),
-        client_secret: environment.get('spotifySecret'),
-        refresh_token: environment.get('spotifyRefresh'),
-      },
-      useragent: [environment.get('userAgent')],
+      soundcloud: { client_id: soundcloudId },
+      spotify:
+        spotifyId && spotifySecret && spotifyRefresh
+          ? {
+              market: 'PH',
+              client_id: spotifyId,
+              client_secret: spotifySecret,
+              refresh_token: spotifyRefresh,
+            }
+          : undefined,
+      youtube: youtubeCookies ? { cookie: youtubeCookies } : undefined,
+      useragent: userAgent ? [userAgent] : undefined,
     });
 
     this.bot.client.on('voiceStateUpdate', (oldState, newState) => {
@@ -72,23 +81,28 @@ export default class MusicManager extends Manager {
   }
 
   private async onMessageCreate(message: Message<boolean>) {
-    const { database } = this.bot.managers;
+    const db = DatabaseFacade.instance();
 
     if (message.author.bot) return;
 
     const guild = message.guild;
     if (!guild) return;
 
-    const config = await database.musicConfig(guild.id);
+    const config = await db.musicConfig(guild.id);
     if (!config?.enabled || message.channelId !== config.channel) return;
 
+    const logger = this.telemetry.start(this.onMessageCreate, false);
+
+    const user = message.author;
     const query = message.content;
     const textChannel = message.channel;
+
+    logger.log(`User: ${user.toString()} Channel: ${textChannel.id} Query: ${query}`);
 
     // Check if message is a command for other bots
     const response = await Promise.race([
       textChannel.awaitMessages({
-        filter: msg => msg.author.id !== this.bot.client.user?.id,
+        filter: msg => msg.author.id !== this.bot.client.user?.id && msg.author.bot,
         max: 1,
         time: 2000,
       }),
@@ -98,36 +112,56 @@ export default class MusicManager extends Manager {
         time: 2000,
       }),
     ]);
-    if (response.first()) return;
 
-    const user = message.member?.user;
-    if (!user) return;
+    if (!response.first()) {
+      const result = await this.play({ user, textChannel, query });
+      await message.reply(result);
+    }
 
-    const result = await this.play({ user, textChannel, query });
+    logger.end();
+  }
 
-    await message.reply(result);
+  private async tokenRefresh() {
+    const logger = this.telemetry.start(this.tokenRefresh);
+
+    if (playdl.is_expired()) {
+      try {
+        await playdl.refreshToken();
+        logger.log('Token refreshed successfully.');
+      } catch (e) {
+        logger.error(e);
+      }
+    }
+
+    logger.end();
   }
 
   private async queryLookup(queryOptions: QueryOptions): Promise<QueryLookupResult> {
+    const logger = this.telemetry.start(this.queryLookup, false);
+
+    await this.tokenRefresh();
+
     const embed = new EmbedBuilder({
       description: Constants.MUSIC_QUERY_NO_RESULT,
       color: Colors.Fuchsia,
     });
 
-    if (playdl.is_expired()) {
-      const tokenTelemetry = this.bot.managers.telemetry.node(this, 'PlayDL Token Refresh');
-      try {
-        await playdl.refreshToken();
-        tokenTelemetry.logMessage('Token refreshed successfully.');
-      } catch (error) {
-        tokenTelemetry.logError(error);
+    const handler = await MusicHandlerFactory.createHandler(queryOptions);
+    try {
+      const info = await handler?.fetchInfo();
+      const tracks = handler?.totalTracks;
+      if (info && tracks) {
+        embed
+          .setColor(Colors.Aqua)
+          .setDescription(
+            `Enqueued ${tracks > 1 ? `${tracks} tracks from ` : ''} ${info.toFormattedString()}.`,
+          );
       }
+    } catch (e) {
+      logger.error(e);
     }
 
-    const handler = await MusicHandlerFactory.createHandler(queryOptions);
-    const info = await handler?.fetchInfo();
-    if (info) embed.setColor(Colors.Aqua).setDescription(`Enqueued ${info.toFormattedString()}.`);
-
+    logger.end();
     return { message: { embeds: [embed] }, handler: handler };
   }
 
@@ -175,17 +209,27 @@ export default class MusicManager extends Manager {
     return { embeds: [embed] };
   }
 
-  play(options: {
+  async play(options: {
     user: User;
     textChannel: TextBasedChannel;
     query?: string;
   }): Promise<BaseMessageOptions> {
-    return this.commandQueuer.queue(async () => {
+    const logger = this.telemetry.start(this.play, false);
+
+    const result = await this.commandQueuer.queue(async () => {
+      logger.log(
+        `User: ${options.user} Channel: ${options.textChannel.id} Query: ${options.query}`,
+      );
+
       if (this.disabled) {
+        logger.log('Music Disabled');
+        logger.end();
         return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_DISABLED }] };
       }
 
       if (!options.query?.length) {
+        logger.log('Query Length Invalid');
+        logger.end();
         return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_QUERY_EMPTY }] };
       }
 
@@ -200,6 +244,11 @@ export default class MusicManager extends Manager {
       const checkResult = this.checkChannel(voiceChannel);
 
       if (!guild || !member || !voiceChannel || checkResult) {
+        logger.log(
+          `Guild: ${guild} Member: ${member} VoiceChannel: ${voiceChannel} CheckResult: ${checkResult}`,
+        );
+        logger.end();
+
         return (
           checkResult ?? {
             embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
@@ -210,12 +259,17 @@ export default class MusicManager extends Manager {
       let subscription = this.subscriptions.get(guild.id);
 
       if (!subscription) {
+        logger.log('Create MusicSubscription');
         subscription = new MusicSubscription({ bot: this.bot, voiceChannel });
 
         // Join voice channel
         try {
+          logger.log('Joining Voice Channel');
           await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20000);
-        } catch (_) {
+        } catch (error) {
+          logger.error(error);
+          logger.end();
+
           return {
             embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_JOIN_CHANNEL_FAILED }],
           };
@@ -232,9 +286,15 @@ export default class MusicManager extends Manager {
         query: options.query,
       });
 
-      if (lookupResult.handler) subscription.queue(lookupResult.handler);
+      if (lookupResult.handler) {
+        await subscription.queue(lookupResult.handler);
+      }
+
       return lookupResult.message;
     });
+
+    logger.end();
+    return result;
   }
 
   skip(options: {

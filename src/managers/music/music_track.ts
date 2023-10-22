@@ -3,8 +3,8 @@ import { Colors, EmbedBuilder, Message } from 'discord.js';
 import playdl from 'play-dl';
 import type TrackInfo from './infos/track_info.js';
 import type MusicHandler from './music_handler.js';
-import Constants from '../../modules/constants.js';
-import Utils from '../../modules/utils.js';
+import Constants from '../../static/constants.js';
+import Utils from '../../static/utils.js';
 
 export default class MusicTrack {
   private message?: Message;
@@ -27,7 +27,8 @@ export default class MusicTrack {
 
   async createAudioResource() {
     if (!this.audioUrl) {
-      const track = await playdl.search(this.info.toString(), {
+      const trackInfo = this.info;
+      const track = await playdl.search(`${trackInfo.info.name} by ${trackInfo.artistToString}`, {
         limit: 1,
         source: { youtube: 'video' },
       });
@@ -35,7 +36,9 @@ export default class MusicTrack {
       this.audioUrl = track.at(0)?.url;
     }
 
-    if (!this.audioUrl) throw new Error('No match found for this query.');
+    if (!this.audioUrl) {
+      throw new Error(`Skipping ${this.info.toFormattedString()}. No match found for this query.`);
+    }
 
     const stream = await playdl.stream(this.audioUrl);
     const resource = createAudioResource(stream.stream, {
@@ -156,8 +159,8 @@ export default class MusicTrack {
   }
 
   async onError(error: unknown) {
-    const strError = String(error);
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
+    const strError = String(error);
 
     if (Utils.hasAny(strError, Constants.PLAYDL_429_ERROR_PATTERN)) {
       embed.setDescription(
@@ -170,6 +173,8 @@ export default class MusicTrack {
       );
     } else if (this.handler.subscription.manager.disabled) {
       embed.setDescription(Constants.MUSIC_DISABLED);
+    } else if (error instanceof Error) {
+      embed.setDescription(error.message);
     } else {
       embed.setDescription(strError);
     }

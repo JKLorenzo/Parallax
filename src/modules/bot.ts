@@ -1,64 +1,58 @@
 import { Client, type ClientOptions } from 'discord.js';
-import Constants from './constants.js';
-import DatabaseManager from '../managers/database_manager.js';
-import EnvironmentManager from '../managers/environment_manager.js';
-import GatewayManager from '../managers/gateway_manager.js';
-import InteractionManager from '../managers/interaction_manager.js';
+import EnvironmentFacade from '../global/environment/environment_facade.js';
+import TelemetryFacade from '../global/telemetry/telemetry_facade.js';
+import type TelemetryNode from '../global/telemetry/telemetry_node.js';
+import GatewayManager from '../managers/gateway/gateway_manager.js';
+import InteractionManager from '../managers/interaction/interaction_manager.js';
 import MusicManager from '../managers/music/music_manager.js';
-import TelemetryManager from '../managers/telemetry_manager.js';
+import Constants from '../static/constants.js';
 
 export default class Bot {
   client: Client;
   managers: {
-    database: DatabaseManager;
-    environment: EnvironmentManager;
     gateway: GatewayManager;
     interaction: InteractionManager;
     music: MusicManager;
-    telemetry: TelemetryManager;
   };
+  telemetry: TelemetryNode;
 
   constructor(options: ClientOptions) {
     this.client = new Client(options);
     this.managers = {
-      database: new DatabaseManager(this),
-      environment: new EnvironmentManager(this),
       gateway: new GatewayManager(this),
       interaction: new InteractionManager(this),
       music: new MusicManager(this),
-      telemetry: new TelemetryManager(this),
     };
     this.client.bot = this;
+    this.telemetry = TelemetryFacade.instance().register(this);
   }
 
   async start() {
-    const { environment, telemetry } = this.managers;
-    const initTelemetry = telemetry.node('Bot', 'Startup', environment.isProduction());
+    const env = EnvironmentFacade.instance();
+    const logger = this.telemetry.start(this.start, env.isProduction());
 
     this.client.once('ready', () => {
-      initTelemetry.logMessage('Connected to Discord. Initializing...');
+      logger.log('Connected to Discord. Initializing...');
 
       // Delay manager initializiation for 5 seconds
       setTimeout(async () => {
         try {
-          // Initialzie database first then telemetry
-          await this.managers.database.init();
-          await this.managers.telemetry.init();
-
           // Initialize other managers
           await Promise.all([this.managers.gateway.init(), this.managers.music.init()]);
 
           // Initialize interaction manager last to accept user commands
           await this.managers.interaction.init();
 
-          initTelemetry.logMessage(`Online on ${this.client.guilds.cache.size} servers.`);
+          logger.log(`Online on ${this.client.guilds.cache.size} servers.`);
         } catch (error) {
-          initTelemetry.logError(error);
+          logger.error(error);
         }
       }, 5000);
     });
 
-    await this.client.login(this.managers.environment.get('botToken'));
+    await this.client.login(env.get('botToken'));
+
+    logger.end();
   }
 
   get guild() {
