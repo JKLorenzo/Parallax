@@ -23,7 +23,7 @@ export default class SoundcloudHandler extends MusicHandler<SoundcloudTypes> {
     } else if (this.type === 'so_track') {
       this.track = (await playdl.soundcloud(this.query)) as playdl.SoundCloudTrack;
       this.trackInfo = new TrackInfo({
-        info: { name: this.track.name, url: this.track.url },
+        info: { name: this.track.name, url: this.track.permalink },
         artists: [{ name: this.track.user.name, url: this.track.user.url }],
       });
       this.totalTracks = 1;
