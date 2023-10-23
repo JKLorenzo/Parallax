@@ -37,16 +37,19 @@ export default class SearchHandler extends MusicHandler<SearchType> {
         info: { name: this.track.name, url: this.track.url },
         artists: [{ name: this.track.user.name, url: this.track.user.url }],
       });
+      this.totalTracks = 1;
     } else if (this.track instanceof playdl.SpotifyTrack) {
       this.trackInfo = new TrackInfo({
         info: { name: this.track.name, url: this.track.url },
         artists: this.track.artists.map(a => ({ name: a.name, url: a.url })),
       });
+      this.totalTracks = 1;
     } else if (this.track instanceof playdl.YouTubeVideo) {
       this.trackInfo = new TrackInfo({
         info: { name: this.track.title ?? 'Unknown', url: this.track.url },
         artists: [{ name: this.track.channel?.name ?? 'Unknown', url: this.track.channel?.url }],
       });
+      this.totalTracks = 1;
     }
 
     return this.trackInfo;
