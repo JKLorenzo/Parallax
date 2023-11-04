@@ -29,7 +29,7 @@ export default class SearchHandler extends MusicHandler<SearchType> {
       limit: 1,
     });
 
-    const tracks = await Promise.all([soundcloudTrack, spotifyTrack, youtubeTrack]);
+    const tracks = await Promise.all([spotifyTrack, soundcloudTrack, youtubeTrack]);
     this.track = tracks.at(0)?.at(0) ?? tracks.at(1)?.at(0) ?? tracks.at(2)?.at(0);
 
     if (this.track instanceof playdl.SoundCloudTrack) {
