@@ -3,11 +3,8 @@ import path from 'path';
 import util from 'util';
 import humanizeDuration from 'humanize-duration';
 import _ from 'lodash';
-import Constants from './constants.js';
 
-export default class Utils {
-  constants = new Constants();
-
+export default abstract class Utils {
   static sleep(ms: number): Promise<void> {
     return new Promise(resolve => {
       setTimeout(resolve, ms);

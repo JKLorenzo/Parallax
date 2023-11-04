@@ -1,4 +1,4 @@
-export default class Constants {
+export default abstract class Constants {
   static readonly CONTROL_SERVER_ID = '806481618008539137';
 
   static readonly MUSIC_DISABLED =
