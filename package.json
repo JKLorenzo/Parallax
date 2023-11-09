@@ -46,7 +46,7 @@
     "libsodium-wrappers": "^0.7.13",
     "lodash": "^4.17.21",
     "mongodb": "^6.2.0",
-    "node-cron": "^3.0.2",
+    "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "node-google-tts-api": "^1.1.1",
     "play-dl": "^1.9.7",
