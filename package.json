@@ -56,8 +56,8 @@
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "^18.2.0",
-    "@commitlint/config-conventional": "^18.1.0",
+    "@commitlint/cli": "^18.4.1",
+    "@commitlint/config-conventional": "^18.4.0",
     "@types/color": "^3.0.6",
     "@types/common-tags": "^1.8.4",
     "@types/humanize-duration": "^3.27.3",
@@ -65,14 +65,14 @@
     "@types/node-cron": "^3.0.11",
     "@types/probe-image-size": "^7.2.3",
     "@types/spotify-web-api-node": "^5.0.10",
-    "@typescript-eslint/eslint-plugin": "^6.10.0",
-    "@typescript-eslint/parser": "^6.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
     "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.0.1",
-    "lint-staged": "^15.0.2",
-    "prettier": "^3.0.3",
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.1.0",
     "typescript": "^5.2.2"
   }
 }
