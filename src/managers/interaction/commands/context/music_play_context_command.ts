@@ -66,7 +66,7 @@ export default class MusicPlayContextCommand extends ContextCommand {
     }
 
     const lookupResult = await music.play({ user, textChannel, query });
-
+    lookupResult.handler?.replyTo(interaction);
     await interaction.editReply(lookupResult.message);
   }
 }
