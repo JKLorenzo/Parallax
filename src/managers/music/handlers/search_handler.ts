@@ -8,6 +8,8 @@ export default class SearchHandler extends MusicHandler<SearchType> {
   track?: playdl.SoundCloudTrack | playdl.SpotifyTrack | playdl.YouTubeVideo;
 
   async fetchInfo() {
+    const logger = this.telemetry.start(this.fetchInfo, false);
+
     if (this.infoLoaded) return this.trackInfo;
     this.infoLoaded = true;
 
@@ -52,10 +54,13 @@ export default class SearchHandler extends MusicHandler<SearchType> {
       this.totalTracks = 1;
     }
 
+    logger.end();
     return this.trackInfo;
   }
 
   loadTracks() {
+    const logger = this.telemetry.start(this.loadTracks, false);
+
     if (this.tracksLoaded || !this.track) return;
     this.tracksLoaded = true;
 
@@ -82,6 +87,7 @@ export default class SearchHandler extends MusicHandler<SearchType> {
       });
     }
 
+    logger.end();
     this.tracks.push(thisTrack);
   }
 }

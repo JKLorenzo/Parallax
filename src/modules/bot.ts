@@ -58,4 +58,8 @@ export default class Bot {
   get guild() {
     return this.client.guilds.cache.get(Constants.CONTROL_SERVER_ID);
   }
+
+  findEmoji(name: string) {
+    return this.guild?.emojis.cache.find(e => e.name === name);
+  }
 }

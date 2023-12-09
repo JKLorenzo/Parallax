@@ -11,7 +11,7 @@ import {
   VoiceConnectionStatus,
   VoiceConnectionDisconnectReason,
 } from '@discordjs/voice';
-import type { Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
+import { Collection, type Guild, type VoiceBasedChannel, type VoiceState } from 'discord.js';
 import type MusicHandler from './music_handler.js';
 import type MusicManager from './music_manager.js';
 import type MusicTrack from './music_track.js';
@@ -26,11 +26,12 @@ export default class MusicSubscription extends Telemetry {
   private processQueuer: Queuer;
 
   readonly bot: Bot;
-  handlers: MusicHandler[];
   readonly guild: Guild;
   readonly manager: MusicManager;
   readonly audioPlayer: AudioPlayer;
   readonly voiceConnection: VoiceConnection;
+
+  handlers: Collection<string, MusicHandler>;
 
   constructor(options: { bot: Bot; voiceChannel: VoiceBasedChannel; audioPlayer?: AudioPlayer }) {
     super();
@@ -40,10 +41,11 @@ export default class MusicSubscription extends Telemetry {
     this.processQueuer = new Queuer();
 
     this.bot = options.bot;
-    this.handlers = [];
     this.guild = options.voiceChannel.guild;
     this.manager = options.bot.managers.music;
     this.audioPlayer = options.audioPlayer ?? createAudioPlayer();
+
+    this.handlers = new Collection();
 
     this.audioPlayer.on('stateChange', (oldState, newState) => {
       this.onAudioPlayerStateChange(oldState, newState);
@@ -114,7 +116,7 @@ export default class MusicSubscription extends Telemetry {
         this.voiceConnection.destroy();
       }
     } else if (isDestroyed) {
-      this.stop({ force: true });
+      this.stop();
     } else if (!this.readyLock && (isConnecting || isSignalling)) {
       this.readyLock = true;
 
@@ -152,23 +154,28 @@ export default class MusicSubscription extends Telemetry {
 
     const process = async () => {
       const isPlayerNotIdle = this.audioPlayer.state.status !== AudioPlayerStatus.Idle;
-      const isHandlerEmpty = this.handlers.length === 0;
+      const isHandlerEmpty = this.handlers.size === 0;
 
       logger.log(`isPlayerNotIdle: ${isPlayerNotIdle} isHandlerEmpty: ${isHandlerEmpty}`);
 
       if (isPlayerNotIdle || isHandlerEmpty) return;
 
       // Get current handler
-      const handler = this.handlers[0];
+      const handler = this.handlers.first()!;
+      logger.log(`Current handler: ${handler.requestId}`);
+
       // Load tracks if not laoded
       await handler.loadTracks();
+
       // Get first track
       const track = handler.tracks.shift();
+      logger.log(`Next track: ${track?.info.toString()}`);
 
       if (!track) {
-        logger.log('Track Empty - Next Handler');
         // Proceed to next handler
-        this.handlers.shift();
+        handler.destroy();
+        this.handlers.delete(handler.requestId);
+
         await this.processQueue(true);
         return;
       }
@@ -239,31 +246,56 @@ export default class MusicSubscription extends Telemetry {
 
   queue(handler: MusicHandler) {
     return this.queuer.queue(async () => {
-      this.handlers.push(handler);
+      this.handlers.set(handler.requestId, handler);
       await this.processQueue();
-      return this.handlers.length;
+      return this.handlers.size;
     });
   }
 
-  stop(options?: { skipCount?: number; force?: boolean }): number {
-    const handler = this.handlers[0];
-    if (!handler) return 0;
+  skipQueue(requestId?: string) {
+    let isCurrentHandler = false;
 
-    let skipped = this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
+    let handler = this.handlers.first();
+    if (requestId) handler = this.handlers.get(requestId);
 
-    if (options?.skipCount) {
-      if (options?.skipCount > 1) {
-        skipped += handler.tracks.splice(0, options?.skipCount - 1).length;
-      }
-    } else {
-      this.handlers.forEach(h => {
-        skipped += h.tracks.length;
-      });
-      this.handlers = [];
+    if (handler) {
+      isCurrentHandler = handler.requestId === this.handlers.firstKey();
+      handler.destroy();
+      this.handlers.delete(handler.requestId);
     }
 
-    this.audioPlayer.stop(options?.force);
+    // Stops the current track, then proceeds playing the next track if available
+    if (isCurrentHandler) this.audioPlayer.stop();
 
-    return skipped;
+    return handler;
+  }
+
+  skipTrack(count = 1) {
+    const handler = this.handlers.at(0);
+    if (!handler) return 0;
+
+    let skippedTracks = this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
+    if (count > 1) skippedTracks += handler.skip(count);
+
+    // Stops the current track,
+    // then proceeds playing the next track if available
+    this.audioPlayer.stop();
+
+    return skippedTracks;
+  }
+
+  stop(): number {
+    let stoppedTracks = this.audioPlayer.state.status === AudioPlayerStatus.Idle ? 0 : 1;
+
+    for (const handler of this.handlers.values()) {
+      handler.destroy();
+      stoppedTracks += handler.tracks.length;
+    }
+    this.handlers.clear();
+
+    // Stops the player
+    this.audioPlayer.stop(true);
+
+    return stoppedTracks;
   }
 }

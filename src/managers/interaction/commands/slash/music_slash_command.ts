@@ -102,13 +102,15 @@ export default class MusicSlashCommand extends SlashCommand {
           textChannel = await user.createDM();
         }
 
-        result = await music.play({ user, textChannel, query });
+        const lookupResult = await music.play({ user, textChannel, query });
+        lookupResult.handler?.replyTo(interaction);
+        result = lookupResult.message;
         break;
       }
       case 'skip': {
-        const position = interaction.options.getInteger('position', false);
+        const position = interaction.options.getInteger('position', false) ?? undefined;
 
-        result = music.skip({ user, textChannel, skipCount: position });
+        result = music.skipTracks({ user, textChannel, skipCount: position });
         break;
       }
       case 'stop': {
