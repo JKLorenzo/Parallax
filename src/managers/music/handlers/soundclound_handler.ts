@@ -10,6 +10,8 @@ export default class SoundcloudHandler extends MusicHandler<SoundcloudTypes> {
   track?: playdl.SoundCloudTrack;
 
   async fetchInfo() {
+    const logger = this.telemetry.start(this.fetchInfo, false);
+
     if (this.infoLoaded) return this.albumInfo ?? this.playlistInfo ?? this.trackInfo;
     this.infoLoaded = true;
 
@@ -29,12 +31,14 @@ export default class SoundcloudHandler extends MusicHandler<SoundcloudTypes> {
       this.totalTracks = 1;
     }
 
+    logger.end();
     return this.playlistInfo ?? this.trackInfo;
   }
 
   async loadTracks() {
+    const logger = this.telemetry.start(this.loadTracks, false);
+
     if (this.tracksLoaded) return;
-    this.tracksLoaded = true;
 
     if (this.playlist) {
       const tracks = await this.playlist.all_tracks();
@@ -42,6 +46,9 @@ export default class SoundcloudHandler extends MusicHandler<SoundcloudTypes> {
     } else if (this.track) {
       this.queueTrack(this.track);
     }
+
+    this.tracksLoaded = true;
+    logger.end();
   }
 
   private queueTrack(track: playdl.SoundCloudTrack) {

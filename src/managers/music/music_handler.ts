@@ -1,4 +1,4 @@
-import type { TextBasedChannel, User } from 'discord.js';
+import { Message, CommandInteraction, type TextBasedChannel, type User } from 'discord.js';
 import type AlbumInfo from './infos/album_info.js';
 import type PlaylistInfo from './infos/playlist_info.js';
 import type TrackInfo from './infos/track_info.js';
@@ -6,8 +6,12 @@ import type { MusicHandlerTypes, QueryOptions } from './music_defs.js';
 import type MusicInfo from './music_info.js';
 import type MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
+import Telemetry from '../../global/telemetry/telemetry.js';
 
-export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHandlerTypes> {
+export default abstract class MusicHandler<
+  T extends MusicHandlerTypes = MusicHandlerTypes,
+> extends Telemetry {
+  requestId: string;
   subscription: MusicSubscription;
   channel: TextBasedChannel;
   requestedBy: User;
@@ -22,7 +26,12 @@ export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHa
   tracksLoaded: boolean;
   totalTracks: number;
 
-  constructor(queryOptions: QueryOptions, type: T) {
+  reply?: Message | CommandInteraction;
+
+  constructor(requestId: string, queryOptions: QueryOptions, type: T) {
+    super();
+
+    this.requestId = requestId;
     this.subscription = queryOptions.subscription;
     this.channel = queryOptions.channel;
     this.requestedBy = queryOptions.requestedBy;
@@ -37,6 +46,33 @@ export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHa
 
   get loadedInfo(): MusicInfo | undefined {
     return this.albumInfo ?? this.playlistInfo ?? this.trackInfo;
+  }
+
+  replyTo(reply: Message | CommandInteraction) {
+    this.telemetry.start(this.replyTo, false);
+    this.reply = reply;
+  }
+
+  skip(count: number) {
+    this.telemetry.start(this.skip, false);
+    return this.tracks.splice(0, count - 1).length;
+  }
+
+  destroy() {
+    const logger = this.telemetry.start(this.destroy, false);
+
+    try {
+      const message = this.reply;
+      if (message instanceof Message) {
+        message.edit({ components: [] });
+      } else if (message instanceof CommandInteraction) {
+        message.editReply({ components: [] });
+      }
+    } catch (e) {
+      logger.error(e);
+    }
+
+    logger.end();
   }
 
   abstract fetchInfo(): Promise<TrackInfo | undefined>;

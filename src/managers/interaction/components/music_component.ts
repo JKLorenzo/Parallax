@@ -65,7 +65,7 @@ export default class MusicComponent extends Component {
         break;
       }
       case 'skip': {
-        result = music.skip({ user });
+        result = music.skipTracks({ user });
         break;
       }
       case 'stop': {

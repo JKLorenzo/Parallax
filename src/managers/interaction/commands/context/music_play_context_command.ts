@@ -65,8 +65,8 @@ export default class MusicPlayContextCommand extends ContextCommand {
       textChannel = await user.createDM();
     }
 
-    const result = await music.play({ user, textChannel, query });
+    const lookupResult = await music.play({ user, textChannel, query });
 
-    await interaction.editReply(result);
+    await interaction.editReply(lookupResult.message);
   }
 }

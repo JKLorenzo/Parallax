@@ -10,6 +10,8 @@ export default class YoutubeHandler extends MusicHandler<YoutubeTypes> {
   track?: playdl.YouTubeVideo;
 
   async fetchInfo() {
+    const logger = this.telemetry.start(this.fetchInfo, false);
+
     if (this.infoLoaded) return this.playlistInfo ?? this.trackInfo;
     this.infoLoaded = true;
 
@@ -42,10 +44,13 @@ export default class YoutubeHandler extends MusicHandler<YoutubeTypes> {
       this.totalTracks = 1;
     }
 
+    logger.end();
     return this.playlistInfo ?? this.trackInfo;
   }
 
   async loadTracks() {
+    const logger = this.telemetry.start(this.loadTracks, false);
+
     if (this.tracksLoaded) return;
     this.tracksLoaded = true;
 
@@ -55,6 +60,8 @@ export default class YoutubeHandler extends MusicHandler<YoutubeTypes> {
     } else if (this.track) {
       this.queueTrack(this.track);
     }
+
+    logger.end();
   }
 
   private queueTrack(track: playdl.YouTubeVideo) {

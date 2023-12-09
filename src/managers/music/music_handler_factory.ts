@@ -7,31 +7,30 @@ import YoutubeHandler from './handlers/youtube_handler.js';
 import type { QueryOptions } from './music_defs.js';
 
 export default class MusicHandlerFactory {
-  static async createHandler(queryOptions: QueryOptions) {
+  static async createHandler(requestId: string, queryOptions: QueryOptions) {
     let handler;
-
     const queryType = await playdl.validate(queryOptions.query);
     switch (queryType) {
       case 'dz_album':
       case 'dz_playlist':
       case 'dz_track':
-        handler = new DeezerHandler(queryOptions, queryType);
+        handler = new DeezerHandler(requestId, queryOptions, queryType);
         break;
       case 'sp_album':
       case 'sp_playlist':
       case 'sp_track':
-        handler = new SpotifyHandler(queryOptions, queryType);
+        handler = new SpotifyHandler(requestId, queryOptions, queryType);
         break;
       case 'so_playlist':
       case 'so_track':
-        handler = new SoundcloudHandler(queryOptions, queryType);
+        handler = new SoundcloudHandler(requestId, queryOptions, queryType);
         break;
       case 'yt_playlist':
       case 'yt_video':
-        handler = new YoutubeHandler(queryOptions, queryType);
+        handler = new YoutubeHandler(requestId, queryOptions, queryType);
         break;
       case 'search':
-        handler = new SearchHandler(queryOptions, queryType);
+        handler = new SearchHandler(requestId, queryOptions, queryType);
         break;
     }
 

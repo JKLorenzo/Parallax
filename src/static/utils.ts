@@ -127,4 +127,24 @@ export default abstract class Utils {
 
     return `TypeOf ${typeof obj}`;
   }
+
+  static makeId(
+    length: number,
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  ) {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    return result;
+  }
+
+  static formatReqId(id: string) {
+    return `Request ID: ${id}`;
+  }
+
+  static parseReqId(str: string) {
+    return str.replace('Request ID:', '').trim();
+  }
 }

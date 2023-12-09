@@ -26,6 +26,7 @@ import DatabaseFacade from '../../global/database/database_facade.js';
 import type Bot from '../../modules/bot.js';
 import Queuer from '../../modules/queuer.js';
 import Constants from '../../static/constants.js';
+import Utils from '../../static/utils.js';
 import Manager from '../manager.js';
 
 export default class MusicManager extends Manager {
@@ -115,7 +116,8 @@ export default class MusicManager extends Manager {
 
     if (!response.first()) {
       const result = await this.play({ user, textChannel, query });
-      await message.reply(result);
+      const reply = await message.reply(result.message);
+      result.handler?.replyTo(reply);
     }
 
     logger.end();
@@ -141,12 +143,14 @@ export default class MusicManager extends Manager {
 
     await this.tokenRefresh();
 
+    const requestId = Utils.makeId(10);
     const embed = new EmbedBuilder({
       description: Constants.MUSIC_QUERY_NO_RESULT,
       color: Colors.Fuchsia,
+      footer: { text: Utils.formatReqId(requestId) },
     });
 
-    const handler = await MusicHandlerFactory.createHandler(queryOptions);
+    const handler = await MusicHandlerFactory.createHandler(requestId, queryOptions);
     try {
       const info = await handler?.fetchInfo();
       const tracks = handler?.totalTracks;
@@ -161,8 +165,13 @@ export default class MusicManager extends Manager {
       logger.error(e);
     }
 
+    const musicQueueComponent = this.bot.managers.interaction.componentData('musicQueue');
+
     logger.end();
-    return { message: { embeds: [embed] }, handler: handler };
+    return {
+      message: { embeds: [embed], components: handler ? musicQueueComponent : undefined },
+      handler: handler,
+    };
   }
 
   private checkChannel(voiceChannel?: VoiceBasedChannel | null): BaseMessageOptions | undefined {
@@ -213,7 +222,7 @@ export default class MusicManager extends Manager {
     user: User;
     textChannel: TextBasedChannel;
     query?: string;
-  }): Promise<BaseMessageOptions> {
+  }): Promise<QueryLookupResult> {
     const logger = this.telemetry.start(this.play, false);
 
     const result = await this.commandQueuer.queue(async () => {
@@ -224,13 +233,19 @@ export default class MusicManager extends Manager {
       if (this.disabled) {
         logger.log('Music Disabled');
         logger.end();
-        return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_DISABLED }] };
+        return {
+          message: { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_DISABLED }] },
+        };
       }
 
       if (!options.query?.length) {
         logger.log('Query Length Invalid');
         logger.end();
-        return { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_QUERY_EMPTY }] };
+        return {
+          message: {
+            embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_QUERY_EMPTY }],
+          },
+        };
       }
 
       const guild =
@@ -249,11 +264,11 @@ export default class MusicManager extends Manager {
         );
         logger.end();
 
-        return (
-          checkResult ?? {
+        return {
+          message: checkResult ?? {
             embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
-          }
-        );
+          },
+        };
       }
 
       let subscription = this.subscriptions.get(guild.id);
@@ -271,7 +286,9 @@ export default class MusicManager extends Manager {
           logger.end();
 
           return {
-            embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_JOIN_CHANNEL_FAILED }],
+            message: {
+              embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_JOIN_CHANNEL_FAILED }],
+            },
           };
         }
 
@@ -290,18 +307,14 @@ export default class MusicManager extends Manager {
         await subscription.queue(lookupResult.handler);
       }
 
-      return lookupResult.message;
+      return lookupResult;
     });
 
     logger.end();
     return result;
   }
 
-  skip(options: {
-    user: User;
-    textChannel?: TextBasedChannel | null;
-    skipCount?: number | null;
-  }): BaseMessageOptions {
+  skipTracks(options: { user: User; textChannel?: TextBasedChannel | null; skipCount?: number }) {
     if (typeof options.skipCount === 'number' && options.skipCount <= 0) {
       return {
         embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_SKIPCOUNT_INVALID }],
@@ -333,7 +346,7 @@ export default class MusicManager extends Manager {
       };
     }
 
-    const skippedTracks = subscription.stop({ skipCount: options.skipCount ?? 1 });
+    const skippedTracks = subscription.skipTrack(options.skipCount);
 
     return {
       embeds: [
@@ -342,6 +355,54 @@ export default class MusicManager extends Manager {
           description: `${member.toString()} skipped ${skippedTracks} track${
             skippedTracks > 1 ? 's' : ''
           } from the queue.`,
+        },
+      ],
+    };
+  }
+
+  skipQueue(options: { user: User; requestId?: string; textChannel?: TextBasedChannel | null }) {
+    const guild =
+      options.textChannel instanceof GuildChannel
+        ? options.textChannel.guild
+        : this.bot.client.guilds.cache.find(
+            g => typeof g.members.resolve(options.user)?.voice.channelId === 'string',
+          );
+    const member = guild?.members.resolve(options.user);
+    const voiceChannel = member?.voice.channel;
+    const checkResult = this.checkChannel(voiceChannel);
+
+    if (!guild || !member || !voiceChannel || checkResult) {
+      return (
+        checkResult ?? {
+          embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_CONTROLS_DENY }],
+        }
+      );
+    }
+
+    const subscription = this.subscriptions.get(guild.id);
+    if (!subscription) {
+      return {
+        embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_NOT_ACTIVE }],
+      };
+    }
+
+    const handler = subscription.skipQueue(options.requestId);
+    if (!handler) {
+      return {
+        embeds: [
+          {
+            color: Colors.Fuchsia,
+            description: 'This queue is no longer active and thus cannot be removed.',
+          },
+        ],
+      };
+    }
+
+    return {
+      embeds: [
+        {
+          color: Colors.Aqua,
+          description: `${member.toString()} removed ${handler.loadedInfo?.toFormattedString()} from the queue.`,
         },
       ],
     };
@@ -547,7 +608,7 @@ export default class MusicManager extends Manager {
 
     let trackCount = 0;
     const onQueue: string[] = [];
-    for (const handler of subscription.handlers) {
+    for (const handler of subscription.handlers.values()) {
       if (handler.totalTracks > 1) {
         if (handler.tracksLoaded) {
           for (const track of handler.tracks) {
