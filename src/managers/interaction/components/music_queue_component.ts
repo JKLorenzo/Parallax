@@ -21,7 +21,7 @@ export default class MusicQueueComponent extends Component {
               label: 'Remove this item from the queue',
               type: ComponentType.Button,
               style: ButtonStyle.Secondary,
-              emoji: bot.guild?.emojis.cache.find(e => e.name === 'queue')?.toString(),
+              emoji: bot.findEmoji('queue')?.identifier,
             },
           ],
         },
