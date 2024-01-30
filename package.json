@@ -41,7 +41,7 @@
     "ffmpeg-static": "^5.2.0",
     "g-i-s": "^2.1.7",
     "humanize-duration": "^3.31.0",
-    "husky": "^8.0.3",
+    "husky": "^9.0.7",
     "is-ci": "^3.0.1",
     "libsodium-wrappers": "^0.7.13",
     "lodash": "^4.17.21",
