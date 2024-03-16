@@ -9,12 +9,6 @@ export default class TelemetryFacade {
   private webhook?: WebhookClient;
   private bot?: Bot;
 
-  private constructor() {
-    process.on('uncaughtException', error => {
-      this.logUnhandledException(error);
-    });
-  }
-
   static instance() {
     if (!this._instance) {
       this._instance = new TelemetryFacade();
@@ -31,6 +25,10 @@ export default class TelemetryFacade {
       this.webhook = new WebhookClient({ url: telemetryUrl });
     }
 
+    process.on('uncaughtException', error => {
+      this.logUnhandledException(error);
+    });
+
     bot.client.on('debug', msg => {
       console.log(`[Client] ${msg}`);
     });
@@ -39,9 +37,7 @@ export default class TelemetryFacade {
       console.error(`[Client] ${msg}`);
     });
 
-    process.on('uncaughtException', error => {
-      this.logUnhandledException(error);
-    });
+    this.bot = bot;
   }
 
   register(origin: string | object, broadcast = true) {
@@ -53,9 +49,9 @@ export default class TelemetryFacade {
   async logMessage(options: TelemetryOptions) {
     console.log(`[${options.origin}] ${options.section}: ${options.value}`);
 
-    if (options.broadcast && this.webhook && this.bot?.client.user) {
+    if (options.broadcast && this.webhook) {
       await this.webhook.send({
-        username: `${this.bot.client.user.username} - ${options.origin}`,
+        username: `${this.bot?.client.user?.username} - ${options.origin}`,
         embeds: [
           new EmbedBuilder()
             .setTitle(options.section)
@@ -73,9 +69,9 @@ export default class TelemetryFacade {
   async logError(options: TelemetryOptions) {
     console.warn(`[${options.origin}] ${options.section}: ${options.value}`);
 
-    if (options.broadcast && this.webhook && this.bot?.client.user) {
+    if (options.broadcast && this.webhook) {
       await this.webhook.send({
-        username: `${this.bot.client.user.username} - ${options.origin}`,
+        username: `${this.bot?.client.user?.username} - ${options.origin}`,
         embeds: [
           new EmbedBuilder()
             .setTitle(options.section)
