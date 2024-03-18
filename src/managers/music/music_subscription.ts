@@ -206,42 +206,42 @@ export default class MusicSubscription extends Telemetry {
   }
 
   async onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+    const logger = this.telemetry.start(this.onVoiceStateUpdate, false);
+
     // Ignore if guild is not for this subscription
     if (this.guild.id !== newState.guild.id) return;
 
     // Ignore when not in guild
-    const me = newState.guild.members.me;
+    const me = newState.guild.members.me ?? oldState.guild.members.me;
     if (!me) return;
 
-    // Ignore when not connected
-    const botVoiceChannel = newState.guild.members.me?.voice.channel;
-    if (!botVoiceChannel) return;
+    if (this.voiceChannel) {
+      if (newState.id === me.id) {
+        // State change of bot
 
-    // Ignore if state change is not a channel change
-    if (newState.channelId === oldState.channelId) return;
+        // Ignore if not channel change
+        if (oldState.channelId === newState.channelId) return;
 
-    if (newState.id === me.id) {
-      // State changes of this bot
+        await Utils.sleep(5000);
+      } else if (this.voiceChannel.id !== oldState.channelId) {
+        // Ignore if user's prev channel is not related to the bot's channel
+        return;
+      }
 
-      // Wait for 5s
-      await Utils.sleep(5000);
-    } else if (botVoiceChannel.id !== oldState.channelId) {
-      // State changes of others
-
-      // Ignore if different channel from the bot
-      return;
+      // Ignore if members is not empty
+      if (this.voiceChannel.members.filter(m => !m.user.bot).size > 0) return;
     }
 
-    // Ignore if members is not empty
-    if (botVoiceChannel.members.filter(m => !m.user.bot).size > 0) return;
-
     await this.terminate();
+    logger.end();
   }
 
   async terminate() {
+    const logger = this.telemetry.start(this.terminate, false);
     this.voiceConnection.destroy();
     this.manager.subscriptions.delete(this.guild.id);
     await this.guild.members.me?.voice.disconnect();
+    logger.end();
   }
 
   queue(handler: MusicHandler) {
