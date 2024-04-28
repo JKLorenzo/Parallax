@@ -306,6 +306,9 @@ export default class MusicManager extends Manager {
 
       if (lookupResult.handler) {
         await subscription.queue(lookupResult.handler);
+
+        // Resume the player if paused
+        subscription.audioPlayer.unpause();
       }
 
       return lookupResult;
