@@ -13,26 +13,42 @@ export default class SearchHandler extends MusicHandler<SearchType> {
     if (this.infoLoaded) return this.trackInfo;
     this.infoLoaded = true;
 
-    // Search using soundcloud
-    const soundcloudTrack = playdl.search(this.query, {
-      source: { soundcloud: 'tracks' },
-      limit: 1,
-    });
+    try {
+      const tracks = await playdl.search(this.query, {
+        source: { spotify: 'track' },
+        limit: 1,
+      });
 
-    // Search using spotify
-    const spotifyTrack = playdl.search(this.query, {
-      source: { spotify: 'track' },
-      limit: 1,
-    });
+      this.track = tracks.at(0);
+    } catch (_) {
+      /* Empty */
+    }
 
-    // Search using youtube
-    const youtubeTrack = playdl.search(this.query, {
-      source: { youtube: 'video' },
-      limit: 1,
-    });
+    if (!this.track) {
+      try {
+        const tracks = await playdl.search(this.query, {
+          source: { soundcloud: 'tracks' },
+          limit: 1,
+        });
 
-    const tracks = await Promise.all([spotifyTrack, soundcloudTrack, youtubeTrack]);
-    this.track = tracks.at(0)?.at(0) ?? tracks.at(1)?.at(0) ?? tracks.at(2)?.at(0);
+        this.track = tracks.at(0);
+      } catch (_) {
+        /* Empty */
+      }
+    }
+
+    if (!this.track) {
+      try {
+        const tracks = await playdl.search(this.query, {
+          source: { youtube: 'video' },
+          limit: 1,
+        });
+
+        this.track = tracks.at(0);
+      } catch (_) {
+        /* Empty */
+      }
+    }
 
     if (this.track instanceof playdl.SoundCloudTrack) {
       this.trackInfo = new TrackInfo({
