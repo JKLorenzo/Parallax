@@ -85,6 +85,7 @@ export default class MusicManager extends Manager {
     const db = DatabaseFacade.instance();
 
     if (message.author.bot) return;
+    if (message.system) return;
 
     const guild = message.guild;
     if (!guild) return;
