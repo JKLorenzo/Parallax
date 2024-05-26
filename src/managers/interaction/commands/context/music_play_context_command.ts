@@ -2,7 +2,7 @@ import {
   ApplicationCommandType,
   type CacheType,
   Colors,
-  ContextMenuCommandInteraction,
+  MessageContextMenuCommandInteraction,
 } from 'discord.js';
 import type Bot from '../../../../modules/bot.js';
 import Constants from '../../../../static/constants.js';
@@ -22,10 +22,10 @@ export default class MusicPlayContextCommand extends ContextCommand {
     );
   }
 
-  async exec(interaction: ContextMenuCommandInteraction<CacheType>) {
+  async exec(interaction: MessageContextMenuCommandInteraction<CacheType>) {
     const { music } = this.bot.managers;
-    const user = interaction.user;
-    const message = interaction.options.getMessage('message', true);
+    const { user, options } = interaction;
+    const message = options.getMessage('message', true);
     let query = message.content;
     let textChannel = interaction.channel;
 

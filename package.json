@@ -32,11 +32,11 @@
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
     "@discordjs/opus": "^0.9.0",
-    "@discordjs/voice": "^0.16.1",
+    "@discordjs/voice": "^0.17.0",
     "color": "^4.2.3",
     "common-tags": "^1.8.2",
     "copyfiles": "^2.4.1",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.15.2",
     "dotenv": "^16.4.5",
     "ffmpeg-static": "^5.2.0",
     "g-i-s": "^2.1.7",
