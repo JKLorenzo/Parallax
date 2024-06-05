@@ -1,6 +1,5 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
 import type { TelemetryOptions } from './telemetry_defs.js';
-import TelemetryNode from './telemetry_node.js';
 import type Bot from '../../modules/bot.js';
 import DatabaseFacade from '../database/database_facade.js';
 
@@ -38,12 +37,6 @@ export default class TelemetryFacade {
     });
 
     this.bot = bot;
-  }
-
-  register(origin: string | object, broadcast = true) {
-    const _origin = typeof origin === 'string' ? origin : origin.constructor.name;
-    console.log(`[${_origin}] Telemetry Registered`);
-    return new TelemetryNode(_origin, broadcast);
   }
 
   async logMessage(options: TelemetryOptions) {

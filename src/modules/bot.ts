@@ -1,22 +1,22 @@
 import { Client, type ClientOptions } from 'discord.js';
 import EnvironmentFacade from '../global/environment/environment_facade.js';
-import TelemetryFacade from '../global/telemetry/telemetry_facade.js';
-import type TelemetryNode from '../global/telemetry/telemetry_node.js';
+import Telemetry from '../global/telemetry/telemetry.js';
 import GatewayManager from '../managers/gateway/gateway_manager.js';
 import InteractionManager from '../managers/interaction/interaction_manager.js';
 import MusicManager from '../managers/music/music_manager.js';
 import Constants from '../static/constants.js';
 
-export default class Bot {
+export default class Bot extends Telemetry {
   client: Client;
   managers: {
     gateway: GatewayManager;
     interaction: InteractionManager;
     music: MusicManager;
   };
-  telemetry: TelemetryNode;
 
   constructor(options: ClientOptions) {
+    super();
+
     this.client = new Client(options);
     this.managers = {
       gateway: new GatewayManager(this),
@@ -24,7 +24,6 @@ export default class Bot {
       music: new MusicManager(this),
     };
     this.client.bot = this;
-    this.telemetry = TelemetryFacade.instance().register(this);
   }
 
   async start() {
