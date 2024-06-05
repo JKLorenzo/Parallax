@@ -3,10 +3,11 @@ import { Colors, EmbedBuilder, Message } from 'discord.js';
 import playdl from 'play-dl';
 import type TrackInfo from './infos/track_info.js';
 import type MusicHandler from './music_handler.js';
+import Telemetry from '../../global/telemetry/telemetry.js';
 import Constants from '../../static/constants.js';
 import Utils from '../../static/utils.js';
 
-export default class MusicTrack {
+export default class MusicTrack extends Telemetry {
   private message?: Message;
   handler: MusicHandler;
   info: TrackInfo;
@@ -19,6 +20,8 @@ export default class MusicTrack {
     audioUrl?: string;
     imageUrl?: string;
   }) {
+    super({ identifier: options.handler.requestId, broadcast: false });
+
     this.handler = options.handler;
     this.info = options.info;
     this.audioUrl = options.audioUrl;
@@ -26,9 +29,14 @@ export default class MusicTrack {
   }
 
   async createAudioResource() {
+    const logger = this.telemetry.start(this.createAudioResource);
+
     if (!this.audioUrl) {
       const trackInfo = this.info;
-      const track = await playdl.search(`${trackInfo.info.name} by ${trackInfo.artistToString}`, {
+      const searchQuery = `${trackInfo.info.name} by ${trackInfo.artistToString}`;
+
+      logger.log(`audioUrl is null. Searching ${searchQuery}`);
+      const track = await playdl.search(searchQuery, {
         limit: 1,
         source: { youtube: 'video' },
       });
@@ -37,19 +45,27 @@ export default class MusicTrack {
     }
 
     if (!this.audioUrl) {
+      logger.log(`audioUrl is still null. Skipping...`);
       throw new Error(`Skipping ${this.info.toFormattedString()}. No match found for this query.`);
     }
 
+    logger.log(`Creating stream for ${this.audioUrl}`);
     const stream = await playdl.stream(this.audioUrl);
+
+    logger.log(`Creating audio resource for steam type ${stream.type}`);
     const resource = createAudioResource(stream.stream, {
       metadata: this,
       inputType: stream.type,
     });
 
+    logger.end();
+
     return resource;
   }
 
   async onPlay() {
+    const logger = this.telemetry.start(this.onPlay);
+
     const { info, artists } = this.info;
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -83,9 +99,13 @@ export default class MusicTrack {
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed], components: musicComponent })
       : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
+
+    logger.end();
   }
 
   async onPause() {
+    const logger = this.telemetry.start(this.onPause);
+
     const { info, artists } = this.info;
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -119,9 +139,13 @@ export default class MusicTrack {
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed], components: musicComponent })
       : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
+
+    logger.end();
   }
 
   async onFinish() {
+    const logger = this.telemetry.start(this.onFinish);
+
     const { info, artists } = this.info;
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -156,9 +180,13 @@ export default class MusicTrack {
     setTimeout(() => {
       if (this.message && this.message.deletable) this.message.delete().catch(() => null);
     }, 15000);
+
+    logger.end();
   }
 
   async onError(error: unknown) {
+    const logger = this.telemetry.start(this.onFinish);
+
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
     const strError = String(error);
 
@@ -182,5 +210,7 @@ export default class MusicTrack {
     this.message = await (this.message
       ? this.message.edit({ embeds: [embed] })
       : this.handler.channel.send({ embeds: [embed] }));
+
+    logger.end();
   }
 }

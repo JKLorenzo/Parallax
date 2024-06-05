@@ -29,7 +29,7 @@ export default abstract class MusicHandler<
   reply?: Message | CommandInteraction;
 
   constructor(requestId: string, queryOptions: QueryOptions, type: T) {
-    super();
+    super({ identifier: requestId, broadcast: false });
 
     this.requestId = requestId;
     this.subscription = queryOptions.subscription;

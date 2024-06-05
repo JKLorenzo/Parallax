@@ -34,7 +34,7 @@ export default class MusicSubscription extends Telemetry {
   handlers: Collection<string, MusicHandler>;
 
   constructor(options: { bot: Bot; voiceChannel: VoiceBasedChannel; audioPlayer?: AudioPlayer }) {
-    super();
+    super({ identifier: options.voiceChannel.guildId });
 
     this.readyLock = false;
     this.queuer = new Queuer();
