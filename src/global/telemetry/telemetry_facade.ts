@@ -1,6 +1,7 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
 import type { TelemetryOptions } from './telemetry_defs.js';
 import type Bot from '../../modules/bot.js';
+import Utils from '../../static/utils.js';
 import DatabaseFacade from '../database/database_facade.js';
 
 export default class TelemetryFacade {
@@ -40,41 +41,39 @@ export default class TelemetryFacade {
   }
 
   async logMessage(options: TelemetryOptions) {
-    console.log(`[${options.origin}] ${options.section}: ${options.value}`);
+    console.log(`[${options.origin}] ${options.section}:`);
+    console.log(options.value);
 
     if (options.broadcast && this.webhook) {
       await this.webhook.send({
         username: `${this.bot?.client.user?.username} - ${options.origin}`,
-        embeds: [
-          new EmbedBuilder()
-            .setTitle(options.section)
-            .setDescription(
-              typeof options.value === 'string'
-                ? options.value
-                : `\`\`\`js\n${options.value}\n\`\`\``,
-            )
-            .setColor(Colors.Blurple),
-        ],
+        embeds: Utils.formatToJs(options.value).map(
+          e =>
+            new EmbedBuilder({
+              description: e,
+              title: options.section,
+              color: Colors.Blurple,
+            }),
+        ),
       });
     }
   }
 
   async logError(options: TelemetryOptions) {
-    console.warn(`[${options.origin}] ${options.section}: ${options.value}`);
+    console.warn(`[${options.origin}] ${options.section}:`);
+    console.warn(options.value);
 
     if (options.broadcast && this.webhook) {
       await this.webhook.send({
         username: `${this.bot?.client.user?.username} - ${options.origin}`,
-        embeds: [
-          new EmbedBuilder()
-            .setTitle(options.section)
-            .setDescription(
-              typeof options.value === 'string'
-                ? options.value
-                : `\`\`\`js\n${options.value}\n\`\`\``,
-            )
-            .setColor(Colors.Fuchsia),
-        ],
+        embeds: Utils.formatToJs(options.value).map(
+          e =>
+            new EmbedBuilder({
+              description: e,
+              title: options.section,
+              color: Colors.Fuchsia,
+            }),
+        ),
       });
     }
   }
@@ -85,13 +84,14 @@ export default class TelemetryFacade {
 
     this.webhook?.send({
       username: `${this.bot?.client.user?.username ?? ''} - TelemetryManager`,
-      embeds: [
-        new EmbedBuilder({
-          title: 'Unhandled Exception',
-          description: typeof error === 'string' ? error : `\`\`\`js\n${error}\n\`\`\``,
-          color: Colors.Red,
-        }),
-      ],
+      embeds: Utils.formatToJs(error).map(
+        e =>
+          new EmbedBuilder({
+            description: e,
+            title: 'Unhandled Exception',
+            color: Colors.Blurple,
+          }),
+      ),
     });
   }
 }

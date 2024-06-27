@@ -68,6 +68,39 @@ export default abstract class Utils {
     return messages.concat(msg + footer);
   }
 
+  static formatToJs(
+    data: unknown,
+    options = {
+      header: '```js\n',
+      footer: '\n```',
+      maxLength: 4096,
+    },
+  ) {
+    const inspected = Utils.inspect(data);
+    const last = inspected.length - 1;
+    const splitInspected = inspected.split('\n');
+
+    const prependPart =
+      inspected[0] !== '{' && inspected[0] !== '[' && inspected[0] !== "'"
+        ? splitInspected[0]
+        : inspected[0];
+
+    const appendPart =
+      inspected[last] !== '}' && inspected[last] !== ']' && inspected[last] !== "'"
+        ? splitInspected[splitInspected.length - 1]
+        : inspected[last];
+
+    const result = Utils.splitString(inspected, {
+      header: options.header,
+      footer: options.footer,
+      maxLength: options.maxLength,
+      prepend: prependPart,
+      append: appendPart,
+    });
+
+    return result;
+  }
+
   static hasAny(base: string, part: string | string[]): boolean {
     const parts = Array.isArray(part) ? part : [part];
     for (const this_part of parts) {

@@ -42,7 +42,7 @@ export default class SudoSlashCommand extends SlashCommand {
   private _callback(interacton: ChatInputCommandInteraction, value: unknown): void {
     const hrDiff = process.hrtime(this._hrStart);
     const isError = value instanceof Error;
-    const result = this._makeResult(value);
+    const result = Utils.formatToJs(value);
 
     interacton.editReply({
       embeds: result.map(
@@ -63,7 +63,7 @@ export default class SudoSlashCommand extends SlashCommand {
   private _followup(interacton: ChatInputCommandInteraction, value: unknown): void {
     const hrDiff = process.hrtime(this._hrStart);
     const isError = value instanceof Error;
-    const result = this._makeResult(value);
+    const result = Utils.formatToJs(value);
 
     interacton.followUp({
       embeds: result.map(
@@ -79,32 +79,6 @@ export default class SudoSlashCommand extends SlashCommand {
           }),
       ),
     });
-  }
-
-  private _makeResult(data: unknown): string[] {
-    const inspected = Utils.inspect(data);
-    const last = inspected.length - 1;
-    const splitInspected = inspected.split('\n');
-
-    const prependPart =
-      inspected[0] !== '{' && inspected[0] !== '[' && inspected[0] !== "'"
-        ? splitInspected[0]
-        : inspected[0];
-
-    const appendPart =
-      inspected[last] !== '}' && inspected[last] !== ']' && inspected[last] !== "'"
-        ? splitInspected[splitInspected.length - 1]
-        : inspected[last];
-
-    const result = Utils.splitString(inspected, {
-      header: '```js\n',
-      footer: '\n```',
-      append: appendPart,
-      prepend: prependPart,
-      maxLength: 4096,
-    });
-
-    return result;
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
@@ -134,7 +108,7 @@ export default class SudoSlashCommand extends SlashCommand {
     // Prepare for callback time and respond
     this._hrStart = process.hrtime();
     const isError = this._lastResult instanceof Error;
-    const result = this._makeResult(this._lastResult);
+    const result = Utils.formatToJs(this._lastResult);
 
     interaction.editReply({
       embeds: result.map(
