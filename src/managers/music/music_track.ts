@@ -67,6 +67,8 @@ export default class MusicTrack extends Telemetry {
     const logger = this.telemetry.start(this.onPlay);
 
     const { info, artists } = this.info;
+    logger.log(`Playing ${info.name}`);
+
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
@@ -107,6 +109,8 @@ export default class MusicTrack extends Telemetry {
     const logger = this.telemetry.start(this.onPause);
 
     const { info, artists } = this.info;
+    logger.log(`Paused ${info.name}`);
+
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
@@ -147,6 +151,8 @@ export default class MusicTrack extends Telemetry {
     const logger = this.telemetry.start(this.onFinish);
 
     const { info, artists } = this.info;
+    logger.log(`Finished ${info.name}`);
+
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
     const embed = new EmbedBuilder()
@@ -185,7 +191,8 @@ export default class MusicTrack extends Telemetry {
   }
 
   async onError(error: unknown) {
-    const logger = this.telemetry.start(this.onFinish);
+    const logger = this.telemetry.start(this.onError);
+    logger.error(error);
 
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
     const strError = String(error);
