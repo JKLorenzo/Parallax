@@ -41,8 +41,7 @@ export default class TelemetryFacade {
   }
 
   async logMessage(options: TelemetryOptions) {
-    console.log(`[${options.origin}] ${options.section}:`);
-    console.log(options.value);
+    console.log(`[${options.origin}]`, options.section, options.value);
 
     if (options.broadcast && this.webhook) {
       await this.webhook.send({
@@ -51,7 +50,7 @@ export default class TelemetryFacade {
           e =>
             new EmbedBuilder({
               description: e,
-              title: options.section,
+              footer: { text: options.section },
               color: Colors.Blurple,
             }),
         ),
@@ -60,8 +59,7 @@ export default class TelemetryFacade {
   }
 
   async logError(options: TelemetryOptions) {
-    console.warn(`[${options.origin}] ${options.section}:`);
-    console.warn(options.value);
+    console.warn(`[${options.origin}]`, options.section, options.value);
 
     if (options.broadcast && this.webhook) {
       await this.webhook.send({
@@ -70,7 +68,7 @@ export default class TelemetryFacade {
           e =>
             new EmbedBuilder({
               description: e,
-              title: options.section,
+              footer: { text: options.section },
               color: Colors.Fuchsia,
             }),
         ),
@@ -79,8 +77,7 @@ export default class TelemetryFacade {
   }
 
   logUnhandledException(error: unknown) {
-    console.error(`[TelemetryManager] Unhandled Exception`);
-    console.error(error);
+    console.error('[TelemetryManager]', 'Unhandled Exception', error);
 
     this.webhook?.send({
       username: `${this.bot?.client.user?.username ?? ''} - TelemetryManager`,
@@ -88,7 +85,7 @@ export default class TelemetryFacade {
         e =>
           new EmbedBuilder({
             description: e,
-            title: 'Unhandled Exception',
+            footer: { text: 'Unhandled Exception' },
             color: Colors.Blurple,
           }),
       ),
