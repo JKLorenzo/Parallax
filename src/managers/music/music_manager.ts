@@ -101,11 +101,9 @@ export default class MusicManager extends Manager {
     telemetry.log(`User: ${user.toString()} Channel: ${textChannel.id} Query: ${query}`);
 
     // Check if this message should be ignored
-    const prefix = query.split(' ').at(0)?.toLowerCase();
-    if (typeof prefix === 'undefined') {
-      telemetry.log(`Ignoring due to message length.`);
-    } else if (config.ignored_prefix?.includes(prefix)) {
-      telemetry.log(`Ignoring due to prefix: ${prefix}`);
+    const ignored_prefix = config.ignored_prefix?.find(e => query.toLowerCase().startsWith(e));
+    if (typeof ignored_prefix !== 'undefined') {
+      telemetry.log(`Ignoring due to prefix: ${ignored_prefix}`);
     } else {
       const result = await this.play({ user, textChannel, query });
       const reply = await message.reply(result.message);
