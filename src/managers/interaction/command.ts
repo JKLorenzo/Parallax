@@ -29,7 +29,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
   }
 
   async init(guild?: Guild) {
-    const telemetry = this.telemetry.start(this.init);
+    const telemetry = this.telemetry.start(this.init, true);
 
     const type = ApplicationCommandType[this.data.type!].toLowerCase();
 
@@ -50,7 +50,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
       }
 
       if (status) {
-        telemetry.log(`global ${type} command ${this.data.name} ${status}`);
+        telemetry.log(`Global ${type} command ${this.data.name} ${status}`);
       }
     } else if (this.options.scope === CommandScope.Guild) {
       const guilds = guild ? [guild] : [...this.bot.client.guilds.cache.values()];
@@ -81,7 +81,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
         }
 
         if (status) {
-          telemetry.log(`guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`);
+          telemetry.log(`Guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`);
         }
       }
     }
