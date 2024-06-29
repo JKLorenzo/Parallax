@@ -192,7 +192,7 @@ export default class MusicTrack {
   }
 
   async onError(error: unknown) {
-    const telemetry = this.telemetry.start(this.onError);
+    const telemetry = this.telemetry.start(this.onError, true);
     telemetry.error(error);
 
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
