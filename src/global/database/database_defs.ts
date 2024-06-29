@@ -12,6 +12,7 @@ export type BotConfigKeys =
 export type MusicConfig = {
   enabled?: boolean;
   channel?: Snowflake;
+  ignored_prefix?: string[];
 };
 
 export type GatewayConfig = {

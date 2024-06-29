@@ -62,6 +62,7 @@ export default class DatabaseFacade {
       if (!config.music) config.music = {};
       if ('enabled' in data) config.music.enabled = data.enabled;
       if ('channel' in data) config.music.channel = data.channel;
+      if ('ignored_prefix' in data) config.music.ignored_prefix = data.ignored_prefix;
       this.guildConfigCache.set(guildId, config);
 
       await this.mongoClient
@@ -79,6 +80,7 @@ export default class DatabaseFacade {
         music: {
           enabled: result?.enabled,
           channel: result?.channel,
+          ignored_prefix: result?.ignored_prefix,
         },
       });
     }

@@ -42,6 +42,12 @@ export default class ConfigSlashCommand extends SlashCommand {
                 type: ApplicationCommandOptionType.Channel,
                 channelTypes: [ChannelType.GuildText],
               },
+              {
+                name: 'ignore_prefix',
+                description: 'Messages sent in the music channel with this prefix are ignored.',
+                type: ApplicationCommandOptionType.String,
+                minLength: 1,
+              },
             ],
           },
           {
@@ -104,9 +110,21 @@ export default class ConfigSlashCommand extends SlashCommand {
 
       const enabled = interaction.options.getBoolean('enabled');
       const channel = interaction.options.getChannel('channel');
+      const ignore_prefix = interaction.options.getString('ignore_prefix')?.toLowerCase();
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (channel) config.channel = data.channel = channel.id;
+      if (ignore_prefix) {
+        let ignored_prefix = config.ignored_prefix ?? [];
+        if (ignored_prefix.includes(ignore_prefix)) {
+          // Remove prefix
+          ignored_prefix = ignored_prefix.filter(prefix => prefix !== ignore_prefix);
+        } else {
+          // Add prefix
+          ignored_prefix.push(ignore_prefix);
+        }
+        config.ignored_prefix = data.ignored_prefix = ignored_prefix;
+      }
 
       if (typeof enabled === 'boolean') {
         if (enabled) {
@@ -114,6 +132,7 @@ export default class ConfigSlashCommand extends SlashCommand {
         } else {
           config.enabled = data.enabled = false;
           config.channel = data.channel = undefined;
+          config.ignored_prefix = data.ignored_prefix = [];
         }
       }
 
@@ -125,6 +144,7 @@ export default class ConfigSlashCommand extends SlashCommand {
           `**Music Channel**: ${
             config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
           }`,
+          `**Ignored Prefix**: ${config.ignored_prefix?.length ? config.ignored_prefix.join(', ') : 'None'}`,
         ].join('\n'),
       );
     } else if (command === 'gateway') {

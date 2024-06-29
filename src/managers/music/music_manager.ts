@@ -100,21 +100,13 @@ export default class MusicManager extends Manager {
 
     telemetry.log(`User: ${user.toString()} Channel: ${textChannel.id} Query: ${query}`);
 
-    // Check if message is a command for other bots
-    const response = await Promise.race([
-      textChannel.awaitMessages({
-        filter: msg => msg.author.id !== this.bot.client.user?.id && msg.author.bot,
-        max: 1,
-        time: 2000,
-      }),
-      message.awaitReactions({
-        filter: reac => reac.users.cache.some(u => u.bot),
-        max: 1,
-        time: 2000,
-      }),
-    ]);
-
-    if (!response.first()) {
+    // Check if this message should be ignored
+    const prefix = query.split(' ').at(0)?.toLowerCase();
+    if (typeof prefix === 'undefined') {
+      telemetry.log(`Ignoring due to message length.`);
+    } else if (config.ignored_prefix?.includes(prefix)) {
+      telemetry.log(`Ignoring due to prefix: ${prefix}`);
+    } else {
       const result = await this.play({ user, textChannel, query });
       const reply = await message.reply(result.message);
       result.handler?.replyTo(reply);
