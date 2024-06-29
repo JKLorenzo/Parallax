@@ -12,17 +12,17 @@ type ComponentOptions = {
   data: ActionRowData<MessageActionRowComponentData>[];
 };
 
-export default abstract class Component extends Telemetry {
+export default abstract class Component {
   bot: Bot;
   name: string;
   data: ActionRowData<MessageActionRowComponentData>[];
+  telemetry: Telemetry;
 
   constructor(bot: Bot, options: ComponentOptions) {
-    super();
-
     this.bot = bot;
     this.name = options.name;
     this.data = options.data;
+    this.telemetry = new Telemetry(this, { parent: bot.telemetry });
   }
 
   // eslint-disable-next-line no-unused-vars

@@ -6,7 +6,8 @@ import InteractionManager from '../managers/interaction/interaction_manager.js';
 import MusicManager from '../managers/music/music_manager.js';
 import Constants from '../static/constants.js';
 
-export default class Bot extends Telemetry {
+export default class Bot {
+  telemetry: Telemetry;
   client: Client;
   managers: {
     gateway: GatewayManager;
@@ -15,8 +16,7 @@ export default class Bot extends Telemetry {
   };
 
   constructor(options: ClientOptions) {
-    super();
-
+    this.telemetry = new Telemetry(this);
     this.client = new Client(options);
     this.managers = {
       gateway: new GatewayManager(this),
@@ -28,10 +28,10 @@ export default class Bot extends Telemetry {
 
   async start() {
     const env = EnvironmentFacade.instance();
-    const logger = this.telemetry.start(this.start, env.isProduction());
+    const telemetry = this.telemetry.start(this.start, env.isProduction());
 
     this.client.once('ready', () => {
-      logger.log('Connected to Discord. Initializing...');
+      telemetry.log('Connected to Discord. Initializing...');
 
       // Delay manager initializiation for 5 seconds
       setTimeout(async () => {
@@ -42,16 +42,16 @@ export default class Bot extends Telemetry {
           // Initialize interaction manager last to accept user commands
           await this.managers.interaction.init();
 
-          logger.log(`Online on ${this.client.guilds.cache.size} servers.`);
+          telemetry.log(`Online on ${this.client.guilds.cache.size} servers.`);
         } catch (error) {
-          logger.error(error);
+          telemetry.error(error);
         }
       }, 5000);
     });
 
     await this.client.login(env.get('botToken'));
 
-    logger.end();
+    telemetry.end();
   }
 
   get guild() {

@@ -7,12 +7,13 @@ import Telemetry from '../../global/telemetry/telemetry.js';
 import Constants from '../../static/constants.js';
 import Utils from '../../static/utils.js';
 
-export default class MusicTrack extends Telemetry {
+export default class MusicTrack {
   private message?: Message;
   handler: MusicHandler;
   info: TrackInfo;
   audioUrl?: string;
   imageUrl?: string;
+  telemetry: Telemetry;
 
   constructor(options: {
     handler: MusicHandler;
@@ -20,22 +21,22 @@ export default class MusicTrack extends Telemetry {
     audioUrl?: string;
     imageUrl?: string;
   }) {
-    super({ identifier: options.handler.requestId, broadcast: false });
-
     this.handler = options.handler;
     this.info = options.info;
     this.audioUrl = options.audioUrl;
     this.imageUrl = options.imageUrl;
+
+    this.telemetry = new Telemetry(this, { parent: this.handler.telemetry });
   }
 
   async createAudioResource() {
-    const logger = this.telemetry.start(this.createAudioResource);
+    const telemetry = this.telemetry.start(this.createAudioResource);
 
     if (!this.audioUrl) {
       const trackInfo = this.info;
       const searchQuery = `${trackInfo.info.name} by ${trackInfo.artistToString}`;
 
-      logger.log(`audioUrl is null. Searching ${searchQuery}`);
+      telemetry.log(`audioUrl is null. Searching ${searchQuery}`);
       const track = await playdl.search(searchQuery, {
         limit: 1,
         source: { youtube: 'video' },
@@ -45,29 +46,29 @@ export default class MusicTrack extends Telemetry {
     }
 
     if (!this.audioUrl) {
-      logger.log(`audioUrl is still null. Skipping...`);
+      telemetry.log(`audioUrl is still null. Skipping...`);
       throw new Error(`Skipping ${this.info.toFormattedString()}. No match found for this query.`);
     }
 
-    logger.log(`Creating stream for ${this.audioUrl}`);
+    telemetry.log(`Creating stream for ${this.audioUrl}`);
     const stream = await playdl.stream(this.audioUrl);
 
-    logger.log(`Creating audio resource for steam type ${stream.type}`);
+    telemetry.log(`Creating audio resource for steam type ${stream.type}`);
     const resource = createAudioResource(stream.stream, {
       metadata: this,
       inputType: stream.type,
     });
 
-    logger.end();
+    telemetry.end();
 
     return resource;
   }
 
   async onPlay() {
-    const logger = this.telemetry.start(this.onPlay);
+    const telemetry = this.telemetry.start(this.onPlay);
 
     const { info, artists } = this.info;
-    logger.log(`Playing ${info.name}`);
+    telemetry.log(`Playing ${info.name}`);
 
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -102,14 +103,14 @@ export default class MusicTrack extends Telemetry {
       ? this.message.edit({ embeds: [embed], components: musicComponent })
       : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
 
-    logger.end();
+    telemetry.end();
   }
 
   async onPause() {
-    const logger = this.telemetry.start(this.onPause);
+    const telemetry = this.telemetry.start(this.onPause);
 
     const { info, artists } = this.info;
-    logger.log(`Paused ${info.name}`);
+    telemetry.log(`Paused ${info.name}`);
 
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -144,14 +145,14 @@ export default class MusicTrack extends Telemetry {
       ? this.message.edit({ embeds: [embed], components: musicComponent })
       : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
 
-    logger.end();
+    telemetry.end();
   }
 
   async onFinish() {
-    const logger = this.telemetry.start(this.onFinish);
+    const telemetry = this.telemetry.start(this.onFinish);
 
     const { info, artists } = this.info;
-    logger.log(`Finished ${info.name}`);
+    telemetry.log(`Finished ${info.name}`);
 
     const nextTrack = await this.handler.subscription.checkNextTrack();
 
@@ -187,12 +188,12 @@ export default class MusicTrack extends Telemetry {
       if (this.message && this.message.deletable) this.message.delete().catch(() => null);
     }, 15000);
 
-    logger.end();
+    telemetry.end();
   }
 
   async onError(error: unknown) {
-    const logger = this.telemetry.start(this.onError);
-    logger.error(error);
+    const telemetry = this.telemetry.start(this.onError);
+    telemetry.error(error);
 
     const embed = new EmbedBuilder({ color: Colors.Fuchsia });
     const strError = String(error);
@@ -218,6 +219,6 @@ export default class MusicTrack extends Telemetry {
       ? this.message.edit({ embeds: [embed] })
       : this.handler.channel.send({ embeds: [embed] }));
 
-    logger.end();
+    telemetry.end();
   }
 }

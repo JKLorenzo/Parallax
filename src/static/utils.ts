@@ -146,19 +146,23 @@ export default abstract class Utils {
   }
 
   static getObjName(obj: unknown) {
-    let name;
+    let value;
 
-    if (typeof obj === 'object') {
-      name = obj?.constructor.name;
-      if (name) return name;
+    if (typeof obj === 'string') {
+      value = obj;
     } else if (typeof obj === 'function') {
-      const strObj = String(obj);
-      name = strObj.substring(0, strObj.indexOf('(')).split(' ');
-      name = name.at(name.length - 1);
-      if (name) return name;
+      value = String(obj);
+      value = value.substring(0, value.indexOf('(')).split(' ');
+      value = value.at(value.length - 1);
+    } else if (typeof obj === 'object') {
+      value = obj?.constructor.name;
     }
 
-    return `TypeOf ${typeof obj}`;
+    if (typeof value !== 'string') {
+      value = `${obj}_${typeof obj}`;
+    }
+
+    return value;
   }
 
   static makeId(

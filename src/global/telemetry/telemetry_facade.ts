@@ -1,5 +1,5 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
-import type { TelemetryOptions } from './telemetry_defs.js';
+import type { TelemetryData } from './telemetry_defs.js';
 import type Bot from '../../modules/bot.js';
 import Utils from '../../static/utils.js';
 import DatabaseFacade from '../database/database_facade.js';
@@ -40,55 +40,71 @@ export default class TelemetryFacade {
     this.bot = bot;
   }
 
-  async logMessage(options: TelemetryOptions) {
-    console.log(`[${options.origin}]`, options.section, options.value);
+  async logMessage(data: TelemetryData) {
+    const { origin, identifier, value, broadcast } = data;
+    console.log(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (options.broadcast && this.webhook) {
+    if (broadcast && this.webhook) {
+      const embed = new EmbedBuilder({
+        author: {
+          name: this.bot?.client.user?.username ?? '',
+          icon_url: this.bot?.client.user?.displayAvatarURL(),
+        },
+        title: identifier,
+        color: Colors.Blurple,
+        footer: { text: origin ?? this.bot?.telemetry.identifier ?? '' },
+      });
+
       await this.webhook.send({
-        username: `${this.bot?.client.user?.username} - ${options.origin}`,
-        embeds: Utils.formatToJs(options.value).map(
-          e =>
-            new EmbedBuilder({
-              description: e,
-              footer: { text: options.section },
-              color: Colors.Blurple,
-            }),
+        embeds: Utils.formatToJs(value).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
         ),
       });
     }
   }
 
-  async logError(options: TelemetryOptions) {
-    console.warn(`[${options.origin}]`, options.section, options.value);
+  async logError(data: TelemetryData) {
+    const { origin, identifier, value, broadcast } = data;
+    console.warn(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (options.broadcast && this.webhook) {
+    if (broadcast && this.webhook) {
+      const embed = new EmbedBuilder({
+        author: {
+          name: this.bot?.client.user?.username ?? '',
+          icon_url: this.bot?.client.user?.displayAvatarURL(),
+        },
+        title: identifier,
+        color: Colors.Fuchsia,
+        footer: { text: origin ?? this.bot?.telemetry.identifier ?? '' },
+      });
+
       await this.webhook.send({
-        username: `${this.bot?.client.user?.username} - ${options.origin}`,
-        embeds: Utils.formatToJs(options.value).map(
-          e =>
-            new EmbedBuilder({
-              description: e,
-              footer: { text: options.section },
-              color: Colors.Fuchsia,
-            }),
+        embeds: Utils.formatToJs(value).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
         ),
       });
     }
   }
 
   logUnhandledException(error: unknown) {
-    console.error('[TelemetryManager]', 'Unhandled Exception', error);
+    console.error('[B]', 'TelemetryManager', 'UnhandledException', error);
 
-    this.webhook?.send({
-      username: `${this.bot?.client.user?.username ?? ''} - TelemetryManager`,
-      embeds: Utils.formatToJs(error).map(
-        e =>
-          new EmbedBuilder({
-            description: e,
-            footer: { text: 'Unhandled Exception' },
-            color: Colors.Blurple,
-          }),
-      ),
-    });
+    if (this.webhook) {
+      const embed = new EmbedBuilder({
+        author: {
+          name: this.bot?.client.user?.username ?? '',
+          icon_url: this.bot?.client.user?.displayAvatarURL(),
+        },
+        title: 'Unhandled Exception',
+        color: Colors.Blurple,
+        footer: { text: this.bot?.telemetry.identifier ?? '' },
+      });
+
+      this.webhook.send({
+        embeds: Utils.formatToJs(error).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
+        ),
+      });
+    }
   }
 }

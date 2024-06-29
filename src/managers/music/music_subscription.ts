@@ -13,6 +13,7 @@ import {
 } from '@discordjs/voice';
 import { Collection, type Guild, type VoiceBasedChannel, type VoiceState } from 'discord.js';
 import type MusicHandler from './music_handler.js';
+import MusicHandlerFactory from './music_handler_factory.js';
 import type MusicManager from './music_manager.js';
 import type MusicTrack from './music_track.js';
 import Telemetry from '../../global/telemetry/telemetry.js';
@@ -20,7 +21,7 @@ import type Bot from '../../modules/bot.js';
 import Queuer from '../../modules/queuer.js';
 import Utils from '../../static/utils.js';
 
-export default class MusicSubscription extends Telemetry {
+export default class MusicSubscription {
   private readyLock: boolean;
   private queuer: Queuer;
   private processQueuer: Queuer;
@@ -32,10 +33,10 @@ export default class MusicSubscription extends Telemetry {
   readonly voiceConnection: VoiceConnection;
 
   handlers: Collection<string, MusicHandler>;
+  handlerFactory: MusicHandlerFactory;
+  telemetry: Telemetry;
 
   constructor(options: { bot: Bot; voiceChannel: VoiceBasedChannel; audioPlayer?: AudioPlayer }) {
-    super({ identifier: options.voiceChannel.guildId });
-
     this.readyLock = false;
     this.queuer = new Queuer();
     this.processQueuer = new Queuer();
@@ -46,6 +47,8 @@ export default class MusicSubscription extends Telemetry {
     this.audioPlayer = options.audioPlayer ?? createAudioPlayer();
 
     this.handlers = new Collection();
+    this.handlerFactory = new MusicHandlerFactory(this);
+    this.telemetry = new Telemetry(this, { id: this.guild.id, parent: this.manager.telemetry });
 
     this.audioPlayer.on('stateChange', (oldState, newState) => {
       this.onAudioPlayerStateChange(oldState, newState);
@@ -133,7 +136,7 @@ export default class MusicSubscription extends Telemetry {
   }
 
   async checkNextTrack() {
-    const logger = this.telemetry.start(this.checkNextTrack, false);
+    const telemetry = this.telemetry.start(this.checkNextTrack, false);
 
     let track = this.handlers.at(0)?.tracks.at(0);
     if (!track) {
@@ -141,35 +144,35 @@ export default class MusicSubscription extends Telemetry {
       track = this.handlers.at(1)?.tracks.at(0);
     }
 
-    logger.log(`Handler: ${track?.handler?.type} Track: ${track?.info.toString()}`);
+    telemetry.log(`Handler: ${track?.handler?.type} Track: ${track?.info.toString()}`);
 
-    logger.end();
+    telemetry.end();
     return track;
   }
 
   private async processQueue(highPriority?: boolean) {
-    const logger = this.telemetry.start(this.processQueue, false);
+    const telemetry = this.telemetry.start(this.processQueue, false);
 
-    logger.log(`Priority ${highPriority ? 'High' : 'Low'}`);
+    telemetry.log(`Priority ${highPriority ? 'High' : 'Low'}`);
 
     const process = async () => {
       const isPlayerNotIdle = this.audioPlayer.state.status !== AudioPlayerStatus.Idle;
       const isHandlerEmpty = this.handlers.size === 0;
 
-      logger.log(`isPlayerNotIdle: ${isPlayerNotIdle} isHandlerEmpty: ${isHandlerEmpty}`);
+      telemetry.log(`isPlayerNotIdle: ${isPlayerNotIdle} isHandlerEmpty: ${isHandlerEmpty}`);
 
       if (isPlayerNotIdle || isHandlerEmpty) return;
 
       // Get current handler
       const handler = this.handlers.first()!;
-      logger.log(`Current handler: ${handler.requestId}`);
+      telemetry.log(`Current handler: ${handler.requestId}`);
 
       // Load tracks if not laoded
       await handler.loadTracks();
 
       // Get first track
       const track = handler.tracks.shift();
-      logger.log(`Next track: ${track?.info.toString()}`);
+      telemetry.log(`Next track: ${track?.info.toString()}`);
 
       if (!track) {
         // Proceed to next handler
@@ -183,9 +186,9 @@ export default class MusicSubscription extends Telemetry {
       try {
         const resource = await track.createAudioResource();
         this.audioPlayer.play(resource);
-        logger.log('AudioPlayer play resource');
+        telemetry.log('AudioPlayer play resource');
       } catch (error) {
-        logger.log('AudioPlayer error - Next Track');
+        telemetry.log('AudioPlayer error - Next Track');
         // Show error and proceed to next track
         track.onError(error);
         await this.processQueue(true);
@@ -198,7 +201,7 @@ export default class MusicSubscription extends Telemetry {
       await this.processQueuer.queue(() => process());
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   get voiceChannel() {
@@ -206,7 +209,7 @@ export default class MusicSubscription extends Telemetry {
   }
 
   async onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
-    const logger = this.telemetry.start(this.onVoiceStateUpdate, false);
+    const telemetry = this.telemetry.start(this.onVoiceStateUpdate, false);
 
     // Ignore if guild is not for this subscription
     if (this.guild.id !== newState.guild.id) return;
@@ -233,15 +236,15 @@ export default class MusicSubscription extends Telemetry {
     }
 
     await this.terminate();
-    logger.end();
+    telemetry.end();
   }
 
   async terminate() {
-    const logger = this.telemetry.start(this.terminate, false);
+    const telemetry = this.telemetry.start(this.terminate, false);
     this.voiceConnection.destroy();
     this.manager.subscriptions.delete(this.guild.id);
     await this.guild.members.me?.voice.disconnect();
-    logger.end();
+    telemetry.end();
   }
 
   queue(handler: MusicHandler) {

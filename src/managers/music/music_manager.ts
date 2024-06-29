@@ -19,7 +19,6 @@ import {
 } from 'discord.js';
 import playdl from 'play-dl';
 import type { QueryLookupResult, QueryOptions } from './music_defs.js';
-import MusicHandlerFactory from './music_handler_factory.js';
 import MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
 import DatabaseFacade from '../../global/database/database_facade.js';
@@ -93,13 +92,13 @@ export default class MusicManager extends Manager {
     const config = await db.musicConfig(guild.id);
     if (!config?.enabled || message.channelId !== config.channel) return;
 
-    const logger = this.telemetry.start(this.onMessageCreate, false);
+    const telemetry = this.telemetry.start(this.onMessageCreate, false);
 
     const user = message.author;
     const query = message.content;
     const textChannel = message.channel;
 
-    logger.log(`User: ${user.toString()} Channel: ${textChannel.id} Query: ${query}`);
+    telemetry.log(`User: ${user.toString()} Channel: ${textChannel.id} Query: ${query}`);
 
     // Check if message is a command for other bots
     const response = await Promise.race([
@@ -121,26 +120,29 @@ export default class MusicManager extends Manager {
       result.handler?.replyTo(reply);
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   private async tokenRefresh() {
-    const logger = this.telemetry.start(this.tokenRefresh);
+    const telemetry = this.telemetry.start(this.tokenRefresh);
 
     if (playdl.is_expired()) {
       try {
         await playdl.refreshToken();
-        logger.log('Token refreshed successfully.');
+        telemetry.log('Token refreshed successfully.');
       } catch (e) {
-        logger.error(e);
+        telemetry.error(e);
       }
     }
 
-    logger.end();
+    telemetry.end();
   }
 
-  private async queryLookup(queryOptions: QueryOptions): Promise<QueryLookupResult> {
-    const logger = this.telemetry.start(this.queryLookup, false);
+  private async queryLookup(
+    subscription: MusicSubscription,
+    options: QueryOptions,
+  ): Promise<QueryLookupResult> {
+    const telemetry = this.telemetry.start(this.queryLookup, false);
 
     await this.tokenRefresh();
 
@@ -151,7 +153,7 @@ export default class MusicManager extends Manager {
       footer: { text: Utils.formatReqId(requestId) },
     });
 
-    const handler = await MusicHandlerFactory.createHandler(requestId, queryOptions);
+    const handler = await subscription.handlerFactory.createHandler(requestId, options);
     try {
       const info = await handler?.fetchInfo();
       const tracks = handler?.totalTracks;
@@ -163,12 +165,12 @@ export default class MusicManager extends Manager {
           );
       }
     } catch (e) {
-      logger.error(e);
+      telemetry.error(e);
     }
 
     const musicQueueComponent = this.bot.managers.interaction.componentData('musicQueue');
 
-    logger.end();
+    telemetry.end();
     return {
       message: { embeds: [embed], components: handler ? musicQueueComponent : undefined },
       handler: handler,
@@ -224,24 +226,24 @@ export default class MusicManager extends Manager {
     textChannel: TextBasedChannel;
     query?: string;
   }): Promise<QueryLookupResult> {
-    const logger = this.telemetry.start(this.play, false);
+    const telemetry = this.telemetry.start(this.play, false);
 
     const result = await this.commandQueuer.queue(async () => {
-      logger.log(
+      telemetry.log(
         `User: ${options.user} Channel: ${options.textChannel.id} Query: ${options.query}`,
       );
 
       if (this.disabled) {
-        logger.log('Music Disabled');
-        logger.end();
+        telemetry.log('Music Disabled');
+        telemetry.end();
         return {
           message: { embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_DISABLED }] },
         };
       }
 
       if (!options.query?.length) {
-        logger.log('Query Length Invalid');
-        logger.end();
+        telemetry.log('Query Length Invalid');
+        telemetry.end();
         return {
           message: {
             embeds: [{ color: Colors.Fuchsia, description: Constants.MUSIC_QUERY_EMPTY }],
@@ -260,10 +262,10 @@ export default class MusicManager extends Manager {
       const checkResult = this.checkChannel(voiceChannel);
 
       if (!guild || !member || !voiceChannel || checkResult) {
-        logger.log(
+        telemetry.log(
           `Guild: ${guild} Member: ${member} VoiceChannel: ${voiceChannel} CheckResult: ${checkResult}`,
         );
-        logger.end();
+        telemetry.end();
 
         return {
           message: checkResult ?? {
@@ -275,16 +277,16 @@ export default class MusicManager extends Manager {
       let subscription = this.subscriptions.get(guild.id);
 
       if (!subscription) {
-        logger.log('Create MusicSubscription');
+        telemetry.log('Create MusicSubscription');
         subscription = new MusicSubscription({ bot: this.bot, voiceChannel });
 
         // Join voice channel
         try {
-          logger.log('Joining Voice Channel');
+          telemetry.log('Joining Voice Channel');
           await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20000);
         } catch (error) {
-          logger.error(error);
-          logger.end();
+          telemetry.error(error);
+          telemetry.end();
 
           return {
             message: {
@@ -297,8 +299,7 @@ export default class MusicManager extends Manager {
         this.subscriptions.set(guild.id, subscription);
       }
 
-      const lookupResult = await this.queryLookup({
-        subscription,
+      const lookupResult = await this.queryLookup(subscription, {
         channel: options.textChannel,
         requestedBy: options.user,
         query: options.query,
@@ -314,7 +315,7 @@ export default class MusicManager extends Manager {
       return lookupResult;
     });
 
-    logger.end();
+    telemetry.end();
     return result;
   }
 

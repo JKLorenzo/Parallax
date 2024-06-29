@@ -15,23 +15,21 @@ import { CommandScope, type CommandOptions } from './interaction_defs.js';
 import Telemetry from '../../global/telemetry/telemetry.js';
 import type Bot from '../../modules/bot.js';
 
-export abstract class Command<
-  T extends ApplicationCommandData = ApplicationCommandData,
-> extends Telemetry {
+export abstract class Command<T extends ApplicationCommandData = ApplicationCommandData> {
   bot: Bot;
   data: T;
   options: CommandOptions;
+  telemetry: Telemetry;
 
   constructor(bot: Bot, data: T, options: CommandOptions) {
-    super();
-
     this.bot = bot;
     this.data = data;
     this.options = options;
+    this.telemetry = new Telemetry(this, { parent: bot.telemetry });
   }
 
   async init(guild?: Guild) {
-    const logger = this.telemetry.start(this.init);
+    const telemetry = this.telemetry.start(this.init);
 
     const type = ApplicationCommandType[this.data.type!].toLowerCase();
 
@@ -52,7 +50,7 @@ export abstract class Command<
       }
 
       if (status) {
-        logger.log(`global ${type} command ${this.data.name} ${status}`);
+        telemetry.log(`global ${type} command ${this.data.name} ${status}`);
       }
     } else if (this.options.scope === CommandScope.Guild) {
       const guilds = guild ? [guild] : [...this.bot.client.guilds.cache.values()];
@@ -83,12 +81,12 @@ export abstract class Command<
         }
 
         if (status) {
-          logger.log(`guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`);
+          telemetry.log(`guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`);
         }
       }
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   abstract exec(interaction: CommandInteraction): Awaitable<unknown>;

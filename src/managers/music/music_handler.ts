@@ -8,9 +8,7 @@ import type MusicSubscription from './music_subscription.js';
 import type MusicTrack from './music_track.js';
 import Telemetry from '../../global/telemetry/telemetry.js';
 
-export default abstract class MusicHandler<
-  T extends MusicHandlerTypes = MusicHandlerTypes,
-> extends Telemetry {
+export default abstract class MusicHandler<T extends MusicHandlerTypes = MusicHandlerTypes> {
   requestId: string;
   subscription: MusicSubscription;
   channel: TextBasedChannel;
@@ -22,17 +20,22 @@ export default abstract class MusicHandler<
   playlistInfo: PlaylistInfo | undefined;
   trackInfo: TrackInfo | undefined;
 
+  telemetry: Telemetry;
+
   infoLoaded: boolean;
   tracksLoaded: boolean;
   totalTracks: number;
 
   reply?: Message | CommandInteraction;
 
-  constructor(requestId: string, queryOptions: QueryOptions, type: T) {
-    super({ identifier: requestId, broadcast: false });
-
+  constructor(
+    subscription: MusicSubscription,
+    requestId: string,
+    queryOptions: QueryOptions,
+    type: T,
+  ) {
+    this.subscription = subscription;
     this.requestId = requestId;
-    this.subscription = queryOptions.subscription;
     this.channel = queryOptions.channel;
     this.requestedBy = queryOptions.requestedBy;
     this.query = queryOptions.query;
@@ -42,6 +45,8 @@ export default abstract class MusicHandler<
     this.infoLoaded = false;
     this.tracksLoaded = false;
     this.totalTracks = 0;
+
+    this.telemetry = new Telemetry(this, { id: requestId, parent: this.subscription.telemetry });
   }
 
   get loadedInfo(): MusicInfo | undefined {
@@ -59,7 +64,7 @@ export default abstract class MusicHandler<
   }
 
   destroy() {
-    const logger = this.telemetry.start(this.destroy, false);
+    const telemetry = this.telemetry.start(this.destroy, false);
 
     try {
       const message = this.reply;
@@ -69,10 +74,10 @@ export default abstract class MusicHandler<
         message.editReply({ components: [] });
       }
     } catch (e) {
-      logger.error(e);
+      telemetry.error(e);
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   abstract fetchInfo(): Promise<TrackInfo | undefined>;

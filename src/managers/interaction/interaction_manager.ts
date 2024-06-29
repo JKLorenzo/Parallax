@@ -35,7 +35,7 @@ export default class InteractionManager extends Manager {
 
   async init() {
     const env = EnvironmentFacade.instance();
-    const logger = this.telemetry.start(this.init, false);
+    const telemetry = this.telemetry.start(this.init, false);
 
     try {
       const interactionsPath = env.interactionsPath();
@@ -51,7 +51,7 @@ export default class InteractionManager extends Manager {
           this.modals.set(modal.data.customId, modal);
         });
       await Promise.all(loadModals);
-      logger.log(`A total of ${loadModals.length} modals were loaded`);
+      telemetry.log(`A total of ${loadModals.length} modals were loaded`);
 
       // Load components
       const componentsPath = join(interactionsPath, 'components');
@@ -64,7 +64,7 @@ export default class InteractionManager extends Manager {
           this.components.set(component.name, component);
         });
       await Promise.all(loadComponents);
-      logger.log(`A total of ${loadComponents.length} components were loaded`);
+      telemetry.log(`A total of ${loadComponents.length} components were loaded`);
 
       // Load commands
       const commandsPath = join(interactionsPath, 'commands');
@@ -77,13 +77,13 @@ export default class InteractionManager extends Manager {
           this.commands.set(command.data.name, command);
         });
       await Promise.all(loadCommands);
-      logger.log(`A total of ${loadCommands.length} commands were loaded`);
+      telemetry.log(`A total of ${loadCommands.length} commands were loaded`);
 
       // Initialize commands
       await this.bot.client.application?.commands.fetch();
       const initCommands = this.commands.map(command => command.init());
       await Promise.all(initCommands);
-      logger.log(`A total of ${initCommands.length} commands were initialized`);
+      telemetry.log(`A total of ${initCommands.length} commands were initialized`);
 
       // Delete commands
       const deleteCommands: Promise<unknown>[] = [];
@@ -101,7 +101,7 @@ export default class InteractionManager extends Manager {
           deleteCommands.push(
             command.delete().then(() => {
               const type = ApplicationCommandType[command.type].toLowerCase();
-              logger.log(`global ${type} command ${command.name} deleted`);
+              telemetry.log(`global ${type} command ${command.name} deleted`);
             }),
           ),
         );
@@ -120,16 +120,16 @@ export default class InteractionManager extends Manager {
             deleteCommands.push(
               command.delete().then(() => {
                 const type = ApplicationCommandType[command.type].toLowerCase();
-                logger.log(`guild ${type} command ${command.name} deleted on ${guild.name}`);
+                telemetry.log(`guild ${type} command ${command.name} deleted on ${guild.name}`);
               }),
             ),
           ),
       );
 
       await Promise.all(deleteCommands);
-      logger.log(`A total of ${deleteCommands.length} commands were deleted`);
+      telemetry.log(`A total of ${deleteCommands.length} commands were deleted`);
     } catch (error) {
-      logger.error(error, true);
+      telemetry.error(error, true);
     }
 
     this.bot.client.on('interactionCreate', interaction => {
@@ -146,11 +146,11 @@ export default class InteractionManager extends Manager {
       this.commands.forEach(command => command.init(guild));
     });
 
-    logger.end();
+    telemetry.end();
   }
 
   private async processModal(interaction: ModalSubmitInteraction) {
-    const logger = this.telemetry.start(this.processModal);
+    const telemetry = this.telemetry.start(this.processModal);
 
     const thisModal = this.modals.get(interaction.customId);
     if (!thisModal) return;
@@ -158,14 +158,14 @@ export default class InteractionManager extends Manager {
     try {
       await thisModal.exec(interaction);
     } catch (error) {
-      logger.error(error);
+      telemetry.error(error);
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   private async processCommand(interaction: CommandInteraction) {
-    const logger = this.telemetry.start(this.processCommand);
+    const telemetry = this.telemetry.start(this.processCommand);
 
     const thisCommand = this.commands.get(interaction.commandName);
     if (!thisCommand) return;
@@ -173,14 +173,14 @@ export default class InteractionManager extends Manager {
     try {
       await thisCommand.exec(interaction);
     } catch (error) {
-      logger.error(error);
+      telemetry.error(error);
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   private async processComponent(interaction: MessageComponentInteraction) {
-    const logger = this.telemetry.start(this.processComponent);
+    const telemetry = this.telemetry.start(this.processComponent);
 
     const [name, customId] = interaction.customId.split('__');
     if (!name || !customId) return;
@@ -191,10 +191,10 @@ export default class InteractionManager extends Manager {
     try {
       await thisComponent.exec(interaction, customId);
     } catch (error) {
-      logger.error(error);
+      telemetry.error(error);
     }
 
-    logger.end();
+    telemetry.end();
   }
 
   componentData(name: string): ActionRowData<MessageActionRowComponentData>[] | undefined {

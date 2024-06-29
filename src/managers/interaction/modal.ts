@@ -2,15 +2,15 @@ import type { Awaitable, ModalComponentData, ModalSubmitInteraction } from 'disc
 import Telemetry from '../../global/telemetry/telemetry.js';
 import type Bot from '../../modules/bot.js';
 
-export default abstract class Modal extends Telemetry {
+export default abstract class Modal {
   bot: Bot;
   data: ModalComponentData;
+  telemetry: Telemetry;
 
   constructor(bot: Bot, data: ModalComponentData) {
-    super();
-
     this.bot = bot;
     this.data = data;
+    this.telemetry = new Telemetry(this, { parent: bot.telemetry });
   }
 
   // eslint-disable-next-line no-unused-vars

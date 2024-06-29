@@ -1,6 +1,5 @@
 import type { BaseMessageOptions, TextBasedChannel, User } from 'discord.js';
 import type MusicHandler from './music_handler.js';
-import type MusicSubscription from './music_subscription.js';
 
 export type BasicInfo = {
   name: string;
@@ -10,7 +9,6 @@ export type BasicInfo = {
 export type QueryOptions = {
   query: string;
   channel: TextBasedChannel;
-  subscription: MusicSubscription;
   requestedBy: User;
 };
 
