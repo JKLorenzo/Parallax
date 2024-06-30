@@ -209,10 +209,8 @@ export default class MusicTrack {
       );
     } else if (this.handler.subscription.manager.disabled) {
       embed.setDescription(Constants.MUSIC_DISABLED);
-    } else if (error instanceof Error) {
-      embed.setDescription(error.message);
     } else {
-      embed.setDescription(strError);
+      embed.setDescription(`Failed to play ${this.info.toFormattedString()}.`);
     }
 
     this.message = await (this.message
