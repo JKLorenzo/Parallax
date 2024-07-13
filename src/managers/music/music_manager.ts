@@ -72,6 +72,18 @@ export default class MusicManager extends Manager {
     this.bot.client.on('messageCreate', message => {
       this.onMessageCreate(message);
     });
+
+    playdl.on('debug', data => {
+      this.telemetry.start('PlayDL').log(data).end();
+    });
+
+    playdl.on('error', e => {
+      this.telemetry.start('PlayDL').error(e).end();
+    });
+
+    playdl.on('unhandledException', e => {
+      this.telemetry.start('PlayDL Unhandled Exception').error(e).end();
+    });
   }
 
   private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
