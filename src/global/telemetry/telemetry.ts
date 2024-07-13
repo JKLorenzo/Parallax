@@ -48,6 +48,7 @@ export default class Telemetry {
       value,
       broadcast,
     });
+    return this;
   }
 
   error(value: unknown, broadcast = this.broadcast) {
@@ -57,5 +58,6 @@ export default class Telemetry {
       value,
       broadcast,
     });
+    return this;
   }
 }
