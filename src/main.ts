@@ -38,4 +38,14 @@ const bot = new Bot({
 
 await database.init();
 await telemetry.init(bot);
+
+process.on('uncaughtException', error => {
+  telemetry.logUncaughtException({
+    broadcast: true,
+    identifier: 'Process',
+    value: error,
+    origin: 'Main',
+  });
+});
+
 await bot.start();

@@ -81,8 +81,8 @@ export default class MusicManager extends Manager {
       this.telemetry.start('PlayDL').error(e).end();
     });
 
-    playdl.on('unhandledException', e => {
-      this.telemetry.start('PlayDL Unhandled Exception').error(e).end();
+    playdl.on('uncaughtException', e => {
+      this.telemetry.start('PlayDL').uncaughtException(e).end();
     });
   }
 

@@ -51,12 +51,22 @@ export default class Telemetry {
     return this;
   }
 
-  error(value: unknown, broadcast = this.broadcast) {
+  error(value: unknown) {
     TelemetryFacade.instance().logError({
       origin: this.origin,
       identifier: this.identifier,
       value,
-      broadcast,
+      broadcast: true,
+    });
+    return this;
+  }
+
+  uncaughtException(value: unknown) {
+    TelemetryFacade.instance().logUncaughtException({
+      origin: this.origin,
+      identifier: this.identifier,
+      value,
+      broadcast: true,
     });
     return this;
   }

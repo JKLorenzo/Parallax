@@ -25,10 +25,6 @@ export default class TelemetryFacade {
       this.webhook = new WebhookClient({ url: telemetryUrl });
     }
 
-    process.on('uncaughtException', error => {
-      this.logUnhandledException(error);
-    });
-
     bot.client.on('debug', msg => {
       console.log(`[Client] ${msg}`);
     });
@@ -52,7 +48,7 @@ export default class TelemetryFacade {
         },
         title: identifier,
         color: Colors.Blurple,
-        footer: { text: origin ?? this.bot?.telemetry.identifier ?? '' },
+        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
       await this.webhook.send({
@@ -75,7 +71,7 @@ export default class TelemetryFacade {
         },
         title: identifier,
         color: Colors.Fuchsia,
-        footer: { text: origin ?? this.bot?.telemetry.identifier ?? '' },
+        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
       await this.webhook.send({
@@ -86,22 +82,23 @@ export default class TelemetryFacade {
     }
   }
 
-  logUnhandledException(error: unknown) {
-    console.error('[B]', 'TelemetryManager', 'UnhandledException', error);
+  logUncaughtException(data: TelemetryData) {
+    const { origin, identifier, value, broadcast } = data;
+    console.error(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (this.webhook) {
+    if (broadcast && this.webhook) {
       const embed = new EmbedBuilder({
         author: {
           name: this.bot?.client.user?.username ?? '',
           icon_url: this.bot?.client.user?.displayAvatarURL(),
         },
-        title: 'Unhandled Exception',
-        color: Colors.Blurple,
-        footer: { text: this.bot?.telemetry.identifier ?? '' },
+        title: 'Uncaught Exception',
+        color: Colors.Red,
+        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
       this.webhook.send({
-        embeds: Utils.formatToJs(error).map(
+        embeds: Utils.formatToJs(value).map(
           e => new EmbedBuilder({ ...embed.data, description: e }),
         ),
       });
