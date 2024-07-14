@@ -25,7 +25,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
     this.bot = bot;
     this.data = data;
     this.options = options;
-    this.telemetry = new Telemetry(this, { parent: bot.telemetry });
+    this.telemetry = new Telemetry(this, { parent: bot.managers.interaction.telemetry });
   }
 
   async init(guild?: Guild) {
@@ -50,7 +50,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
       }
 
       if (status) {
-        telemetry.log(`Global ${type} command ${this.data.name} ${status}`);
+        telemetry.log(`Global ${type} command ${this.data.name} ${status}.`);
       }
     } else if (this.options.scope === CommandScope.Guild) {
       const guilds = guild ? [guild] : [...this.bot.client.guilds.cache.values()];
@@ -81,7 +81,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
         }
 
         if (status) {
-          telemetry.log(`Guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}`);
+          telemetry.log(`Guild ${type} command ${this.data.name} ${status} on ${thisGuild.name}.`);
         }
       }
     }

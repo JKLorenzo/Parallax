@@ -51,7 +51,7 @@ export default class InteractionManager extends Manager {
           this.modals.set(modal.data.customId, modal);
         });
       await Promise.all(loadModals);
-      telemetry.log(`A total of ${loadModals.length} modals were loaded`);
+      telemetry.log(`A total of ${loadModals.length} modals were loaded.`);
 
       // Load components
       const componentsPath = join(interactionsPath, 'components');
@@ -64,7 +64,7 @@ export default class InteractionManager extends Manager {
           this.components.set(component.name, component);
         });
       await Promise.all(loadComponents);
-      telemetry.log(`A total of ${loadComponents.length} components were loaded`);
+      telemetry.log(`A total of ${loadComponents.length} components were loaded.`);
 
       // Load commands
       const commandsPath = join(interactionsPath, 'commands');
@@ -77,13 +77,13 @@ export default class InteractionManager extends Manager {
           this.commands.set(command.data.name, command);
         });
       await Promise.all(loadCommands);
-      telemetry.log(`A total of ${loadCommands.length} commands were loaded`);
+      telemetry.log(`A total of ${loadCommands.length} commands were loaded.`);
 
       // Initialize commands
       await this.bot.client.application?.commands.fetch();
       const initCommands = this.commands.map(command => command.init());
       await Promise.all(initCommands);
-      telemetry.log(`A total of ${initCommands.length} commands were initialized`);
+      telemetry.log(`A total of ${initCommands.length} commands were initialized.`);
 
       // Delete commands
       const deleteCommands: Promise<unknown>[] = [];
@@ -101,7 +101,7 @@ export default class InteractionManager extends Manager {
           deleteCommands.push(
             command.delete().then(() => {
               const type = ApplicationCommandType[command.type].toLowerCase();
-              telemetry.log(`global ${type} command ${command.name} deleted`);
+              telemetry.log(`Global ${type} command ${command.name} deleted.`, true);
             }),
           ),
         );
@@ -120,16 +120,21 @@ export default class InteractionManager extends Manager {
             deleteCommands.push(
               command.delete().then(() => {
                 const type = ApplicationCommandType[command.type].toLowerCase();
-                telemetry.log(`guild ${type} command ${command.name} deleted on ${guild.name}`);
+                telemetry.log(
+                  `Guild ${type} command ${command.name} deleted on ${guild.name}.`,
+                  true,
+                );
               }),
             ),
           ),
       );
 
-      await Promise.all(deleteCommands);
-      telemetry.log(`A total of ${deleteCommands.length} commands were deleted`);
+      const deletedCommands = await Promise.all(deleteCommands);
+      if (deletedCommands.length > 0) {
+        telemetry.log(`A total of ${deleteCommands.length} commands were deleted.`, true);
+      }
     } catch (error) {
-      telemetry.error(error, true);
+      telemetry.error(error);
     }
 
     this.bot.client.on('interactionCreate', interaction => {

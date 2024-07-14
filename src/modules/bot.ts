@@ -24,6 +24,14 @@ export default class Bot {
       music: new MusicManager(this),
     };
     this.client.bot = this;
+
+    this.client.on('debug', msg => {
+      this.telemetry.start('Client').log(msg).end();
+    });
+
+    this.client.on('error', e => {
+      this.telemetry.start('Client').error(e).end();
+    });
   }
 
   async start() {

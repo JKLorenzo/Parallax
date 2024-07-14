@@ -25,14 +25,6 @@ export default class TelemetryFacade {
       this.webhook = new WebhookClient({ url: telemetryUrl });
     }
 
-    bot.client.on('debug', msg => {
-      console.log(`[Client] ${msg}`);
-    });
-
-    bot.client.on('error', msg => {
-      console.error(`[Client] ${msg}`);
-    });
-
     this.bot = bot;
   }
 
