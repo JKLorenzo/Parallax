@@ -52,12 +52,22 @@ export default abstract class Utils {
 
     if ((header + text + footer).length <= maxLength) return [header + text + footer];
 
-    const splitText = text.split(seperator);
-    if (splitText.some(elem => elem.length > maxLength)) throw new RangeError('SPLIT_MAX_LEN');
+    const chunks = [];
+    for (const splitText of text.split(seperator)) {
+      if (splitText.length > maxLength) {
+        // Split chars up to maxLength
+        const splitChars = splitText.split('');
+        while (splitChars.length > 0) {
+          chunks.push(splitChars.splice(0, maxLength).join(''));
+        }
+      } else {
+        chunks.push(splitText);
+      }
+    }
 
     const messages = [];
     let msg = header;
-    for (const chunk of splitText) {
+    for (const chunk of chunks) {
       if ((msg + seperator + chunk + append + footer).length > maxLength) {
         messages.push(msg + append + footer);
         msg = header + prepend;
