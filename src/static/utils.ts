@@ -49,16 +49,18 @@ export default abstract class Utils {
     const prepend = options?.prepend ?? '';
     const header = options?.header ?? '';
     const footer = options?.footer ?? '';
+    const extrasLength = append.length + prepend.length + header.length + footer.length;
 
     if ((header + text + footer).length <= maxLength) return [header + text + footer];
 
     const chunks = [];
+    const chunkLength = maxLength - extrasLength;
     for (const splitText of text.split(seperator)) {
-      if (splitText.length > maxLength) {
+      if (splitText.length > chunkLength) {
         // Split chars up to maxLength
         const splitChars = splitText.split('');
         while (splitChars.length > 0) {
-          chunks.push(splitChars.splice(0, maxLength).join(''));
+          chunks.push(splitChars.splice(0, chunkLength).join(''));
         }
       } else {
         chunks.push(splitText);
