@@ -43,11 +43,24 @@ export default class TelemetryFacade {
         footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
-      await this.webhook.send({
-        embeds: Utils.formatToJs(value).map(
-          e => new EmbedBuilder({ ...embed.data, description: e }),
-        ),
-      });
+      try {
+        await this.webhook.send({
+          embeds: Utils.formatToJs(value).map(
+            e => new EmbedBuilder({ ...embed.data, description: e }),
+          ),
+        });
+      } catch (_) {
+        await this.webhook.send({
+          embeds: [
+            new EmbedBuilder({
+              ...embed.data,
+              description:
+                'Message exceeds the allowable length. Refer to console for the actual data.',
+            }),
+          ],
+        });
+        console.error(value);
+      }
     }
   }
 
@@ -66,11 +79,24 @@ export default class TelemetryFacade {
         footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
-      await this.webhook.send({
-        embeds: Utils.formatToJs(value).map(
-          e => new EmbedBuilder({ ...embed.data, description: e }),
-        ),
-      });
+      try {
+        await this.webhook.send({
+          embeds: Utils.formatToJs(value).map(
+            e => new EmbedBuilder({ ...embed.data, description: e }),
+          ),
+        });
+      } catch (_) {
+        await this.webhook.send({
+          embeds: [
+            new EmbedBuilder({
+              ...embed.data,
+              description:
+                'Message exceeds the allowable length. Refer to console for the actual data.',
+            }),
+          ],
+        });
+        console.error(value);
+      }
     }
   }
 
@@ -89,11 +115,24 @@ export default class TelemetryFacade {
         footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
       });
 
-      this.webhook.send({
-        embeds: Utils.formatToJs(value).map(
-          e => new EmbedBuilder({ ...embed.data, description: e }),
-        ),
-      });
+      try {
+        this.webhook.send({
+          embeds: Utils.formatToJs(value).map(
+            e => new EmbedBuilder({ ...embed.data, description: e }),
+          ),
+        });
+      } catch (_) {
+        this.webhook.send({
+          embeds: [
+            new EmbedBuilder({
+              ...embed.data,
+              description:
+                'Message exceeds the allowable length. Refer to console for the actual data.',
+            }),
+          ],
+        });
+        console.error(value);
+      }
     }
   }
 }
