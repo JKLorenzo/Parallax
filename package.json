@@ -51,7 +51,7 @@
     "node-google-tts-api": "^1.1.1",
     "play-dl": "github:JKLorenzo/play-dl",
     "probe-image-size": "^7.2.3",
-    "rimraf": "^5.0.8",
+    "rimraf": "^6.0.1",
     "soundcloud-scraper": "^5.0.3",
     "spotify-web-api-node": "^5.0.2"
   },
