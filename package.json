@@ -42,7 +42,7 @@
     "g-i-s": "^2.1.7",
     "humanize-duration": "^3.32.1",
     "husky": "^9.1.7",
-    "is-ci": "^3.0.1",
+    "is-ci": "^4.1.0",
     "libsodium-wrappers": "^0.7.15",
     "lodash": "^4.17.21",
     "mongodb": "^6.11.0",
