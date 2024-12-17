@@ -142,7 +142,7 @@ export default class ConfigSlashCommand extends SlashCommand {
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
           `**Music Channel**: ${
-            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
+            config.channel ? (guild.channels.cache.get(config.channel) ?? 'Invalid') : 'Not Set'
           }`,
           `**Ignored Prefix**: ${config.ignored_prefix?.length ? config.ignored_prefix.join(', ') : 'None'}`,
         ].join('\n'),
@@ -175,9 +175,9 @@ export default class ConfigSlashCommand extends SlashCommand {
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
           `**Channel**: ${
-            config.channel ? guild.channels.cache.get(config.channel) : 'Not Set' ?? 'Invalid'
+            config.channel ? (guild.channels.cache.get(config.channel) ?? 'Invalid') : 'Not Set'
           }`,
-          `**Role**: ${config.role ? guild.roles.cache.get(config.role) : 'Not Set' ?? 'Invalid'}`,
+          `**Role**: ${config.role ? (guild.roles.cache.get(config.role) ?? 'Invalid') : 'Not Set'}`,
         ].join('\n'),
       );
     }
