@@ -99,9 +99,14 @@ export default class MusicTrack {
     const musicComponent =
       this.handler.subscription.bot.managers.interaction.componentData('music');
 
-    this.message = await (this.message
-      ? this.message.edit({ embeds: [embed], components: musicComponent })
-      : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
+    if (this.message) {
+      this.message = await this.message.edit({ embeds: [embed], components: musicComponent });
+    } else if (this.handler.channel.isSendable()) {
+      this.message = await this.handler.channel.send({
+        embeds: [embed],
+        components: musicComponent,
+      });
+    }
 
     telemetry.end();
   }
@@ -141,9 +146,14 @@ export default class MusicTrack {
     const musicComponent =
       this.handler.subscription.bot.managers.interaction.componentData('music');
 
-    this.message = await (this.message
-      ? this.message.edit({ embeds: [embed], components: musicComponent })
-      : this.handler.channel.send({ embeds: [embed], components: musicComponent }));
+    if (this.message) {
+      this.message = await this.message.edit({ embeds: [embed], components: musicComponent });
+    } else if (this.handler.channel.isSendable()) {
+      this.message = await this.handler.channel.send({
+        embeds: [embed],
+        components: musicComponent,
+      });
+    }
 
     telemetry.end();
   }
@@ -180,9 +190,14 @@ export default class MusicTrack {
 
     embed.addFields({ name: 'Requested by', value: this.handler.requestedBy.toString() });
 
-    this.message = await (this.message
-      ? this.message.edit({ embeds: [embed], components: [] })
-      : this.handler.channel.send({ embeds: [embed], components: [] }));
+    if (this.message) {
+      this.message = await this.message.edit({ embeds: [embed], components: [] });
+    } else if (this.handler.channel.isSendable()) {
+      this.message = await this.handler.channel.send({
+        embeds: [embed],
+        components: [],
+      });
+    }
 
     setTimeout(() => {
       if (this.message && this.message.deletable) this.message.delete().catch(() => null);
@@ -213,9 +228,11 @@ export default class MusicTrack {
       embed.setDescription(`Failed to play ${this.info.toFormattedString()}.`);
     }
 
-    this.message = await (this.message
-      ? this.message.edit({ embeds: [embed] })
-      : this.handler.channel.send({ embeds: [embed] }));
+    if (this.message) {
+      this.message = await this.message.edit({ embeds: [embed] });
+    } else if (this.handler.channel.isSendable()) {
+      this.message = await this.handler.channel.send({ embeds: [embed] });
+    }
 
     telemetry.end();
   }
