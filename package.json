@@ -35,7 +35,7 @@
     "color": "^4.2.3",
     "common-tags": "^1.8.2",
     "copyfiles": "^2.4.1",
-    "discord.js": "^14.17.2",
+    "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
     "ffmpeg-static": "^5.2.0",
     "g-i-s": "^2.1.7",
