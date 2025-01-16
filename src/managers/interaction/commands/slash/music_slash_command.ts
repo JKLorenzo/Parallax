@@ -1,6 +1,7 @@
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
+  ApplicationIntegrationType,
   type CacheType,
   ChatInputCommandInteraction,
 } from 'discord.js';
@@ -16,6 +17,10 @@ export default class MusicSlashCommand extends SlashCommand {
         name: 'music',
         description: 'Contains all the music commands of this bot.',
         type: ApplicationCommandType.ChatInput,
+        integrationTypes: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
         options: [
           {
             name: 'play',

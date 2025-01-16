@@ -7,6 +7,8 @@ import {
   ActivityType,
   type APIEmbedField,
   Colors,
+  MessageFlags,
+  ApplicationIntegrationType,
 } from 'discord.js';
 import DatabaseFacade from '../../../../global/database/database_facade.js';
 import type Bot from '../../../../modules/bot.js';
@@ -22,6 +24,7 @@ export default class InfoSlashCommand extends SlashCommand {
         name: 'info',
         description: 'Shows the current info of the selected user.',
         type: ApplicationCommandType.ChatInput,
+        integrationTypes: [ApplicationIntegrationType.GuildInstall],
         options: [
           {
             name: 'user',
@@ -153,7 +156,6 @@ export default class InfoSlashCommand extends SlashCommand {
     }
 
     await interaction.reply({
-      ephemeral: true,
       embeds: [
         {
           author: { name: `Parallax Snooper: ${guild.name}` },
@@ -165,6 +167,7 @@ export default class InfoSlashCommand extends SlashCommand {
           color: Colors.Blurple,
         },
       ],
+      flags: [MessageFlags.Ephemeral],
     });
   }
 }

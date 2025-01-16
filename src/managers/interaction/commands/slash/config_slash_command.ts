@@ -8,6 +8,7 @@ import {
   EmbedBuilder,
   Colors,
   AttachmentBuilder,
+  ApplicationIntegrationType,
 } from 'discord.js';
 import type { GatewayConfig, MusicConfig } from '../../../../global/database/database_defs.js';
 import DatabaseFacade from '../../../../global/database/database_facade.js';
@@ -25,6 +26,7 @@ export default class ConfigSlashCommand extends SlashCommand {
         description: 'Gets or updates the configuration of this server.',
         defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
         type: ApplicationCommandType.ChatInput,
+        integrationTypes: [ApplicationIntegrationType.GuildInstall],
         options: [
           {
             name: 'music',

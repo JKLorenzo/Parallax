@@ -1,5 +1,6 @@
 import {
   ApplicationCommandType,
+  ApplicationIntegrationType,
   type CacheType,
   Colors,
   MessageContextMenuCommandInteraction,
@@ -17,6 +18,10 @@ export default class MusicPlayContextCommand extends ContextCommand {
       {
         name: 'Music: Play',
         type: ApplicationCommandType.Message,
+        integrationTypes: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
       },
       { scope: CommandScope.Global },
     );
