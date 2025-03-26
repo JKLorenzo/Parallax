@@ -23,7 +23,6 @@ export default class SudoSlashCommand extends SlashCommand {
         name: 'sudo',
         description: 'Executes a command as a superuser.',
         type: ApplicationCommandType.ChatInput,
-        integrationTypes: [ApplicationIntegrationType.GuildInstall],
         defaultMemberPermissions: 'Administrator',
         options: [
           {

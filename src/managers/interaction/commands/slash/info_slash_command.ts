@@ -24,7 +24,6 @@ export default class InfoSlashCommand extends SlashCommand {
         name: 'info',
         description: 'Shows the current info of the selected user.',
         type: ApplicationCommandType.ChatInput,
-        integrationTypes: [ApplicationIntegrationType.GuildInstall],
         options: [
           {
             name: 'user',

@@ -26,7 +26,6 @@ export default class ConfigSlashCommand extends SlashCommand {
         description: 'Gets or updates the configuration of this server.',
         defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
         type: ApplicationCommandType.ChatInput,
-        integrationTypes: [ApplicationIntegrationType.GuildInstall],
         options: [
           {
             name: 'gateway',
