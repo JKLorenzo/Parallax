@@ -3,7 +3,6 @@ import EnvironmentFacade from '../global/environment/environment_facade.js';
 import Telemetry from '../global/telemetry/telemetry.js';
 import GatewayManager from '../managers/gateway/gateway_manager.js';
 import InteractionManager from '../managers/interaction/interaction_manager.js';
-import MusicManager from '../managers/music/music_manager.js';
 import Constants from '../static/constants.js';
 
 export default class Bot {
@@ -12,7 +11,6 @@ export default class Bot {
   managers: {
     gateway: GatewayManager;
     interaction: InteractionManager;
-    music: MusicManager;
   };
 
   constructor(options: ClientOptions) {
@@ -20,8 +18,7 @@ export default class Bot {
     this.client = new Client(options);
     this.managers = {
       gateway: new GatewayManager(this),
-      interaction: new InteractionManager(this),
-      music: new MusicManager(this),
+      interaction: new InteractionManager(this)
     };
     this.client.bot = this;
 
@@ -45,7 +42,7 @@ export default class Bot {
       setTimeout(async () => {
         try {
           // Initialize other managers
-          await Promise.all([this.managers.gateway.init(), this.managers.music.init()]);
+          await Promise.all([this.managers.gateway.init()]);
 
           // Initialize interaction manager last to accept user commands
           await this.managers.interaction.init();

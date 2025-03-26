@@ -29,30 +29,6 @@ export default class ConfigSlashCommand extends SlashCommand {
         integrationTypes: [ApplicationIntegrationType.GuildInstall],
         options: [
           {
-            name: 'music',
-            description: 'Gets or updates the music configuration of this server.',
-            type: ApplicationCommandOptionType.Subcommand,
-            options: [
-              {
-                name: 'enabled',
-                description: 'Enable or disable this config.',
-                type: ApplicationCommandOptionType.Boolean,
-              },
-              {
-                name: 'channel',
-                description: 'The channel where chats are automatically added to the queue.',
-                type: ApplicationCommandOptionType.Channel,
-                channelTypes: [ChannelType.GuildText],
-              },
-              {
-                name: 'ignore_prefix',
-                description: 'Messages sent in the music channel with this prefix are ignored.',
-                type: ApplicationCommandOptionType.String,
-                minLength: 1,
-              },
-            ],
-          },
-          {
             name: 'gateway',
             description: 'Gets or updates the gateway configuration of this server.',
             type: ApplicationCommandOptionType.Subcommand,
