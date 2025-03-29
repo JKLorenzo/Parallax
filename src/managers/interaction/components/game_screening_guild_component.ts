@@ -95,7 +95,7 @@ export default class GameScreeningGuildComponent extends Component {
           color: referenceRole?.color,
           hoist: referenceRole?.hoist,
           icon: referenceRole?.icon,
-          mentionable: referenceRole?.mentionable,
+          mentionable: true,
           permissions: referenceRole?.permissions,
           reason: Constants.GAME_MANAGER_TITLE,
         });
