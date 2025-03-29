@@ -8,45 +8,49 @@ import {
   GuildMember,
   EmbedBuilder,
   Colors,
+  type ActionRowData,
+  type MessageActionRowComponentData,
 } from 'discord.js';
 import DatabaseFacade from '../../../global/database/database_facade.js';
-import type Bot from '../../../modules/bot.js';
 import Utils from '../../../static/utils.js';
 import Component from '../component.js';
 
+enum Id {
+  Approve = 'approve',
+  Kick = 'kick',
+  Ban = 'ban',
+}
+
 export default class GatewayComponent extends Component {
-  constructor(bot: Bot) {
-    super(bot, {
-      name: 'gateway',
-      data: [
-        {
-          type: ComponentType.ActionRow,
-          components: [
-            {
-              customId: 'approve',
-              label: 'Approve',
-              type: ComponentType.Button,
-              style: ButtonStyle.Success,
-            },
-            {
-              customId: 'kick',
-              label: 'Deny (Kick)',
-              type: ComponentType.Button,
-              style: ButtonStyle.Primary,
-            },
-            {
-              customId: 'ban',
-              label: 'Ignore requests from this user (Ban)',
-              type: ComponentType.Button,
-              style: ButtonStyle.Danger,
-            },
-          ],
-        },
-      ],
-    });
+  static data(): ActionRowData<MessageActionRowComponentData>[] {
+    return [
+      {
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            customId: this.makeId(Id.Approve),
+            label: 'Approve',
+            type: ComponentType.Button,
+            style: ButtonStyle.Success,
+          },
+          {
+            customId: this.makeId(Id.Kick),
+            label: 'Deny (Kick)',
+            type: ComponentType.Button,
+            style: ButtonStyle.Primary,
+          },
+          {
+            customId: this.makeId(Id.Ban),
+            label: 'Ignore requests from this user (Ban)',
+            type: ComponentType.Button,
+            style: ButtonStyle.Danger,
+          },
+        ],
+      },
+    ];
   }
 
-  async exec(interaction: MessageComponentInteraction<CacheType>, customId: string) {
+  async exec(interaction: MessageComponentInteraction<CacheType>, customId: Id) {
     const db = DatabaseFacade.instance();
 
     const guild = interaction.guild;
@@ -73,7 +77,7 @@ export default class GatewayComponent extends Component {
     }
 
     let feedback: string | undefined;
-    if (customId === 'approve') {
+    if (customId === Id.Approve) {
       feedback = [
         `Hooraaay! 🥳 Your membership request has been approved! Welcome to **${guild.name}**!`,
         '',
@@ -82,9 +86,9 @@ export default class GatewayComponent extends Component {
           "in any of the server's text channels.",
         ].join(' '),
       ].join('\n');
-    } else if (customId === 'kick') {
+    } else if (customId === Id.Kick) {
       feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied.`;
-    } else if (customId === 'ban') {
+    } else if (customId === Id.Ban) {
       feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied indefinitely.`;
     }
 
@@ -96,7 +100,7 @@ export default class GatewayComponent extends Component {
       }
 
       switch (customId) {
-        case 'approve':
+        case Id.Approve:
           await member.roles.add(role);
           await db.memberData(guild.id, member.id, {
             id: member.id,
@@ -107,13 +111,13 @@ export default class GatewayComponent extends Component {
             .spliceFields(3, 1, { name: 'Status:', value: `Approved by ${moderator}` })
             .setColor(Colors.Green);
           break;
-        case 'kick':
+        case Id.Kick:
           await member.kick(`Gateway Kick by ${moderator.displayName}.`);
           embed
             .spliceFields(3, 1, { name: 'Status:', value: `Kicked by ${moderator}` })
             .setColor(Colors.Fuchsia);
           break;
-        case 'ban':
+        case Id.Ban:
           await member.ban({ reason: `Gateway Ban by ${moderator.displayName}.` });
           embed
             .spliceFields(3, 1, { name: 'Status:', value: `Banned by ${moderator}` })

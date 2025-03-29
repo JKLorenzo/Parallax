@@ -12,6 +12,7 @@ import type Bot from '../../modules/bot.js';
 import Queuer from '../../modules/queuer.js';
 import Utils from '../../static/utils.js';
 import Manager from '../manager.js';
+import GatewayComponent from '../interaction/components/gateway_component.js';
 
 export default class GatewayManager extends Manager {
   private cache: Collection<string, Collection<string, Invite>>;
@@ -193,12 +194,12 @@ export default class GatewayManager extends Manager {
     if (message) {
       await message.edit({
         embeds: [embed],
-        components: member.pending ? [] : interaction.componentData('gateway'),
+        components: member.pending ? [] : GatewayComponent.data(),
       });
     } else {
       message = await channel.send({
         embeds: [embed],
-        components: member.pending ? [] : interaction.componentData('gateway'),
+        components: member.pending ? [] : GatewayComponent.data(),
       });
     }
 
@@ -254,7 +255,7 @@ export default class GatewayManager extends Manager {
 
     const action_message = await message.edit({
       embeds: [embed],
-      components: interaction.componentData('gateway'),
+      components: GatewayComponent.data(),
     });
 
     await action_message.reply(

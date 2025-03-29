@@ -1,14 +1,10 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import {
-  type ActionRowData,
   ApplicationCommandType,
   Collection,
   CommandInteraction,
-  type MessageActionRowComponent,
-  type MessageActionRowComponentData,
   MessageComponentInteraction,
-  type ModalComponentData,
   ModalSubmitInteraction,
 } from 'discord.js';
 import { Command } from './command.js';
@@ -31,6 +27,10 @@ export default class InteractionManager extends Manager {
     this.commands = new Collection();
     this.components = new Collection();
     this.modals = new Collection();
+  }
+
+  static get CustomIdSeparator() {
+    return '__';
   }
 
   async init() {
@@ -187,7 +187,7 @@ export default class InteractionManager extends Manager {
   private async processComponent(interaction: MessageComponentInteraction) {
     const telemetry = this.telemetry.start(this.processComponent);
 
-    const [name, customId] = interaction.customId.split('__');
+    const [name, customId] = interaction.customId.split(InteractionManager.CustomIdSeparator);
     if (!name || !customId) return;
 
     const thisComponent = this.components.get(name);
@@ -200,19 +200,5 @@ export default class InteractionManager extends Manager {
     }
 
     telemetry.end();
-  }
-
-  componentData(name: string): ActionRowData<MessageActionRowComponentData>[] | undefined {
-    return this.components.get(name)?.data.map(row => ({
-      ...row,
-      components: row.components.map(component => ({
-        ...component,
-        customId: `${name}__${(component as MessageActionRowComponent).customId}`,
-      })),
-    }));
-  }
-
-  modalData(customId: string): ModalComponentData | undefined {
-    return this.modals.get(customId)?.data;
   }
 }

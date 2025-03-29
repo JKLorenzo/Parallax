@@ -1,11 +1,14 @@
-import type { Snowflake } from 'discord.js';
+import { type Snowflake } from 'discord.js';
 import { MongoClient } from 'mongodb';
-import type {
-  BotConfigKeys,
-  GatewayConfig,
-  GuildConfig,
-  MemberData,
-  MusicConfig,
+import {
+  type BotConfigKeys,
+  type GameConfig,
+  type GameData,
+  type GatewayConfig,
+  type GuildConfig,
+  type GuildGameData,
+  type MemberData,
+  type MusicConfig,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 
@@ -15,11 +18,15 @@ export default class DatabaseFacade {
   private botConfigCache: Map<string, string>;
   private guildConfigCache: Map<string, GuildConfig>;
   private memberDataCache: Map<string, Map<string, MemberData>>;
+  private gameDataCache: Map<string, GameData>;
+  private guildGameDataCache: Map<string, Map<string, GuildGameData>>;
 
   private constructor() {
     this.botConfigCache = new Map();
     this.guildConfigCache = new Map();
     this.memberDataCache = new Map();
+    this.gameDataCache = new Map();
+    this.guildGameDataCache = new Map();
   }
 
   static instance() {
@@ -121,6 +128,39 @@ export default class DatabaseFacade {
     return this.guildConfigCache.get(guildId)?.gateway;
   }
 
+  async gameConfig(guildId: Snowflake, data?: GameConfig) {
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const config = this.guildConfigCache.get(guildId) ?? {};
+      if (!config.game) config.game = {};
+      if ('enabled' in data) config.game.enabled = data.enabled;
+      if ('channel' in data) config.game.channel = data.channel;
+      if ('role' in data) config.game.role = data.role;
+      this.guildConfigCache.set(guildId, config);
+
+      await this.mongoClient
+        .db(guildId)
+        .collection('config')
+        .updateOne({ name: 'game' }, { $set: config.game }, { upsert: true });
+    } else if (!this.guildConfigCache.get(guildId)?.game) {
+      // Get
+      const result = await this.mongoClient
+        .db(guildId)
+        .collection('config')
+        .findOne({ name: 'game' });
+
+      this.guildConfigCache.set(guildId, {
+        game: {
+          enabled: result?.enabled,
+          channel: result?.channel,
+          role: result?.role,
+        },
+      });
+    }
+
+    return this.guildConfigCache.get(guildId)?.game;
+  }
+
   async memberData(guildId: Snowflake, memberId: Snowflake, data?: MemberData) {
     if (data && Object.keys(data).length > 0) {
       // Upsert
@@ -138,7 +178,7 @@ export default class DatabaseFacade {
       await this.mongoClient
         .db(guildId)
         .collection('members')
-        .updateOne({ id: member.id }, { $set: member }, { upsert: true });
+        .updateOne({ id: memberId }, { $set: member }, { upsert: true });
     } else if (!this.memberDataCache.get(guildId)?.get(memberId)) {
       // Get
       const result = await this.mongoClient
@@ -161,5 +201,115 @@ export default class DatabaseFacade {
     }
 
     return this.memberDataCache.get(guildId)?.get(memberId);
+  }
+
+  async gameData(applicationId: string, data?: GameData) {
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const game = this.gameDataCache.get(applicationId) ?? { id: applicationId };
+
+      if ('name' in data) game.name = data.name;
+      if ('status' in data) game.status = data.status;
+      if ('iconURLs' in data) game.iconURLs = data.iconURLs;
+      if ('iconIndex' in data) game.iconIndex = data.iconIndex;
+      if ('bannerURLs' in data) game.bannerURLs = data.bannerURLs;
+      if ('bannerIndex' in data) game.bannerIndex = data.bannerIndex;
+      this.gameDataCache.set(applicationId, game);
+
+      await this.mongoClient
+        .db('global')
+        .collection('games')
+        .updateOne({ id: applicationId }, { $set: game }, { upsert: true });
+    } else if (!this.gameDataCache.get(applicationId)) {
+      // Get
+      const result = await this.mongoClient
+        .db('global')
+        .collection('games')
+        .findOne({ id: applicationId });
+
+      if (result?._id) {
+        this.gameDataCache.set(applicationId, {
+          id: applicationId,
+          name: result?.name,
+          status: result?.status,
+          iconURLs: result?.iconURLs,
+          iconIndex: result?.iconIndex,
+          bannerURLs: result?.bannerURLs,
+          bannerIndex: result?.bannerIndex,
+        });
+      }
+    }
+
+    return this.gameDataCache.get(applicationId);
+  }
+
+  async guildGameData(guildId: string, applicationId: string, data?: GuildGameData) {
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
+      const guildGame: GuildGameData = guildGames.get(applicationId) ?? { id: applicationId };
+
+      if ('status' in data) guildGame.status = data.status;
+      if ('roleId' in data) guildGame.roleId = data.roleId;
+      if ('moderatorId' in data) guildGame.moderatorId = data.moderatorId;
+      if ('lastPlayed' in data) guildGame.lastPlayed = data.lastPlayed;
+      guildGames.set(applicationId, guildGame);
+      this.guildGameDataCache.set(guildId, guildGames);
+
+      await this.mongoClient
+        .db(guildId)
+        .collection('games')
+        .updateOne({ id: applicationId }, { $set: guildGame }, { upsert: true });
+    } else if (!this.guildGameDataCache.get(guildId)?.get(applicationId)) {
+      // Get
+      const result = await this.mongoClient
+        .db(guildId)
+        .collection('games')
+        .findOne({ id: applicationId });
+
+      if (result?._id) {
+        const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
+        const guildGame: GuildGameData = {
+          id: applicationId,
+          status: result?.status,
+          roleId: result?.roleId,
+          moderatorId: result?.moderatorId,
+          lastPlayed: result?.lastPlayed,
+        };
+
+        guildGames.set(applicationId, guildGame);
+        this.guildGameDataCache.set(guildId, guildGames);
+      }
+    }
+
+    return this.guildGameDataCache.get(guildId)?.get(applicationId);
+  }
+
+  async findGuildGameByRole(guildId: Snowflake, roleId: Snowflake) {
+    const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
+    if (![...guildGames.values()].some(game => game.roleId === roleId)) {
+      const result = await this.mongoClient
+        .db(guildId)
+        .collection('games')
+        .findOne({ roleId: roleId });
+
+      if (result?._id) {
+        const guildGame: GuildGameData = {
+          id: result.id,
+          status: result?.status,
+          roleId: result?.roleId,
+          moderatorId: result?.moderatorId,
+          lastPlayed: result?.lastPlayed,
+        };
+
+        guildGames.set(result.id, guildGame);
+        this.guildGameDataCache.set(guildId, guildGames);
+      }
+    }
+
+    const newGuildGames = this.guildGameDataCache.get(guildId);
+    if (!newGuildGames) return;
+
+    return [...newGuildGames.values()].find(guildGame => guildGame.roleId === roleId);
   }
 }
