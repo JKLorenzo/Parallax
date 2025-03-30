@@ -214,6 +214,7 @@ export default class DatabaseFacade {
       if ('iconIndex' in data) game.iconIndex = data.iconIndex;
       if ('bannerURLs' in data) game.bannerURLs = data.bannerURLs;
       if ('bannerIndex' in data) game.bannerIndex = data.bannerIndex;
+      if ('moderatorId' in data) game.moderatorId = data.moderatorId;
       this.gameDataCache.set(applicationId, game);
 
       await this.mongoClient
@@ -236,6 +237,7 @@ export default class DatabaseFacade {
           iconIndex: result?.iconIndex,
           bannerURLs: result?.bannerURLs,
           bannerIndex: result?.bannerIndex,
+          moderatorId: result?.moderatorId,
         });
       }
     }
