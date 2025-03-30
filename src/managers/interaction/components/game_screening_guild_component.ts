@@ -10,7 +10,7 @@ import {
 import DatabaseFacade from '../../../global/database/database_facade.js';
 import Component from '../component.js';
 import Constants from '../../../static/constants.js';
-import { GameStatus } from '../../../global/database/database_defs.js';
+import { GameStatus, type GuildGameData } from '../../../global/database/database_defs.js';
 import GameManager from '../../game/game_manager.js';
 
 enum Id {
@@ -112,11 +112,13 @@ export default class GameScreeningGuildComponent extends Component {
       } catch {}
     }
 
-    guildGameData = await db.guildGameData(guild.id, applicationId, {
+    const updateData: GuildGameData = {
       status: GameStatus.Approved,
-      roleId: role?.id,
       moderatorId: interaction.user.id,
-    });
+    };
+    if (role) updateData.roleId = role.id;
+
+    guildGameData = await db.guildGameData(guild.id, applicationId, updateData);
 
     const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
     await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
