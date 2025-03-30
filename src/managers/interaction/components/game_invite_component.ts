@@ -66,15 +66,17 @@ export default class GameInviteComponent extends Component {
       ?.fields.find(field => field.name === Constants.GAME_EMBED_INVITER_FIELD)?.value;
     if (!inviterMention) return;
 
+    const inviterId = Utils.parseMention(inviterMention);
+
     switch (customId) {
       case Id.Join:
-        await this.join(interaction, inviterMention, gameData);
+        await this.join(interaction, inviterId, gameData);
         break;
       case Id.Leave:
-        await this.leave(interaction, inviterMention, gameData);
+        await this.leave(interaction, inviterId, gameData);
         break;
       case Id.Close:
-        await this.close(interaction, inviterMention, gameData);
+        await this.close(interaction, inviterId, gameData);
         break;
       default:
     }
@@ -85,7 +87,7 @@ export default class GameInviteComponent extends Component {
     inviter: string,
     gameData: GameData,
   ) {
-    if (Utils.parseMention(inviter) === interaction.user.id) {
+    if (inviter === interaction.user.id) {
       return interaction.deferUpdate();
     }
 
@@ -93,10 +95,10 @@ export default class GameInviteComponent extends Component {
       interaction.message.embeds
         .find(embed => embed.author?.name === Constants.GAME_MANAGER_TITLE)
         ?.fields.filter(field => Utils.hasAny(field.name, 'Player'))
-        ?.map(field => field.value) ?? [];
+        ?.map(field => Utils.parseMention(field.value)) ?? [];
 
-    const willUpdate = !joiners.some(joiner => joiner === `${interaction.user}`);
-    if (willUpdate) joiners.push(`${interaction.user}`);
+    const willUpdate = !joiners.some(joiner => joiner === interaction.user.id);
+    if (willUpdate) joiners.push(interaction.user.id);
 
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     if (willUpdate) embed.setColor(Colors.Green);
@@ -108,7 +110,7 @@ export default class GameInviteComponent extends Component {
     inviter: string,
     gameData: GameData,
   ) {
-    if (Utils.parseMention(inviter) === interaction.user.id) {
+    if (inviter === interaction.user.id) {
       return interaction.deferUpdate();
     }
 
@@ -116,10 +118,10 @@ export default class GameInviteComponent extends Component {
       interaction.message.embeds
         .find(embed => embed.author?.name === Constants.GAME_MANAGER_TITLE)
         ?.fields.filter(field => Utils.hasAny(field.name, 'Player'))
-        ?.map(field => field.value) ?? [];
+        ?.map(field => Utils.parseMention(field.value)) ?? [];
 
-    const willUpdate = joiners.some(joiner => joiner === `${interaction.user}`);
-    if (willUpdate) joiners = joiners.filter(joiner => joiner !== `${interaction.user}`);
+    const willUpdate = joiners.some(joiner => joiner === interaction.user.id);
+    if (willUpdate) joiners = joiners.filter(joiner => joiner !== interaction.user.id);
 
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     if (willUpdate) embed.setColor(Colors.Fuchsia);
@@ -138,11 +140,11 @@ export default class GameInviteComponent extends Component {
       });
     }
 
-    let joiners =
+    const joiners =
       interaction.message.embeds
         .find(embed => embed.author?.name === Constants.GAME_MANAGER_TITLE)
         ?.fields.filter(field => Utils.hasAny(field.name, 'Player'))
-        ?.map(field => field.value) ?? [];
+        ?.map(field => Utils.parseMention(field.value)) ?? [];
 
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     embed.setColor(Colors.Blurple);

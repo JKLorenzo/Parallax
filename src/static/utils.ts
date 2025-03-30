@@ -133,6 +133,18 @@ export default abstract class Utils {
     return String(mention).replace(/\W/g, '');
   }
 
+  static mentionRoleById(roleId: string) {
+    return `<@&${roleId}>`;
+  }
+
+  static mentionChannelById(channelId: string) {
+    return `<#${channelId}>`;
+  }
+
+  static mentionUserById(userId: string) {
+    return `<@${userId}>`;
+  }
+
   static toSelectiveUpper(
     str: string,
     options?: { word?: 'first' | 'all'; seperator?: string },

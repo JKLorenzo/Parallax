@@ -7,7 +7,6 @@ import {
   GuildMember,
   Message,
   Role,
-  type UserResolvable,
 } from 'discord.js';
 import DatabaseFacade from '../../global/database/database_facade.js';
 import type Bot from '../../modules/bot.js';
@@ -78,11 +77,17 @@ export default class GameManager extends Manager {
     });
   }
 
-  static makeInviteEmbed(inviter: UserResolvable, data: GameData, joiners?: UserResolvable[]) {
+  static makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
     const embed = new EmbedBuilder({
       author: { name: Constants.GAME_MANAGER_TITLE },
       title: data.name,
-      fields: [{ name: Constants.GAME_EMBED_INVITER_FIELD, value: `${inviter}`, inline: true }],
+      fields: [
+        {
+          name: Constants.GAME_EMBED_INVITER_FIELD,
+          value: Utils.mentionUserById(inviterId),
+          inline: true,
+        },
+      ],
       footer: { text: `${new Date()}` },
       color: Colors.Yellow,
     });
@@ -91,9 +96,12 @@ export default class GameManager extends Manager {
       embed.addFields({ name: Constants.GAME_EMBED_APPID_FIELD, value: data.id, inline: true });
     }
 
-    if (joiners?.length) {
+    if (joinersId?.length) {
       embed.addFields(
-        joiners.map((joiner, i) => ({ name: `Player ${i + 2}`, value: `${joiner}` })),
+        joinersId.map((joiner, i) => ({
+          name: `Player ${i + 2}`,
+          value: Utils.mentionUserById(joiner),
+        })),
       );
     }
 
@@ -114,35 +122,31 @@ export default class GameManager extends Manager {
       title: data.name,
     });
 
-    if (data.id) {
-      embed.addFields({ name: Constants.GAME_EMBED_APPID_FIELD, value: data.id });
-    }
-
-    switch (guildData?.status ?? data.status) {
+    switch (guildData ? guildData.status : data.status) {
       case GameStatus.Pending:
         embed
-          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Pending', inline: true })
+          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Pending' })
           .setColor(Colors.Blurple);
         break;
       case GameStatus.Approved:
         embed
-          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Approved', inline: true })
+          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Approved' })
           .setColor(Colors.Green);
         break;
       case GameStatus.Denied:
         embed
-          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Denied', inline: true })
-          .setColor(Colors.Red);
+          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: 'Denied' })
+          .setColor(Colors.Fuchsia);
         break;
       default:
         embed
-          .addFields({
-            name: Constants.GAME_EMBED_STATUS_FIELD,
-            value: `Unknown (${data.status})`,
-            inline: true,
-          })
-          .setColor(Colors.DarkRed);
+          .addFields({ name: Constants.GAME_EMBED_STATUS_FIELD, value: `Unknown (${data.status})` })
+          .setColor(Colors.Red);
         break;
+    }
+
+    if (data.id) {
+      embed.addFields({ name: Constants.GAME_EMBED_APPID_FIELD, value: data.id, inline: true });
     }
 
     if (data.iconURLs?.length && typeof data.iconIndex === 'number') {
@@ -152,7 +156,6 @@ export default class GameManager extends Manager {
         embed.addFields({
           name: Constants.GAME_EMBED_ICON_FIELD,
           value: `${data.iconIndex + 1} / ${data.iconURLs.length}`,
-          inline: true,
         });
       }
     }
@@ -171,8 +174,15 @@ export default class GameManager extends Manager {
 
     if (guildData?.roleId) {
       embed.addFields({
-        name: Constants.GAME_EMBED_ROLEID_FIELD,
-        value: guildData.roleId,
+        name: Constants.GAME_EMBED_ROLE_FIELD,
+        value: Utils.mentionRoleById(guildData.roleId),
+      });
+    }
+
+    if (guildData?.lastPlayed) {
+      embed.addFields({
+        name: Constants.GAME_EMBED_LASTPLAYED_FIELD,
+        value: guildData.lastPlayed.toString(),
         inline: true,
       });
     }
@@ -180,8 +190,8 @@ export default class GameManager extends Manager {
     const moderatorId = guildData ? guildData.moderatorId : data.moderatorId;
     if (moderatorId) {
       embed.addFields({
-        name: Constants.GAME_EMBED_MODID_FIELD,
-        value: moderatorId,
+        name: Constants.GAME_EMBED_MOD_FIELD,
+        value: Utils.mentionUserById(moderatorId),
       });
     }
 
@@ -314,7 +324,7 @@ export default class GameManager extends Manager {
     const gameData = await db.gameData(gameRoleData.id);
     if (!gameData) return;
 
-    const embed = GameManager.makeInviteEmbed(message.author, gameData);
+    const embed = GameManager.makeInviteEmbed(message.author.id, gameData);
     await message.reply({ embeds: [embed], components: GameInviteComponent.data() });
   }
 }
