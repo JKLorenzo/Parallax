@@ -7,6 +7,7 @@ import {
   type MessageActionRowComponentData,
   MessageFlags,
   Colors,
+  EmbedBuilder,
 } from 'discord.js';
 import DatabaseFacade from '../../../global/database/database_facade.js';
 import Component from '../component.js';
@@ -105,11 +106,13 @@ export default class GameInviteComponent extends Component {
     await interaction.update({ embeds: [embed] });
 
     if (willUpdate) {
-      for (const player in [inviter, ...joiners].filter(player => player != interaction.user.id)) {
-        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
-        dmChannel?.send(
-          `**${interaction.user.displayName}** joined the **${gameData.name}** game invite on **${interaction.guild}**.`,
-        );
+      for (const player of [inviter, ...joiners].filter(player => player != interaction.user.id)) {
+        try {
+          const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+          dmChannel?.send(
+            `**${interaction.user.displayName}** joined the **${gameData.name}** game invite on **${interaction.guild}**.`,
+          );
+        } catch {}
       }
     }
   }
@@ -137,11 +140,13 @@ export default class GameInviteComponent extends Component {
     await interaction.update({ embeds: [embed] });
 
     if (willUpdate) {
-      for (const player in [inviter, ...joiners]) {
-        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
-        dmChannel?.send(
-          `**${interaction.user.displayName}** left the **${gameData.name}** game invite on **${interaction.guild}**.`,
-        );
+      for (const player of [inviter, ...joiners]) {
+        try {
+          const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+          dmChannel?.send(
+            `**${interaction.user.displayName}** left the **${gameData.name}** game invite on **${interaction.guild}**.`,
+          );
+        } catch {}
       }
     }
   }
@@ -167,5 +172,37 @@ export default class GameInviteComponent extends Component {
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     embed.setColor(Colors.Blurple);
     await interaction.update({ embeds: [embed], components: [] });
+
+    const inviteClosedEmbed = new EmbedBuilder({
+      author: { name: Constants.GAME_MANAGER_TITLE },
+      title: gameData.name,
+      fields: [
+        ...[inviter, ...joiners].map((players, i) => ({
+          name: `Player ${i + 1}`,
+          value: Utils.mentionUserById(players),
+          inline: true,
+        })),
+      ],
+      footer: { text: `${new Date()}` },
+      color: Colors.Blurple,
+    });
+
+    if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
+      embed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
+    }
+
+    if (gameData.bannerURLs?.length && typeof gameData.bannerIndex === 'number') {
+      embed.setImage(gameData.bannerURLs[gameData.bannerIndex]);
+    }
+
+    for (const player of [inviter, ...joiners]) {
+      try {
+        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+        dmChannel?.send({
+          content: `The **${gameData.name}** party is now closed. Good luck!`,
+          embeds: [inviteClosedEmbed],
+        });
+      } catch {}
+    }
   }
 }
