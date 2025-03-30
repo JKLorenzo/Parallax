@@ -119,7 +119,7 @@ export default class GameScreeningGuildComponent extends Component {
     });
 
     const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 
   async deny(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
@@ -152,7 +152,7 @@ export default class GameScreeningGuildComponent extends Component {
     });
 
     const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 
   async refresh(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
@@ -171,6 +171,6 @@ export default class GameScreeningGuildComponent extends Component {
     if (!guildGameData) return;
 
     const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 }

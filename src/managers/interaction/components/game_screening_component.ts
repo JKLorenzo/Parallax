@@ -92,7 +92,7 @@ export default class GameScreeningComponent extends Component {
     if (!gameData) return;
 
     const embed = GameManager.makeScreeningEmbed(gameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
   async deny(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
@@ -105,7 +105,7 @@ export default class GameScreeningComponent extends Component {
     if (!gameData) return;
 
     const embed = GameManager.makeScreeningEmbed(gameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
   async cycleIcon(
@@ -128,7 +128,7 @@ export default class GameScreeningComponent extends Component {
     });
 
     const embed = GameManager.makeScreeningEmbed(gameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
   async cycleBanner(
@@ -151,6 +151,6 @@ export default class GameScreeningComponent extends Component {
     });
 
     const embed = GameManager.makeScreeningEmbed(gameData);
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 }
