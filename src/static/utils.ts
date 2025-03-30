@@ -196,4 +196,8 @@ export default abstract class Utils {
   static parseReqId(str: string) {
     return str.replace('Request ID:', '').trim();
   }
+
+  static filterUnique<T>(value: T, index: number, array: T[]) {
+    return array.indexOf(value) === index;
+  }
 }

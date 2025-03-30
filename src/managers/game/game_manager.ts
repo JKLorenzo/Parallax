@@ -329,7 +329,12 @@ export default class GameManager extends Manager {
     const gameData = await db.gameData(gameRoleData.id);
     if (!gameData) return;
 
-    const embed = GameManager.makeInviteEmbed(message.author.id, gameData);
+    const joinersId = message.mentions.users
+      .filter(user => !user.bot)
+      .map(user => user.id)
+      .filter(Utils.filterUnique);
+
+    const embed = GameManager.makeInviteEmbed(message.author.id, gameData, joinersId);
     await message.reply({ embeds: [embed], components: GameInviteComponent.data() });
   }
 }
