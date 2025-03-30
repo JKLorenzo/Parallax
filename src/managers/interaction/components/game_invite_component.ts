@@ -103,6 +103,15 @@ export default class GameInviteComponent extends Component {
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     if (willUpdate) embed.setColor(Colors.Green);
     await interaction.update({ embeds: [embed] });
+
+    if (willUpdate) {
+      for (const player in [inviter, ...joiners].filter(player => player != interaction.user.id)) {
+        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+        dmChannel?.send(
+          `**${interaction.user.displayName}** joined the **${gameData.name}** game invite on **${interaction.guild}**.`,
+        );
+      }
+    }
   }
 
   async leave(
@@ -126,6 +135,15 @@ export default class GameInviteComponent extends Component {
     const embed = GameManager.makeInviteEmbed(inviter, gameData, joiners);
     if (willUpdate) embed.setColor(Colors.Fuchsia);
     await interaction.update({ embeds: [embed] });
+
+    if (willUpdate) {
+      for (const player in [inviter, ...joiners]) {
+        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+        dmChannel?.send(
+          `**${interaction.user.displayName}** left the **${gameData.name}** game invite on **${interaction.guild}**.`,
+        );
+      }
+    }
   }
 
   async close(
