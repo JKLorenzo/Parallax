@@ -188,11 +188,7 @@ export default class GameInviteComponent extends Component {
     });
 
     if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
-      embed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
-    }
-
-    if (gameData.bannerURLs?.length && typeof gameData.bannerIndex === 'number') {
-      embed.setImage(gameData.bannerURLs[gameData.bannerIndex]);
+      inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
     }
 
     for (const player of [inviter, ...joiners]) {
