@@ -14,7 +14,7 @@
     "forever-stop": "forever stop ./build/main.js"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": ">=22.x"
   },
   "repository": {
     "type": "git",
