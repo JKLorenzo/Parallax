@@ -9,7 +9,9 @@
     "clean": "rimraf build",
     "build": "tsc",
     "postbuild": "copyfiles -u 1 \"src/assets/**/*.*\" build",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "forever-start": "forever start ./build/main.js",
+    "forever-stop": "forever stop ./build/main.js"
   },
   "engines": {
     "node": ">=18.x"
@@ -52,6 +54,7 @@
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.5",
+    "forever": "^4.0.3",
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2"
