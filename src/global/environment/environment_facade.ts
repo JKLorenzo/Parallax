@@ -36,10 +36,10 @@ export default class EnvironmentFacade {
   }
 
   assetsPath(path: string) {
-    return join(process.cwd(), this.isProduction() ? '' : 'build', AssetsPath, path);
+    return join(process.cwd(), AssetsPath, path);
   }
 
   interactionsPath() {
-    return join(process.cwd(), this.isProduction() ? '' : 'build', InteractionPath);
+    return join(process.cwd(), InteractionPath);
   }
 }

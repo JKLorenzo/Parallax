@@ -7,14 +7,11 @@
   [![TSCompiler](https://github.com/JKLorenzo/Parallax/actions/workflows/tscompiler.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/tscompiler.yml)
   
   [![License](https://img.shields.io/github/license/JKLorenzo/Parallax)](https://github.com/JKLorenzo/Parallax/blob/master/LICENSE)
-  [![Docker](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml/badge.svg)](https://github.com/JKLorenzo/Parallax/actions/workflows/docker.yml)
   [![Depfu](https://badges.depfu.com/badges/10a2b397579dcfc1b15b4327c12a9bdd/count.svg)](https://depfu.com/github/JKLorenzo/Parallax?project_id=29783)
   
   Parallax is a multi-purpose Discord bot that features passive role automations for gaming purposes.
   
   It automatically creates and assigns roles based on the user's gaming activity.
-  
-  Playing tracks from Deezer, YouTube, Spotify, and SoundCloud.
   
   For personal use only.
   
