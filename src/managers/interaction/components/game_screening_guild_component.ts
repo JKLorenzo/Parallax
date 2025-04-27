@@ -8,8 +8,8 @@ import {
   Role,
 } from 'discord.js';
 import DatabaseFacade from '../../../global/database/database_facade.js';
-import Component from '../component.js';
-import Constants from '../../../static/constants.js';
+import { Component } from '../component.js';
+import { Constants } from '../../../static/constants.js';
 import { GameStatus, type GuildGameData } from '../../../global/database/database_defs.js';
 import GameManager from '../../game/game_manager.js';
 

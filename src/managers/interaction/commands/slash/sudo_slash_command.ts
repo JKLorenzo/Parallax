@@ -35,7 +35,7 @@ export default class SudoSlashCommand extends SlashCommand {
       },
       {
         scope: CommandScope.Guild,
-        guilds: guild => guild.id === bot.guild?.id,
+        guilds: guild => guild.id === bot.cs?.id,
       },
     );
   }

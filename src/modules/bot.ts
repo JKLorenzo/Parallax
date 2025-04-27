@@ -3,10 +3,12 @@ import EnvironmentFacade from '../global/environment/environment_facade.js';
 import Telemetry from '../global/telemetry/telemetry.js';
 import GatewayManager from '../managers/gateway/gateway_manager.js';
 import InteractionManager from '../managers/interaction/interaction_manager.js';
-import Constants from '../static/constants.js';
+import { Constants } from '../static/constants.js';
 import GameManager from '../managers/game/game_manager.js';
 
 export default class Bot {
+  private static _instance: Bot;
+
   telemetry: Telemetry;
   client: Client;
   managers: {
@@ -32,6 +34,12 @@ export default class Bot {
     this.client.on('error', e => {
       this.telemetry.start('Client').error(e).end();
     });
+
+    Bot._instance = this;
+  }
+
+  static instance() {
+    return this._instance;
   }
 
   async start() {
@@ -62,11 +70,19 @@ export default class Bot {
     telemetry.end();
   }
 
-  get guild() {
+  get cs() {
     return this.client.guilds.cache.get(Constants.CONTROL_SERVER_ID);
   }
 
+  get qg() {
+    return this.client.guilds.cache.get(Constants.QUARANTINE_GAMING_ID);
+  }
+
+  getMemberById(id: string) {
+    return this.qg?.members.cache.get(id) ?? this.cs?.members.cache.get(id);
+  }
+
   findEmoji(name: string) {
-    return this.guild?.emojis.cache.find(e => e.name === name);
+    return this.cs?.emojis.cache.find(e => e.name === name);
   }
 }

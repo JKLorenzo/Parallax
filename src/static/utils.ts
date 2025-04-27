@@ -145,6 +145,10 @@ export default abstract class Utils {
     return `<@${userId}>`;
   }
 
+  static removeLeadingWord(str: string, separator = ' '): string {
+    return str.trim().split(separator).slice(1).join(separator);
+  }
+
   static toSelectiveUpper(
     str: string,
     options?: { word?: 'first' | 'all'; seperator?: string },

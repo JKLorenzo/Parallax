@@ -6,10 +6,11 @@ import {
   Guild,
   GuildMember,
   Message,
+  MessageFlags,
   Role,
 } from 'discord.js';
 import DatabaseFacade from '../../global/database/database_facade.js';
-import type Bot from '../../modules/bot.js';
+import Bot from '../../modules/bot.js';
 import Queuer from '../../modules/queuer.js';
 import Manager from '../manager.js';
 import {
@@ -17,7 +18,7 @@ import {
   type GameData,
   type GuildGameData,
 } from '../../global/database/database_defs.js';
-import Constants from '../../static/constants.js';
+import { Constants } from '../../static/constants.js';
 import gis from 'async-g-i-s';
 import GameScreeningComponent from '../interaction/components/game_screening_component.js';
 import GameScreeningGuildComponent from '../interaction/components/game_screening_guild_component.js';
@@ -25,6 +26,7 @@ import Utils from '../../static/utils.js';
 import GameInviteComponent from '../interaction/components/game_invite_component.js';
 
 export default class GameManager extends Manager {
+  private static _instance: GameManager;
   private screeningQueue: Queuer;
   private roleQueue: Queuer;
   private timekeepingQueue: Queuer;
@@ -37,6 +39,12 @@ export default class GameManager extends Manager {
     this.roleQueue = new Queuer();
     this.timekeepingQueue = new Queuer();
     this.messageQueue = new Queuer();
+
+    GameManager._instance = this;
+  }
+
+  static instance() {
+    return this._instance;
   }
 
   async init() {
@@ -323,10 +331,10 @@ export default class GameManager extends Manager {
   private async gameInvite(message: Message<boolean>, role: Role) {
     const db = DatabaseFacade.instance();
 
-    const gameRoleData = await db.findGuildGameByRole(role.guild.id, role.id);
-    if (!gameRoleData?.id) return;
+    const guildGameData = await db.findGuildGameByRole(role.guild.id, role.id);
+    if (!guildGameData?.id) return;
 
-    const gameData = await db.gameData(gameRoleData.id);
+    const gameData = await db.gameData(guildGameData.id);
     if (!gameData) return;
 
     const joinersId = message.mentions.users
@@ -334,7 +342,13 @@ export default class GameManager extends Manager {
       .map(user => user.id)
       .filter(Utils.filterUnique);
 
-    const embed = GameManager.makeInviteEmbed(message.author.id, gameData, joinersId);
-    await message.reply({ embeds: [embed], components: GameInviteComponent.data() });
+    const reply = GameInviteComponent.createInteractable(
+      message.author.id,
+      gameData,
+      guildGameData,
+      role,
+      joinersId,
+    );
+    await message.reply(reply);
   }
 }

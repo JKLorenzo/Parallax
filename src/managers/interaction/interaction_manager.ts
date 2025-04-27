@@ -8,7 +8,7 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import { Command } from './command.js';
-import type Component from './component.js';
+import type { Component, ComponentV2 } from './component.js';
 import { CommandScope } from './interaction_defs.js';
 import type Modal from './modal.js';
 import EnvironmentFacade from '../../global/environment/environment_facade.js';
@@ -18,7 +18,7 @@ import Manager from '../manager.js';
 
 export default class InteractionManager extends Manager {
   private commands: Collection<string, Command>;
-  private components: Collection<string, Component>;
+  private components: Collection<string, Component | ComponentV2>;
   private modals: Collection<string, Modal>;
 
   constructor(bot: Bot) {
@@ -60,7 +60,7 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const componentPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(componentPath);
-          const component = new Interaction(this.bot) as Component;
+          const component = new Interaction(this.bot) as Component | ComponentV2;
           this.components.set(component.name, component);
         });
       await Promise.all(loadComponents);

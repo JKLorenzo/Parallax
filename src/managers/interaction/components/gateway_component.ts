@@ -13,7 +13,7 @@ import {
 } from 'discord.js';
 import DatabaseFacade from '../../../global/database/database_facade.js';
 import Utils from '../../../static/utils.js';
-import Component from '../component.js';
+import { Component } from '../component.js';
 
 enum Id {
   Approve = 'approve',
