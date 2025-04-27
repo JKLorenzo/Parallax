@@ -349,6 +349,12 @@ export default class GameManager extends Manager {
       role,
       joinersId,
     );
-    await message.reply(reply);
+
+    const invite = await message.reply(reply);
+    setTimeout(() => {
+      try {
+        invite.delete();
+      } catch {}
+    }, 15 * 60000);
   }
 }
