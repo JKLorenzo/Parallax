@@ -282,7 +282,7 @@ export default class GameInviteComponent extends ComponentV2 {
       });
     }
 
-    await interaction.deleteReply();
+    await interaction.message.delete();
 
     const inviteClosedEmbed = new EmbedBuilder({
       author: { name: Constants.GAME_MANAGER_TITLE },
