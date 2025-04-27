@@ -103,7 +103,7 @@ export default class GameInviteComponent extends ComponentV2 {
             .addTextDisplayComponents([
               new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
               new TextDisplayBuilder()
-                .setId(GameInviteComponents.JOINER_TEXT)
+                .setId(GameInviteComponents.JOINER_TEXT_RANGE_START + i)
                 .setContent(Utils.mentionUserById(joinerIds[i])),
             ])
             .setThumbnailAccessory(builder =>
@@ -171,7 +171,7 @@ export default class GameInviteComponent extends ComponentV2 {
     const joinerIds: string[] = [];
     for (const section of container.components.filter(c => c.type === ComponentType.Section)) {
       const joinerMentionComponent = section.components.find(
-        c => c.id === GameInviteComponents.JOINER_TEXT,
+        c => (c.id ?? 0) >= GameInviteComponents.JOINER_TEXT_RANGE_START,
       );
       if (!joinerMentionComponent?.content) continue;
 
