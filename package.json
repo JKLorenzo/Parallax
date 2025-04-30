@@ -34,7 +34,7 @@
   "dependencies": {
     "async-g-i-s": "^1.5.5",
     "copyfiles": "^2.4.1",
-    "discord.js": "^14.19.1",
+    "discord.js": "^14.19.2",
     "dotenv": "^16.5.0",
     "humanize-duration": "^3.32.1",
     "husky": "^9.1.7",
