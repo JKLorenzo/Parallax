@@ -22,8 +22,8 @@ import { ComponentV2 } from '../component.js';
 import { Constants, GameInviteComponents } from '../../../static/constants.js';
 import { type GameData, type GuildGameData } from '../../../global/database/database_defs.js';
 import Utils from '../../../static/utils.js';
-import Bot from '../../../modules/bot.js';
 import {
+  ActivityType,
   TextDisplayComponent,
   type ContainerComponent,
   type MessageReplyOptions,
@@ -83,31 +83,73 @@ export default class GameInviteComponent extends ComponentV2 {
 
     container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
 
+    const inviterComponent: TextDisplayBuilder[] = [
+      new TextDisplayBuilder().setContent('## Inviter'),
+      new TextDisplayBuilder()
+        .setId(GameInviteComponents.INVITER_TEXT)
+        .setContent(Utils.mentionUserById(inviterId)),
+    ];
+
+    const inviter = role.guild.members.cache.get(inviterId);
+    const inviterPresence = inviter?.presence?.activities
+      .filter(a => a.type === ActivityType.Playing)
+      .map(a => a.name);
+    const inviterChannel = inviter?.voice.channel;
+
+    const inviterInfo: string[] = [];
+    if (inviterPresence?.length) {
+      inviterInfo.push(`-# **Now playing**: ${inviterPresence.map(i => `**${i}**`).join(', ')}`);
+    }
+
+    if (inviterChannel) {
+      inviterInfo.push(`-# **In voice**: ${inviterChannel}`);
+    }
+
+    if (inviterInfo.length) {
+      inviterComponent.push(new TextDisplayBuilder().setContent(inviterInfo.join('\n')));
+    }
+
     container.addSectionComponents(
       new SectionBuilder()
-        .addTextDisplayComponents([
-          new TextDisplayBuilder().setContent('## Inviter'),
-          new TextDisplayBuilder()
-            .setId(GameInviteComponents.INVITER_TEXT)
-            .setContent(Utils.mentionUserById(inviterId)),
-        ])
+        .addTextDisplayComponents(inviterComponent)
         .setThumbnailAccessory(builder =>
-          builder.setURL(role.guild.members.cache.get(inviterId)!.displayAvatarURL()),
+          builder.setURL(inviter?.displayAvatarURL() ?? role.guild.iconURL()!),
         ),
     );
 
     if (joinerIds?.length) {
       for (let i = 0; i < joinerIds.length; i++) {
+        const joinerComponent: TextDisplayBuilder[] = [
+          new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
+          new TextDisplayBuilder()
+            .setId(GameInviteComponents.JOINER_TEXT_RANGE_START + i)
+            .setContent(Utils.mentionUserById(joinerIds[i])),
+        ];
+
+        const joiner = role.guild.members.cache.get(joinerIds[i]);
+        const joinerPresence = joiner?.presence?.activities
+          .filter(a => a.type === ActivityType.Playing)
+          .map(a => a.name);
+        const joinerChannel = joiner?.voice.channel;
+
+        const joinerInfo: string[] = [];
+        if (joinerPresence?.length) {
+          joinerInfo.push(`-# **Now playing**: ${joinerPresence.map(i => `**${i}**`).join(', ')}`);
+        }
+
+        if (joinerChannel) {
+          joinerInfo.push(`-# **In voice**: ${joinerChannel}`);
+        }
+
+        if (joinerInfo.length) {
+          joinerComponent.push(new TextDisplayBuilder().setContent(joinerInfo.join('\n')));
+        }
+
         container.addSectionComponents(
           new SectionBuilder()
-            .addTextDisplayComponents([
-              new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
-              new TextDisplayBuilder()
-                .setId(GameInviteComponents.JOINER_TEXT_RANGE_START + i)
-                .setContent(Utils.mentionUserById(joinerIds[i])),
-            ])
+            .addTextDisplayComponents(joinerComponent)
             .setThumbnailAccessory(builder =>
-              builder.setURL(role.guild.members.cache.get(joinerIds[i])!.displayAvatarURL()),
+              builder.setURL(joiner?.displayAvatarURL() ?? role.guild.iconURL()!),
             ),
         );
       }
@@ -127,10 +169,15 @@ export default class GameInviteComponent extends ComponentV2 {
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId(this.makeId(CustomId.Close))
-          .setLabel('Mark as Full / Cancel')
+          .setLabel('Mark as Full')
           .setStyle(ButtonStyle.Secondary),
       ]),
     );
+
+    const footer = new TextDisplayBuilder().setContent(
+      `-# This game invite will automatically expire in ${Constants.GAME_INVITE_EXPIRATION_MINS} mins.`,
+    );
+    container.addTextDisplayComponents(footer);
 
     return {
       components: [container],
