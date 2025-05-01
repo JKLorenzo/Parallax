@@ -354,7 +354,7 @@ export default class GameManager extends Manager {
     setTimeout(() => {
       try {
         invite.delete();
-      } catch {}
-    }, 15 * 60000);
+      } catch (_) {}
+    }, Constants.GAME_INVITE_EXPIRATION_MINS * 60000);
   }
 }
