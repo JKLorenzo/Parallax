@@ -232,7 +232,7 @@ export default class GameInviteComponent extends ComponentV2 {
           dmChannel?.send(
             `**${interaction.user.displayName}** joined the **${data.name}** game invite on **${interaction.guild}**.`,
           );
-        } catch {}
+        } catch (_) {}
       }
     }
   }
@@ -309,7 +309,7 @@ export default class GameInviteComponent extends ComponentV2 {
           content: `The **${data.name}** party is now closed. Good luck!`,
           embeds: [inviteClosedEmbed],
         });
-      } catch {}
+      } catch (_) {}
     }
   }
 }
