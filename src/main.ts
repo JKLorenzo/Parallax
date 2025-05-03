@@ -1,13 +1,19 @@
 import 'dotenv/config';
-import { ActivityType, GatewayIntentBits } from 'discord.js';
-import DatabaseFacade from './global/database/database_facade.js';
-import TelemetryFacade from './global/telemetry/telemetry_facade.js';
-import Bot from './modules/bot.js';
+import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
+import DatabaseFacade from './database/database_facade.js';
+import TelemetryFacade from './telemetry/telemetry_facade.js';
+import GatewayManager from './gateway/gateway_manager.js';
+import EnvironmentFacade from './environment/environment_facade.js';
+import InteractionManager from './interaction/interaction_manager.js';
+import GameManager from './game/game_manager.js';
 
-const telemetry = TelemetryFacade.instance();
 const database = DatabaseFacade.instance();
+const telemetry = TelemetryFacade.instance();
 
-const bot = new Bot({
+await database.init();
+await telemetry.init();
+
+export const client = new Client({
   allowedMentions: {
     parse: ['everyone', 'roles', 'users'],
     repliedUser: true,
@@ -37,16 +43,19 @@ const bot = new Bot({
   },
 });
 
-await database.init();
-await telemetry.init(bot);
+client.once('ready', async () => {
+  // Initialize other managers
+  await Promise.all([GatewayManager.instance().init(), GameManager.instance().init()]);
 
-process.on('uncaughtException', error => {
-  telemetry.logUncaughtException({
+  // Initialize interaction manager last to accept user commands
+  await InteractionManager.instance().init();
+
+  telemetry.logMessage({
+    identifier: 'Client',
+    value: `Online on ${client.guilds.cache.size} servers.`,
     broadcast: true,
-    identifier: 'Process',
-    value: error,
     origin: 'Main',
   });
 });
 
-await bot.start();
+client.login(EnvironmentFacade.instance().get('botToken'));

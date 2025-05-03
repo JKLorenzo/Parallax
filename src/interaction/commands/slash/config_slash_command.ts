@@ -9,17 +9,14 @@ import {
   Colors,
   AttachmentBuilder,
 } from 'discord.js';
-import type { GameConfig, GatewayConfig } from '../../../../global/database/database_defs.js';
-import DatabaseFacade from '../../../../global/database/database_facade.js';
-import EnvironmentFacade from '../../../../global/environment/environment_facade.js';
-import type Bot from '../../../../modules/bot.js';
-import { SlashCommand } from '../../command.js';
-import { CommandScope } from '../../interaction_defs.js';
+import DatabaseFacade from '../../../database/database_facade.js';
+import EnvironmentFacade from '../../../environment/environment_facade.js';
+import type { GameConfig, GatewayConfig } from '../../../database/database_defs.js';
+import { CommandScope, SlashCommand } from '../../../modules/command.js';
 
 export default class ConfigSlashCommand extends SlashCommand {
-  constructor(bot: Bot) {
+  constructor() {
     super(
-      bot,
       {
         name: 'config',
         description: 'Gets or updates the configuration of this server.',

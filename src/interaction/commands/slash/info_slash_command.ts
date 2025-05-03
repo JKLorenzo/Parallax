@@ -10,16 +10,13 @@ import {
   MessageFlags,
   ApplicationIntegrationType,
 } from 'discord.js';
-import DatabaseFacade from '../../../../global/database/database_facade.js';
-import type Bot from '../../../../modules/bot.js';
-import Utils from '../../../../static/utils.js';
-import { SlashCommand } from '../../command.js';
-import { CommandScope } from '../../interaction_defs.js';
+import DatabaseFacade from '../../../database/database_facade.js';
+import Utils from '../../../modules/utils.js';
+import { CommandScope, SlashCommand } from '../../../modules/command.js';
 
 export default class InfoSlashCommand extends SlashCommand {
-  constructor(bot: Bot) {
+  constructor() {
     super(
-      bot,
       {
         name: 'info',
         description: 'Shows the current info of the selected user.',

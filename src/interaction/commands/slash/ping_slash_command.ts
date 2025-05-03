@@ -5,14 +5,11 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from 'discord.js';
-import type Bot from '../../../../modules/bot.js';
-import { SlashCommand } from '../../command.js';
-import { CommandScope } from '../../interaction_defs.js';
+import { CommandScope, SlashCommand } from '../../../modules/command.js';
 
 export default class PingSlashCommand extends SlashCommand {
-  constructor(bot: Bot) {
+  constructor() {
     super(
-      bot,
       {
         name: 'ping',
         description: 'Checks the ping of this bot.',

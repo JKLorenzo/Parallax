@@ -1,24 +1,21 @@
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
-  ApplicationIntegrationType,
   type CacheType,
   ChatInputCommandInteraction,
   Colors,
   EmbedBuilder,
 } from 'discord.js';
-import type Bot from '../../../../modules/bot.js';
-import Utils from '../../../../static/utils.js';
-import { SlashCommand } from '../../command.js';
-import { CommandScope } from '../../interaction_defs.js';
+import Utils from '../../../modules/utils.js';
+import { Constants } from '../../../misc/constants.js';
+import { CommandScope, SlashCommand } from '../../../modules/command.js';
 
 export default class SudoSlashCommand extends SlashCommand {
   private _lastResult?: unknown;
   private _hrStart?: [number, number];
 
-  constructor(bot: Bot) {
+  constructor() {
     super(
-      bot,
       {
         name: 'sudo',
         description: 'Executes a command as a superuser.',
@@ -35,7 +32,7 @@ export default class SudoSlashCommand extends SlashCommand {
       },
       {
         scope: CommandScope.Guild,
-        guilds: guild => guild.id === bot.cs?.id,
+        guilds: guild => guild.id === Constants.CONTROL_SERVER_ID,
       },
     );
   }

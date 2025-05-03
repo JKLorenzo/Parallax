@@ -1,16 +1,13 @@
 import type { Awaitable, ModalComponentData, ModalSubmitInteraction } from 'discord.js';
-import Telemetry from '../../global/telemetry/telemetry.js';
-import type Bot from '../../modules/bot.js';
+import Telemetry from '../telemetry/telemetry.js';
 
 export default abstract class Modal {
-  bot: Bot;
   data: ModalComponentData;
   telemetry: Telemetry;
 
-  constructor(bot: Bot, data: ModalComponentData) {
-    this.bot = bot;
+  constructor(data: ModalComponentData) {
     this.data = data;
-    this.telemetry = new Telemetry(this, { parent: bot.telemetry });
+    this.telemetry = new Telemetry(this);
   }
 
   // eslint-disable-next-line no-unused-vars

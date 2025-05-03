@@ -17,17 +17,17 @@ import {
   SectionComponent,
   Role,
 } from 'discord.js';
-import DatabaseFacade from '../../../global/database/database_facade.js';
-import { ComponentV2 } from '../component.js';
-import { Constants, GameInviteComponents } from '../../../static/constants.js';
-import { type GameData, type GuildGameData } from '../../../global/database/database_defs.js';
-import Utils from '../../../static/utils.js';
 import {
   ActivityType,
   TextDisplayComponent,
   type ContainerComponent,
   type MessageReplyOptions,
 } from 'discord.js';
+import type { GameData, GuildGameData } from '../../database/database_defs.js';
+import { Constants, GameInviteComponents } from '../../misc/constants.js';
+import Utils from '../../modules/utils.js';
+import DatabaseFacade from '../../database/database_facade.js';
+import { Component } from '../../modules/component.js';
 
 enum CustomId {
   Join = 'join',
@@ -35,7 +35,7 @@ enum CustomId {
   Close = 'close',
 }
 
-export default class GameInviteComponent extends ComponentV2 {
+export default class GameInviteComponent extends Component {
   static createInteractable(
     inviterId: string,
     data: GameData,

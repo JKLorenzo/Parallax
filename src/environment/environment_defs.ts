@@ -4,4 +4,4 @@ export const EnvKeys = {
 };
 
 export const AssetsPath = 'assets';
-export const InteractionPath = 'managers/interaction';
+export const InteractionPath = 'interaction';

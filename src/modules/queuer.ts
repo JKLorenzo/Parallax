@@ -1,5 +1,5 @@
 import type { Awaitable } from 'discord.js';
-import Utils from '../static/utils.js';
+import Utils from './utils.js';
 
 type QueueItem = {
   exec: () => unknown;

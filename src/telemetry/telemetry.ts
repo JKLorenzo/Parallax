@@ -1,6 +1,6 @@
+import Utils from '../modules/utils.js';
 import { TELEMETRY_END_STR, TELEMETRY_START_STR, type TelemetryOptions } from './telemetry_defs.js';
 import TelemetryFacade from './telemetry_facade.js';
-import Utils from '../../static/utils.js';
 
 export default class Telemetry {
   id: string;

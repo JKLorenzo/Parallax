@@ -1,13 +1,17 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
 import type { TelemetryData } from './telemetry_defs.js';
-import type Bot from '../../modules/bot.js';
-import Utils from '../../static/utils.js';
 import DatabaseFacade from '../database/database_facade.js';
+import Utils from '../modules/utils.js';
+import { client } from '../main.js';
 
 export default class TelemetryFacade {
   private static _instance: TelemetryFacade;
   private webhook?: WebhookClient;
-  private bot?: Bot;
+  private sessionId: string;
+
+  constructor() {
+    this.sessionId = Utils.makeId(5);
+  }
 
   static instance() {
     if (!this._instance) {
@@ -17,7 +21,7 @@ export default class TelemetryFacade {
     return this._instance;
   }
 
-  async init(bot: Bot) {
+  async init() {
     const db = DatabaseFacade.instance();
     const telemetryUrl = await db.botConfig('TelemetryWebhookURL');
 
@@ -25,7 +29,13 @@ export default class TelemetryFacade {
       this.webhook = new WebhookClient({ url: telemetryUrl });
     }
 
-    this.bot = bot;
+    process.on('uncaughtException', error => {
+      this.logUncaughtException({
+        broadcast: true,
+        identifier: 'Process',
+        value: error,
+      });
+    });
   }
 
   async logMessage(data: TelemetryData) {
@@ -35,12 +45,12 @@ export default class TelemetryFacade {
     if (broadcast && this.webhook) {
       const embed = new EmbedBuilder({
         author: {
-          name: this.bot?.client.user?.username ?? '',
-          icon_url: this.bot?.client.user?.displayAvatarURL(),
+          name: client.user?.username ?? '',
+          icon_url: client.user?.displayAvatarURL(),
         },
         title: identifier,
         color: Colors.Blurple,
-        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
+        footer: { text: `Session (${this.sessionId}) ${origin ?? ''}` },
       });
 
       try {
@@ -71,12 +81,12 @@ export default class TelemetryFacade {
     if (broadcast && this.webhook) {
       const embed = new EmbedBuilder({
         author: {
-          name: this.bot?.client.user?.username ?? '',
-          icon_url: this.bot?.client.user?.displayAvatarURL(),
+          name: client.user?.username ?? '',
+          icon_url: client.user?.displayAvatarURL(),
         },
         title: identifier,
         color: Colors.Fuchsia,
-        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
+        footer: { text: origin ?? 'Unknown' },
       });
 
       try {
@@ -107,12 +117,12 @@ export default class TelemetryFacade {
     if (broadcast && this.webhook) {
       const embed = new EmbedBuilder({
         author: {
-          name: this.bot?.client.user?.username ?? '',
-          icon_url: this.bot?.client.user?.displayAvatarURL(),
+          name: client.user?.username ?? '',
+          icon_url: client.user?.displayAvatarURL(),
         },
         title: 'Uncaught Exception',
         color: Colors.Red,
-        footer: { text: origin ?? this.bot?.telemetry.identifier ?? 'Unknown' },
+        footer: { text: origin ?? 'Unknown' },
       });
 
       try {

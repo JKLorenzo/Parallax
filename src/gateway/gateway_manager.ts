@@ -7,29 +7,40 @@ import {
   Invite,
   type PartialGuildMember,
 } from 'discord.js';
-import DatabaseFacade from '../../global/database/database_facade.js';
-import type Bot from '../../modules/bot.js';
-import Queuer from '../../modules/queuer.js';
-import Utils from '../../static/utils.js';
-import Manager from '../manager.js';
+import Queuer from '../modules/queuer.js';
+import Utils from '../modules/utils.js';
+import Manager from '../modules/manager.js';
+import DatabaseFacade from '../database/database_facade.js';
 import GatewayComponent from '../interaction/components/gateway_component.js';
+import { client } from '../main.js';
 
 export default class GatewayManager extends Manager {
+  private static _instance: GatewayManager;
   private cache: Collection<string, Collection<string, Invite>>;
   private queuer: Queuer;
 
-  constructor(bot: Bot) {
-    super(bot);
+  private constructor() {
+    super();
 
     this.cache = new Collection();
     this.queuer = new Queuer();
+
+    GatewayManager._instance = this;
+  }
+
+  static instance() {
+    if (!this._instance) {
+      this._instance = new GatewayManager();
+    }
+
+    return this._instance;
   }
 
   async init() {
     const db = DatabaseFacade.instance();
     const guilds: Guild[] = [];
 
-    for (const guild of this.bot.client.guilds.cache.values()) {
+    for (const guild of client.guilds.cache.values()) {
       const config = await db.gatewayConfig(guild.id);
       if (!config?.enabled) continue;
       guilds.push(guild);
@@ -43,19 +54,19 @@ export default class GatewayManager extends Manager {
       this.cache.set(guildId, invite);
     });
 
-    this.bot.client.on('inviteCreate', invite => {
+    client.on('inviteCreate', invite => {
       this.queuer.queue(() => this.onInviteCreate(invite));
     });
 
-    this.bot.client.on('inviteDelete', invite => {
+    client.on('inviteDelete', invite => {
       this.queuer.queue(() => this.onInviteDelete(invite));
     });
 
-    this.bot.client.on('guildMemberAdd', member => {
+    client.on('guildMemberAdd', member => {
       this.queuer.queue(() => this.onMemberAdd(member));
     });
 
-    this.bot.client.on('guildMemberUpdate', (oldMember, newMember) => {
+    client.on('guildMemberUpdate', (oldMember, newMember) => {
       this.queuer.queue(() => this.onMemberUpdate(oldMember, newMember));
     });
   }
@@ -97,7 +108,6 @@ export default class GatewayManager extends Manager {
 
   private async onMemberAdd(member: GuildMember) {
     const db = DatabaseFacade.instance();
-    const { interaction } = this.bot.managers;
 
     if (member.user.bot) return;
 
@@ -221,7 +231,6 @@ export default class GatewayManager extends Manager {
     newMember: GuildMember,
   ) {
     const db = DatabaseFacade.instance();
-    const { interaction } = this.bot.managers;
 
     if (newMember.user.bot) return;
     if (newMember.pending) return;

@@ -7,26 +7,36 @@ import {
   MessageComponentInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
-import { Command } from './command.js';
-import type { Component, ComponentV2 } from './component.js';
-import { CommandScope } from './interaction_defs.js';
-import type Modal from './modal.js';
-import EnvironmentFacade from '../../global/environment/environment_facade.js';
-import type Bot from '../../modules/bot.js';
-import Utils from '../../static/utils.js';
-import Manager from '../manager.js';
+import type Modal from '../modules/modal.js';
+import Manager from '../modules/manager.js';
+import EnvironmentFacade from '../environment/environment_facade.js';
+import Utils from '../modules/utils.js';
+import { client } from '../main.js';
+import type { Component } from '../modules/component.js';
+import { CommandScope, type Command } from '../modules/command.js';
 
 export default class InteractionManager extends Manager {
+  private static _instance: InteractionManager;
   private commands: Collection<string, Command>;
-  private components: Collection<string, Component | ComponentV2>;
+  private components: Collection<string, Component>;
   private modals: Collection<string, Modal>;
 
-  constructor(bot: Bot) {
-    super(bot);
+  private constructor() {
+    super();
 
     this.commands = new Collection();
     this.components = new Collection();
     this.modals = new Collection();
+
+    InteractionManager._instance = this;
+  }
+
+  static instance() {
+    if (!this._instance) {
+      this._instance = new InteractionManager();
+    }
+
+    return this._instance;
   }
 
   static get CustomIdSeparator() {
@@ -47,7 +57,7 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const modalPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(modalPath);
-          const modal = new Interaction(this.bot) as Modal;
+          const modal = new Interaction() as Modal;
           this.modals.set(modal.data.customId, modal);
         });
       await Promise.all(loadModals);
@@ -60,7 +70,7 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const componentPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(componentPath);
-          const component = new Interaction(this.bot) as Component | ComponentV2;
+          const component = new Interaction() as Component;
           this.components.set(component.name, component);
         });
       await Promise.all(loadComponents);
@@ -73,14 +83,14 @@ export default class InteractionManager extends Manager {
         .map(async path => {
           const commandPath = pathToFileURL(path).href;
           const { default: Interaction } = await import(commandPath);
-          const command = new Interaction(this.bot) as Command;
+          const command = new Interaction() as Command;
           this.commands.set(command.data.name, command);
         });
       await Promise.all(loadCommands);
       telemetry.log(`A total of ${loadCommands.length} commands were loaded.`);
 
       // Initialize commands
-      await this.bot.client.application?.commands.fetch();
+      await client.application?.commands.fetch();
       const initCommands = this.commands.map(command => command.init());
       await Promise.all(initCommands);
       telemetry.log(`A total of ${initCommands.length} commands were initialized.`);
@@ -88,7 +98,7 @@ export default class InteractionManager extends Manager {
       // Delete commands
       const deleteCommands: Promise<unknown>[] = [];
 
-      this.bot.client.application?.commands.cache
+      client.application?.commands.cache
         .filter(
           command =>
             !this.commands.some(thisCommand => {
@@ -106,7 +116,7 @@ export default class InteractionManager extends Manager {
           ),
         );
 
-      this.bot.client.guilds.cache.map(guild =>
+      client.guilds.cache.map(guild =>
         guild.commands.cache
           .filter(
             command =>
@@ -137,7 +147,7 @@ export default class InteractionManager extends Manager {
       telemetry.error(error);
     }
 
-    this.bot.client.on('interactionCreate', interaction => {
+    client.on('interactionCreate', interaction => {
       if (interaction.isCommand()) {
         this.processCommand(interaction);
       } else if (interaction.isMessageComponent()) {
@@ -147,7 +157,7 @@ export default class InteractionManager extends Manager {
       }
     });
 
-    this.bot.client.on('guildCreate', guild => {
+    client.on('guildCreate', guild => {
       this.commands.forEach(command => command.init(guild));
     });
 

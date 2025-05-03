@@ -11,9 +11,9 @@ import {
   type ActionRowData,
   type MessageActionRowComponentData,
 } from 'discord.js';
-import DatabaseFacade from '../../../global/database/database_facade.js';
-import Utils from '../../../static/utils.js';
-import { Component } from '../component.js';
+import DatabaseFacade from '../../database/database_facade.js';
+import Utils from '../../modules/utils.js';
+import { Component } from '../../modules/component.js';
 
 enum Id {
   Approve = 'approve',

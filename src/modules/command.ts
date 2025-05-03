@@ -11,21 +11,28 @@ import {
   type MessageApplicationCommandData,
   ContextMenuCommandInteraction,
 } from 'discord.js';
-import { CommandScope, type CommandOptions } from './interaction_defs.js';
-import Telemetry from '../../global/telemetry/telemetry.js';
-import type Bot from '../../modules/bot.js';
+import Telemetry from '../telemetry/telemetry.js';
+import { client } from '../main.js';
+
+export enum CommandScope {
+  Global,
+  Guild,
+}
+
+export type CommandOptions = {
+  scope: CommandScope;
+  guilds?(guild: Guild): Awaitable<boolean>;
+};
 
 export abstract class Command<T extends ApplicationCommandData = ApplicationCommandData> {
-  bot: Bot;
   data: T;
   options: CommandOptions;
   telemetry: Telemetry;
 
-  constructor(bot: Bot, data: T, options: CommandOptions) {
-    this.bot = bot;
+  constructor(data: T, options: CommandOptions) {
     this.data = data;
     this.options = options;
-    this.telemetry = new Telemetry(this, { parent: bot.managers.interaction.telemetry });
+    this.telemetry = new Telemetry(this);
   }
 
   async init(guild?: Guild) {
@@ -34,7 +41,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
     const type = ApplicationCommandType[this.data.type!].toLowerCase();
 
     if (this.options.scope === CommandScope.Global) {
-      const command = this.bot.client.application?.commands.cache.find(
+      const command = client.application?.commands.cache.find(
         c => c.name === this.data.name && c.type === this.data.type,
       );
 
@@ -42,7 +49,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
 
       // Create
       if (!command) {
-        await this.bot.client.application?.commands.create(this.data);
+        await client.application?.commands.create(this.data);
         status = 'created';
       } else if (!command.equals(this.data)) {
         await command.edit(this.data);
@@ -53,7 +60,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
         telemetry.log(`Global ${type} command ${this.data.name} ${status}.`);
       }
     } else if (this.options.scope === CommandScope.Guild) {
-      const guilds = guild ? [guild] : [...this.bot.client.guilds.cache.values()];
+      const guilds = guild ? [guild] : [...client.guilds.cache.values()];
       await Promise.all(guilds.map(e => e.commands.fetch()));
 
       for (const thisGuild of guilds) {
