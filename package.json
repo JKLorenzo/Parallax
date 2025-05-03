@@ -10,8 +10,7 @@
     "build": "tsc",
     "postbuild": "copyfiles -u 1 \"src/assets/**/*.*\" build",
     "prepare": "is-ci || husky install",
-    "forever-start": "forever start ./build/main.js",
-    "forever-stop": "forever stop ./build/main.js"
+    "rebuild": "npm run clean && npm run build"
   },
   "engines": {
     "node": ">=22.x"
@@ -54,7 +53,6 @@
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.6",
-    "forever": "^4.0.3",
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
