@@ -2,6 +2,8 @@ export abstract class Constants {
   static readonly CONTROL_SERVER_ID = '806481618008539137';
   static readonly QUARANTINE_GAMING_ID = '351178660725915649';
 
+  static readonly DEDICATED_CHANNEL_CATEGORY_ID = '778541774154891264';
+
   static readonly GAME_MANAGER_TITLE = 'Parallax: Game Manager';
   static readonly GAME_EMBED_APPID_FIELD = 'Application Id';
   static readonly GAME_EMBED_ROLE_FIELD = 'Role';

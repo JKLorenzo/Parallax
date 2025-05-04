@@ -7,15 +7,13 @@ import {
   EmbedBuilder,
   ContainerBuilder,
   SectionBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
-  ThumbnailBuilder,
   TextDisplayBuilder,
   SeparatorSpacingSize,
   ButtonStyle,
   ButtonBuilder,
   SectionComponent,
   Role,
+  GuildMember,
 } from 'discord.js';
 import {
   ActivityType,
@@ -33,6 +31,7 @@ enum CustomId {
   Join = 'join',
   Leave = 'leave',
   Close = 'close',
+  Notify = 'notify',
 }
 
 export default class GameInviteComponent extends Component {
@@ -47,13 +46,6 @@ export default class GameInviteComponent extends Component {
       id: GameInviteComponents.GAME_INVITE_CONTAINER,
     });
 
-    if (data.bannerURLs?.length && typeof data.bannerIndex === 'number') {
-      const banner = new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(data.bannerURLs[data.bannerIndex]),
-      );
-      container.addMediaGalleryComponents(banner);
-    }
-
     const gameName = new TextDisplayBuilder()
       .setId(GameInviteComponents.GAME_NAME_TEXT)
       .setContent(`# ${data.name}`);
@@ -62,6 +54,17 @@ export default class GameInviteComponent extends Component {
       .setId(GameInviteComponents.APP_ID_TEXT)
       .setContent(`-# ${data.id}`);
 
+    const headerSection = new SectionBuilder()
+      .setId(GameInviteComponents.HEADER_SECTION)
+      .addTextDisplayComponents(gameName, appId)
+      .setButtonAccessory(
+        new ButtonBuilder()
+          .setCustomId(this.makeId(CustomId.Notify))
+          .setEmoji('1368464152368123944')
+          .setStyle(ButtonStyle.Secondary),
+      );
+    container.addSectionComponents(headerSection);
+
     const onlineMembers = role?.members.filter(m => m.presence?.status != 'offline');
     const gameInfo = new TextDisplayBuilder().setContent(
       [
@@ -69,17 +72,7 @@ export default class GameInviteComponent extends Component {
         `-# **Last Played**: ${guildData.lastPlayed ?? 'Not played yet'}`,
       ].join('\n'),
     );
-
-    if (data.iconURLs?.length && typeof data.iconIndex === 'number') {
-      const icon = new ThumbnailBuilder().setURL(data.iconURLs[data.iconIndex]);
-      const section = new SectionBuilder()
-        .setId(GameInviteComponents.HEADER_SECTION)
-        .addTextDisplayComponents(gameName, appId, gameInfo)
-        .setThumbnailAccessory(icon);
-      container.addSectionComponents(section);
-    } else {
-      container.addTextDisplayComponents(gameName, appId, gameInfo);
-    }
+    container.addTextDisplayComponents(gameInfo);
 
     container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
 
@@ -174,11 +167,6 @@ export default class GameInviteComponent extends Component {
       ]),
     );
 
-    const footer = new TextDisplayBuilder().setContent(
-      `-# This game invite will automatically expire in ${Constants.GAME_INVITE_EXPIRATION_MINS} mins.`,
-    );
-    container.addTextDisplayComponents(footer);
-
     return {
       components: [container],
       flags: MessageFlags.IsComponentsV2,
@@ -247,6 +235,9 @@ export default class GameInviteComponent extends Component {
         break;
       case CustomId.Close:
         await this.close(interaction, inviterId, gameData, guildGameData, role, joinerIds);
+        break;
+      case CustomId.Notify:
+        await this.notify(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
       default:
     }
@@ -357,6 +348,57 @@ export default class GameInviteComponent extends Component {
           embeds: [inviteClosedEmbed],
         });
       } catch (_) {}
+    }
+  }
+
+  async notify(
+    interaction: MessageComponentInteraction<CacheType>,
+    inviter: string,
+    data: GameData,
+    guildData: GuildGameData,
+    role: Role,
+    joinerIds: string[],
+  ) {
+    const member = interaction.member;
+    if (!(member instanceof GuildMember)) return;
+
+    const channels = role.guild.channels.cache.filter(
+      c =>
+        c.parentId === Constants.DEDICATED_CHANNEL_CATEGORY_ID &&
+        c.permissionsFor(role).has('ViewChannel'),
+    );
+
+    if (member.roles.cache.has(role.id)) {
+      const content = [
+        `You will no longer be notified when there is a game invite for ${role}.`,
+        `However, this role will automatically be added to you once you play this game again.`,
+      ];
+      if (channels.size > 0) {
+        content.push(
+          `Also, you will no longer have access to the following channel: ${channels.map(c => c.toString()).join(', ')}`,
+        );
+      }
+
+      await member.roles.remove(role, Constants.GAME_MANAGER_TITLE);
+
+      await interaction.reply({
+        content: content.join('\n'),
+        flags: MessageFlags.Ephemeral,
+      });
+    } else {
+      const content = [`You will now be notified when there is a game invite for ${role}.`, ``];
+      if (channels.size > 0) {
+        content.push(
+          `Also, you now have access to the following channel: ${channels.map(c => c.toString()).join(', ')}`,
+        );
+      }
+
+      await member.roles.add(role, Constants.GAME_MANAGER_TITLE);
+
+      await interaction.reply({
+        content: content.join('\n'),
+        flags: MessageFlags.Ephemeral,
+      });
     }
   }
 }
