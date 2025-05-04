@@ -13,7 +13,7 @@ export abstract class Constants {
 
   static readonly GAME_EMBED_INVITER_FIELD = 'Inviter';
 
-  static readonly GAME_INVITE_EXPIRATION_MINS = 30;
+  static readonly GAME_INVITE_EXPIRATION_MINS = 60;
 }
 
 enum Containers {
