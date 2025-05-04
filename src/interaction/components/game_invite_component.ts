@@ -65,7 +65,7 @@ export default class GameInviteComponent extends Component {
       );
     container.addSectionComponents(headerSection);
 
-    const onlineMembers = role?.members.filter(m => m.presence?.status != 'offline');
+    const onlineMembers = role?.members.filter(m => m.presence && m.presence.status != 'offline');
     const gameInfo = new TextDisplayBuilder().setContent(
       [
         `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
