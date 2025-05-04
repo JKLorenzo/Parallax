@@ -69,9 +69,9 @@ export default class GameInviteOperator {
     );
 
     const invite = await message.reply(reply);
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        invite.delete();
+        await invite.delete();
       } catch (_) {}
     }, Constants.GAME_INVITE_EXPIRATION_MINS * 60000);
   }
