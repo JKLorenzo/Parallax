@@ -386,7 +386,7 @@ export default class GameInviteComponent extends Component {
         flags: MessageFlags.Ephemeral,
       });
     } else {
-      const content = [`You will now be notified when there is a game invite for ${role}.`, ``];
+      const content = [`You will now be notified when there is a game invite for ${role}.`];
       if (channels.size > 0) {
         content.push(
           `Also, you now have access to the following channel: ${channels.map(c => c.toString()).join(', ')}`,
