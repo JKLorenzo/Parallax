@@ -6,6 +6,7 @@ import GatewayManager from './gateway/gateway_manager.js';
 import EnvironmentFacade from './environment/environment_facade.js';
 import InteractionManager from './interaction/interaction_manager.js';
 import GameManager from './game/game_manager.js';
+import VoiceManager from './voice/voice_manager.js';
 
 const database = DatabaseFacade.instance();
 const telemetry = TelemetryFacade.instance();
@@ -45,7 +46,11 @@ export const client = new Client({
 
 client.once('ready', async () => {
   // Initialize other managers
-  await Promise.all([GatewayManager.instance().init(), GameManager.instance().init()]);
+  await Promise.all([
+    GatewayManager.instance().init(),
+    GameManager.instance().init(),
+    VoiceManager.instance().init(),
+  ]);
 
   // Initialize interaction manager last to accept user commands
   await InteractionManager.instance().init();
