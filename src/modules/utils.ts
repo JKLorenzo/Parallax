@@ -109,7 +109,7 @@ export default abstract class Utils {
     return false;
   }
 
-  static asAll(base: string, parts: string[]): boolean {
+  static hasAll(base: string, parts: string[]): boolean {
     for (const this_part of parts) {
       if (!this.hasAny(base, this_part)) return false;
     }
