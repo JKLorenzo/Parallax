@@ -12,14 +12,16 @@ export abstract class Constants {
   static readonly GAME_EMBED_ICON_FIELD = 'Icon';
   static readonly GAME_EMBED_BANNER_FIELD = 'Banner';
   static readonly GAME_EMBED_LASTPLAYED_FIELD = 'Last Played';
-
   static readonly GAME_EMBED_INVITER_FIELD = 'Inviter';
-
   static readonly GAME_INVITE_EXPIRATION_MINS = 60;
+
+  static readonly AUTOMOD_MANAGER_TITLE = 'Parallax: AutoMod Manager';
+  static readonly AUTOMOD_TIMEOUT_MINS = 5;
 }
 
 enum Containers {
   GAME_INVITE = 1 << 10,
+  AUTOMOD = 2 << 10,
 }
 
 export enum GameInviteComponents {
@@ -29,4 +31,10 @@ export enum GameInviteComponents {
   HEADER_SECTION,
   INVITER_TEXT,
   JOINER_TEXT_RANGE_START, // SHOULD ALWAYS BE LAST
+}
+
+export enum AutoModComponents {
+  AUTOMOD_CONTAINER = Containers.AUTOMOD,
+  AUTOMOD_OFFENDER,
+  AUTOMOD_EVIDENCE,
 }
