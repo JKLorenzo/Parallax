@@ -36,7 +36,7 @@ export default class AutomodAntiSpamOperator {
     if (!member?.moderatable) return;
 
     const messages = this.messages.filter(m => m.author.id === member.id && m.id !== message.id);
-    const spamMessages = messages.filter(m => m.content === message.content);
+    const spamMessages = messages.filter(m => m.content === message.content && m.channelId !== message.channelId);
     if (spamMessages.length === 0) return;
     spamMessages.push(message);
 
