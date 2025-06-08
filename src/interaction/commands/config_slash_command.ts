@@ -9,10 +9,10 @@ import {
   Colors,
   AttachmentBuilder,
 } from 'discord.js';
-import DatabaseFacade from '../../../database/database_facade.js';
-import EnvironmentFacade from '../../../environment/environment_facade.js';
-import type { GameConfig, GatewayConfig } from '../../../database/database_defs.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import DatabaseFacade from '../../database/database_facade.js';
+import EnvironmentFacade from '../../environment/environment_facade.js';
+import type { GameConfig, GatewayConfig } from '../../database/database_defs.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
 
 export default class ConfigSlashCommand extends SlashCommand {
   constructor() {

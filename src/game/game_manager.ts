@@ -30,8 +30,6 @@ export default class GameManager extends Manager {
     this.roleQueue = new Queuer();
     this.timekeepingQueue = new Queuer();
     this.messageQueue = new Queuer();
-
-    GameManager._instance = this;
   }
 
   static instance() {

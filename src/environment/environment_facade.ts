@@ -35,11 +35,11 @@ export default class EnvironmentFacade {
     return process.env.NODE_ENV === 'production';
   }
 
-  assetsPath(path: string) {
-    return join(process.cwd(), 'build', AssetsPath, path);
+  get cwd() {
+    return join(process.cwd(), 'build');
   }
 
-  interactionsPath() {
-    return join(process.cwd(), 'build', InteractionPath);
+  assetsPath(path: string) {
+    return join(this.cwd, AssetsPath, path);
   }
 }

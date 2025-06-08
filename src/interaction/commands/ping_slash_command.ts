@@ -5,7 +5,7 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
 
 export default class PingSlashCommand extends SlashCommand {
   constructor() {
@@ -30,7 +30,7 @@ export default class PingSlashCommand extends SlashCommand {
 
     await interaction.reply({
       content: `My current ping to the discord server is ${ping} ms.`,
-      flags: [MessageFlags.Ephemeral],
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

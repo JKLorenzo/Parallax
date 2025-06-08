@@ -27,7 +27,7 @@ import Utils from '../../modules/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import { Component } from '../../modules/component.js';
 
-enum CustomId {
+enum Id {
   Join = 'join',
   Leave = 'leave',
   Close = 'close',
@@ -59,7 +59,7 @@ export default class GameInviteComponent extends Component {
       .addTextDisplayComponents(gameName, appId)
       .setButtonAccessory(
         new ButtonBuilder()
-          .setCustomId(this.makeId(CustomId.Notify))
+          .setCustomId(this.makeId(Id.Notify))
           .setEmoji('1368464152368123944')
           .setStyle(ButtonStyle.Secondary),
       );
@@ -153,15 +153,15 @@ export default class GameInviteComponent extends Component {
     container.addActionRowComponents(row =>
       row.addComponents([
         new ButtonBuilder()
-          .setCustomId(this.makeId(CustomId.Join))
+          .setCustomId(this.makeId(Id.Join))
           .setLabel('Join')
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId(this.makeId(CustomId.Leave))
+          .setCustomId(this.makeId(Id.Leave))
           .setLabel('Leave')
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId(this.makeId(CustomId.Close))
+          .setCustomId(this.makeId(Id.Close))
           .setLabel('Mark as Full')
           .setStyle(ButtonStyle.Secondary),
       ]),
@@ -173,7 +173,7 @@ export default class GameInviteComponent extends Component {
     };
   }
 
-  async exec(interaction: MessageComponentInteraction<CacheType>, customId: CustomId) {
+  async exec(interaction: MessageComponentInteraction<CacheType>, customId: Id) {
     const db = DatabaseFacade.instance();
 
     if (!interaction.inGuild()) return;
@@ -227,16 +227,16 @@ export default class GameInviteComponent extends Component {
     const inviterId = Utils.parseMention(inviterMentionComponent.content);
 
     switch (customId) {
-      case CustomId.Join:
+      case Id.Join:
         await this.join(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
-      case CustomId.Leave:
+      case Id.Leave:
         await this.leave(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
-      case CustomId.Close:
+      case Id.Close:
         await this.close(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
-      case CustomId.Notify:
+      case Id.Notify:
         await this.notify(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
       default:

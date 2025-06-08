@@ -6,9 +6,9 @@ import {
   Colors,
   EmbedBuilder,
 } from 'discord.js';
-import Utils from '../../../modules/utils.js';
-import { Constants } from '../../../misc/constants.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import Utils from '../../modules/utils.js';
+import { Constants } from '../../misc/constants.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
 
 export default class SudoSlashCommand extends SlashCommand {
   private _lastResult?: unknown;

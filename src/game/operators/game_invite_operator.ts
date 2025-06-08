@@ -4,7 +4,7 @@ import type { GameData } from '../../database/database_defs.js';
 import { Constants } from '../../misc/constants.js';
 import Utils from '../../modules/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
-import GameInviteComponent from '../../interaction/components/game_invite_component.js';
+import GameInviteComponent from '../components/game_invite_component.js';
 
 export default class GameInviteOperator {
   static makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {

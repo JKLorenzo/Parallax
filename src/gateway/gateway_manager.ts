@@ -11,7 +11,7 @@ import Queuer from '../modules/queuer.js';
 import Utils from '../modules/utils.js';
 import Manager from '../modules/manager.js';
 import DatabaseFacade from '../database/database_facade.js';
-import GatewayComponent from '../interaction/components/gateway_component.js';
+import GatewayComponent from './components/gateway_component.js';
 import { client } from '../main.js';
 
 export default class GatewayManager extends Manager {
@@ -24,8 +24,6 @@ export default class GatewayManager extends Manager {
 
     this.cache = new Collection();
     this.queuer = new Queuer();
-
-    GatewayManager._instance = this;
   }
 
   static instance() {

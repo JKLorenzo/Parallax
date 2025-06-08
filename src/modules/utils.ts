@@ -1,8 +1,10 @@
 import fs from 'fs';
+import { readdir } from 'fs/promises';
 import path from 'path';
 import util from 'util';
 import humanizeDuration from 'humanize-duration';
 import _ from 'lodash';
+import url from 'url';
 
 export default abstract class Utils {
   static sleep(ms: number): Promise<void> {
@@ -11,13 +13,34 @@ export default abstract class Utils {
     });
   }
 
+  static dirExists(dir: string): boolean {
+    return fs.existsSync(dir);
+  }
+
+  static joinPaths(...paths: string[]) {
+    return path.join(...paths);
+  }
+
   static getFiles(dir: string): string[] {
-    if (!fs.existsSync(dir)) return [];
+    if (!this.dirExists(dir)) return [];
     return fs.readdirSync(dir).reduce<string[]>((list, file) => {
-      const name = path.join(dir, file);
+      const name = this.joinPaths(dir, file);
       const isDir = fs.statSync(name).isDirectory();
       return list.concat(isDir ? this.getFiles(name) : [name]);
     }, []);
+  }
+
+  static async getPaths(dir: string): Promise<string[]> {
+    if (!this.dirExists(dir)) return [];
+    const dirs = await readdir(dir, { withFileTypes: true });
+    const dirNames = dirs
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => this.joinPaths(dirent.path, dirent.name));
+    return dirNames;
+  }
+
+  static getPathURL(path: string): url.URL {
+    return url.pathToFileURL(path);
   }
 
   static inspect(data: unknown): string {

@@ -3,13 +3,13 @@ import { TELEMETRY_END_STR, TELEMETRY_START_STR, type TelemetryOptions } from '.
 import TelemetryFacade from './telemetry_facade.js';
 
 export default class Telemetry {
-  id: string;
   section: string;
-  parent?: Telemetry;
   broadcast: boolean;
+  id?: string;
+  parent?: Telemetry;
 
   constructor(section: string | object, options?: TelemetryOptions) {
-    this.id = options?.id ?? Utils.makeId(3);
+    this.id = options?.id;
     this.section = Utils.getObjName(section);
     this.parent = options?.parent;
     this.broadcast = options?.broadcast ?? false;
@@ -18,7 +18,7 @@ export default class Telemetry {
   }
 
   get identifier() {
-    return `${this.section}(${this.id})`;
+    return `${this.section}${this.id ? `(${this.id})` : ''}`;
   }
 
   get origin() {

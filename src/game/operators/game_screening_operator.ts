@@ -5,8 +5,8 @@ import { GameStatus, type GameData, type GuildGameData } from '../../database/da
 import { client } from '../../main.js';
 import { Constants } from '../../misc/constants.js';
 import GameManager from '../game_manager.js';
-import GameScreeningComponent from '../../interaction/components/game_screening_component.js';
-import GameScreeningGuildComponent from '../../interaction/components/game_screening_guild_component.js';
+import GameScreeningComponent from '../components/game_screening_component.js';
+import GameScreeningGuildComponent from '../components/game_screening_guild_component.js';
 
 export default class GameScreeningOperator {
   static async screenGame(game: Activity) {
