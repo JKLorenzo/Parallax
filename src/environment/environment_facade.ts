@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { AssetsPath, EnvKeys, InteractionPath } from './environment_defs.js';
+import { AssetsPath, EnvKeys } from './environment_defs.js';
 
 export default class EnvironmentFacade {
   private static _instance: EnvironmentFacade;
@@ -39,7 +39,7 @@ export default class EnvironmentFacade {
     return join(process.cwd(), 'build');
   }
 
-  assetsPath(path: string) {
-    return join(this.cwd, AssetsPath, path);
+  assetsPath(name: string) {
+    return join(process.cwd(), 'src', AssetsPath, name);
   }
 }
