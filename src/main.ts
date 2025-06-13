@@ -8,6 +8,7 @@ import InteractionManager from './interaction/interaction_manager.js';
 import GameManager from './game/game_manager.js';
 import VoiceManager from './voice/voice_manager.js';
 import AutomodManager from './automod/automod_manager.js';
+import ProcessManager from './process/process_manager.js';
 
 const database = DatabaseFacade.instance();
 const telemetry = TelemetryFacade.instance();
@@ -40,9 +41,12 @@ client.once('ready', async () => {
     AutomodManager.instance().init(),
     GatewayManager.instance().init(),
     GameManager.instance().init(),
-    InteractionManager.instance().init(),
     VoiceManager.instance().init(),
+    ProcessManager.instance().init(),
   ]);
+
+  // Accept commands once all managers are intiialized.
+  await InteractionManager.instance().init();
 
   telemetry.logMessage({
     identifier: 'Client',

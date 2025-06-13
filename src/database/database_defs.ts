@@ -59,3 +59,8 @@ export type GuildGameData = {
   moderatorId?: Snowflake;
   lastPlayed?: Date;
 };
+
+export type ProcessData = {
+  name: string;
+  path: string[];
+};

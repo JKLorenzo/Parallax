@@ -9,6 +9,7 @@ import {
   type GuildGameData,
   type MemberData,
   type MusicConfig,
+  type ProcessData,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 
@@ -313,5 +314,17 @@ export default class DatabaseFacade {
     if (!newGuildGames) return;
 
     return [...newGuildGames.values()].find(guildGame => guildGame.roleId === roleId);
+  }
+
+  async fetchProcesses() {
+    const results = await this.mongoClient.db('global').collection('processes').find().toArray();
+
+    return results.map(result => {
+      const processData: ProcessData = {
+        name: result.name,
+        path: result.path,
+      };
+      return processData;
+    });
   }
 }
