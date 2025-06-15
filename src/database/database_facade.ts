@@ -9,7 +9,7 @@ import {
   type GuildGameData,
   type MemberData,
   type MusicConfig,
-  type ProcessData,
+  type Executable,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 
@@ -316,15 +316,13 @@ export default class DatabaseFacade {
     return [...newGuildGames.values()].find(guildGame => guildGame.roleId === roleId);
   }
 
-  async fetchProcesses() {
-    const results = await this.mongoClient.db('global').collection('processes').find().toArray();
+  async fetchExecutables() {
+    const results = await this.mongoClient.db('global').collection('executables').find().toArray();
+    const executables: Executable[] = results.map(result => ({
+      name: result.name,
+      path: result.path,
+    }));
 
-    return results.map(result => {
-      const processData: ProcessData = {
-        name: result.name,
-        path: result.path,
-      };
-      return processData;
-    });
+    return executables;
   }
 }

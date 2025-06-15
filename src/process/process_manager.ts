@@ -1,25 +1,18 @@
 import { execFile, ChildProcess } from 'node:child_process';
-import { kill } from 'node:process';
 import Manager from '../modules/manager.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 import Utils from '../modules/utils.js';
-import type { ProcessData } from '../database/database_defs.js';
+import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
-import {
-  ActivityType,
-  Colors,
-  EmbedBuilder,
-  type ApplicationCommandOptionChoiceData,
-  type TextBasedChannel,
-} from 'discord.js';
+import { ActivityType, Colors, EmbedBuilder, type TextBasedChannel } from 'discord.js';
 import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
 import stripAnsi from 'strip-ansi';
 
 export default class ProcessManager extends Manager {
   private static _instance: ProcessManager;
+  private _executables: Executable[];
   private process?: ChildProcess;
-  private processData: ProcessData[];
   private processTelemetry?: Telemetry;
   private processOutput: string[];
   private interval?: NodeJS.Timeout;
@@ -27,7 +20,7 @@ export default class ProcessManager extends Manager {
   constructor() {
     super();
 
-    this.processData = [];
+    this._executables = [];
     this.processOutput = [];
   }
 
@@ -40,18 +33,17 @@ export default class ProcessManager extends Manager {
   }
 
   async init() {
-    const db = DatabaseFacade.instance();
-    this.processData = await db.fetchProcesses();
+    await this.updateExecutables();
   }
 
-  processDataToChoice() {
-    return this.processData.map(data => {
-      const choice: ApplicationCommandOptionChoiceData<string> = {
-        name: data.name,
-        value: data.name,
-      };
-      return choice;
-    });
+  get executables() {
+    return this._executables;
+  }
+
+  async updateExecutables() {
+    const db = DatabaseFacade.instance();
+    this._executables = await db.fetchExecutables();
+    return this.executables;
   }
 
   start(name: string, textChannel: TextBasedChannel | null) {
@@ -59,10 +51,10 @@ export default class ProcessManager extends Manager {
     if (this.process) return;
     if (!textChannel?.isSendable()) return;
 
-    const processData = this.processData.find(p => p.name === name);
-    if (!processData) return;
+    const executable = this.executables.find(p => p.name === name);
+    if (!executable) return;
 
-    this.process = execFile(Utils.joinPaths(...processData.path), {
+    this.process = execFile(Utils.joinPaths(...executable.path), {
       cwd: Utils.joinPaths(env.cwd, '../../../'),
       shell: true,
     });

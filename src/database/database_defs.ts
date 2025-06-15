@@ -60,7 +60,7 @@ export type GuildGameData = {
   lastPlayed?: Date;
 };
 
-export type ProcessData = {
+export type Executable = {
   name: string;
   path: string[];
 };
