@@ -1,6 +1,11 @@
-import { ApplicationCommandType, Collection, CommandInteraction } from 'discord.js';
+import {
+  ApplicationCommandType,
+  AutocompleteInteraction,
+  Collection,
+  CommandInteraction,
+} from 'discord.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
-import { CommandScope, type Command } from '../../modules/command.js';
+import { CommandScope, SlashCommandAutoComplete, type Command } from '../../modules/command.js';
 import Utils from '../../modules/utils.js';
 import type InteractionManager from '../interaction_manager.js';
 import { client } from '../../main.js';
@@ -99,14 +104,22 @@ export default class InteractionCommandOperator {
     telemetry.end();
   }
 
-  async process(interaction: CommandInteraction) {
+  async process(interaction: CommandInteraction | AutocompleteInteraction) {
     const telemetry = this.telemetry.start(this.process);
 
     const thisCommand = this.commands.get(interaction.commandName);
     if (!thisCommand) return;
 
     try {
-      await thisCommand.exec(interaction);
+      if (interaction instanceof AutocompleteInteraction) {
+        if (!(thisCommand instanceof SlashCommandAutoComplete)) {
+          throw `${interaction.commandName} does not support autocomplete.`;
+        }
+
+        await thisCommand.autocomplete(interaction);
+      } else {
+        await thisCommand.exec(interaction);
+      }
     } catch (error) {
       telemetry.error(error);
     }

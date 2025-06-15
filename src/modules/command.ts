@@ -10,6 +10,7 @@ import {
   type UserApplicationCommandData,
   type MessageApplicationCommandData,
   ContextMenuCommandInteraction,
+  AutocompleteInteraction,
 } from 'discord.js';
 import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
@@ -101,6 +102,10 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
 
 export abstract class SlashCommand extends Command<ChatInputApplicationCommandData> {
   abstract exec(interaction: ChatInputCommandInteraction<CacheType>): Awaitable<unknown>;
+}
+
+export abstract class SlashCommandAutoComplete extends SlashCommand {
+  abstract autocomplete(interaction: AutocompleteInteraction<CacheType>): Awaitable<unknown>;
 }
 
 export abstract class ContextCommand extends Command<

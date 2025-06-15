@@ -39,7 +39,7 @@ export default class InteractionManager extends Manager {
     }
 
     client.on('interactionCreate', interaction => {
-      if (interaction.isCommand()) {
+      if (interaction.isCommand() || interaction.isAutocomplete()) {
         this.commandOperator.process(interaction);
       } else if (interaction.isMessageComponent()) {
         this.componentOperator.process(interaction);
