@@ -4,12 +4,15 @@ import {
   PermissionFlagsBits,
   ApplicationCommandType,
   ApplicationCommandOptionType,
+  AutocompleteInteraction,
+  type ApplicationCommandOptionChoiceData,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
 import ProcessManager from '../process_manager.js';
+import Utils from '../../modules/utils.js';
 import { Constants } from '../../misc/constants.js';
 
-export default class ProcessManagerSlashCommand extends SlashCommand {
+export default class ProcessManagerSlashCommand extends SlashCommandAutoComplete {
   constructor() {
     super(
       {
@@ -28,7 +31,7 @@ export default class ProcessManagerSlashCommand extends SlashCommand {
                 description: 'Start the selected process.',
                 type: ApplicationCommandOptionType.String,
                 required: true,
-                choices: ProcessManager.instance().processDataToChoice(),
+                autocomplete: true,
               },
             ],
           },
@@ -41,6 +44,7 @@ export default class ProcessManagerSlashCommand extends SlashCommand {
       },
       {
         scope: CommandScope.Guild,
+        guilds: guild => guild.id === Constants.CONTROL_SERVER_ID,
       },
     );
   }
@@ -54,12 +58,28 @@ export default class ProcessManagerSlashCommand extends SlashCommand {
       const pid = ProcessManager.instance().start(process, interaction.channel);
       if (!pid) return interaction.editReply(`Process failed to start.`);
 
-      interaction.editReply(`Process started with PID: \`${pid}\``);
+      await interaction.editReply(`Process started with PID: \`${pid}\``);
     } else if (command === 'stop') {
       const stopped = ProcessManager.instance().stop();
       if (!stopped) return interaction.editReply(`Process failed to exit.`);
 
-      interaction.editReply(`Process exited successfully.`);
+      await interaction.editReply(`Process exited successfully.`);
+    }
+  }
+
+  async autocomplete(interaction: AutocompleteInteraction<CacheType>) {
+    const focused = interaction.options.getFocused(true);
+
+    if (focused.name === 'process') {
+      const executables = ProcessManager.instance().executables;
+      const choices: ApplicationCommandOptionChoiceData<string>[] = executables
+        .filter(pd => Utils.hasAny(pd.name.toLowerCase(), focused.value.toLowerCase()))
+        .map(data => ({
+          name: data.name,
+          value: data.name,
+        }));
+
+      await interaction.respond(choices);
     }
   }
 }
