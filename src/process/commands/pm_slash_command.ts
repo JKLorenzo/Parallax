@@ -40,6 +40,11 @@ export default class ProcessManagerSlashCommand extends SlashCommandAutoComplete
             description: 'Stop the running process.',
             type: ApplicationCommandOptionType.Subcommand,
           },
+          {
+            name: 'update',
+            description: 'Update the executables.',
+            type: ApplicationCommandOptionType.Subcommand,
+          },
         ],
       },
       {
@@ -64,6 +69,9 @@ export default class ProcessManagerSlashCommand extends SlashCommandAutoComplete
       if (!stopped) return interaction.editReply(`Process failed to exit.`);
 
       await interaction.editReply(`Process exited successfully.`);
+    } else if (command === 'update') {
+      const executables = await ProcessManager.instance().updateExecutables();
+      await interaction.editReply(`Loaded ${executables.length} executables.`);
     }
   }
 
