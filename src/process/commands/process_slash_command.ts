@@ -12,7 +12,7 @@ import ProcessManager from '../process_manager.js';
 import Utils from '../../modules/utils.js';
 import { Constants } from '../../misc/constants.js';
 
-export default class ProcessManagerSlashCommand extends SlashCommandAutoComplete {
+export default class ProcessSlashCommand extends SlashCommandAutoComplete {
   constructor() {
     super(
       {
