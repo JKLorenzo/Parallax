@@ -10,7 +10,7 @@ import {
 import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
 import ProcessManager from '../process_manager.js';
 import Utils from '../../misc/utils.js';
-import { Constants } from '../../misc/constants.js';
+import { CSConstants } from '../../misc/constants.js';
 
 export default class ProcessSlashCommand extends SlashCommandAutoComplete {
   constructor() {
@@ -49,7 +49,7 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
       },
       {
         scope: CommandScope.Guild,
-        guilds: guild => guild.id === Constants.CONTROL_SERVER_ID,
+        guilds: guild => guild.id === CSConstants.GUILD_ID,
       },
     );
   }

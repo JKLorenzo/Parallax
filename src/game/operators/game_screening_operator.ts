@@ -3,13 +3,13 @@ import gis from 'async-g-i-s';
 import DatabaseFacade from '../../database/database_facade.js';
 import { GameStatus, type GameData, type GuildGameData } from '../../database/database_defs.js';
 import { client } from '../../main.js';
-import { Constants } from '../../misc/constants.js';
+import { CSConstants } from '../../misc/constants.js';
 import GameManager from '../game_manager.js';
 import GameScreeningComponent from '../components/game_screening_component.js';
 import GameScreeningGuildComponent from '../components/game_screening_guild_component.js';
 
 export default class GameScreeningOperator {
-  static async screenGame(game: Activity) {
+  async screenGame(game: Activity) {
     const db = DatabaseFacade.instance();
 
     if (!game.applicationId) return;
@@ -45,18 +45,17 @@ export default class GameScreeningOperator {
     };
     await db.gameData(game.applicationId, data);
 
-    const gameChannelId = await db.botConfig('GameScreeningChannelId');
-    if (!gameChannelId) return;
-
-    const controlServer = client.guilds.cache.get(Constants.CONTROL_SERVER_ID);
-    const gameChannel = controlServer?.channels.cache.get(gameChannelId);
-    if (!gameChannel || !gameChannel.isSendable()) return;
+    const controlServer = client.guilds.cache.get(CSConstants.GUILD_ID);
+    const screeningChannel = controlServer?.channels.cache.get(
+      CSConstants.GAME_SCREENING_CHANNEL_ID,
+    );
+    if (!screeningChannel?.isSendable()) return;
 
     const embed = GameManager.makeScreeningEmbed(data);
-    await gameChannel.send({ embeds: [embed], components: GameScreeningComponent.data() });
+    await screeningChannel.send({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
-  static async screenGuildGame(game: Activity, guild: Guild) {
+  async screenGuildGame(game: Activity, guild: Guild) {
     const db = DatabaseFacade.instance();
 
     if (!game.applicationId) return;
