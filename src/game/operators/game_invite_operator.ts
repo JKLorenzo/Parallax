@@ -1,5 +1,5 @@
 import { Colors, EmbedBuilder, type Role } from 'discord.js';
-import type { Message } from 'discord.js';
+import type { SendableChannels } from 'discord.js';
 import type { GameData } from '../../database/database_defs.js';
 import { Constants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
@@ -7,7 +7,7 @@ import DatabaseFacade from '../../database/database_facade.js';
 import GameInviteComponent from '../components/game_invite_component.js';
 
 export default class GameInviteOperator {
-  static makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
+  makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
     const embed = new EmbedBuilder({
       author: { name: Constants.GAME_MANAGER_TITLE },
       title: data.name,
@@ -46,7 +46,7 @@ export default class GameInviteOperator {
     return embed;
   }
 
-  static async gameInvite(message: Message<boolean>, role: Role) {
+  async gameInvite(inviterId: string, channel: SendableChannels, role: Role, joinerIds?: string[]) {
     const db = DatabaseFacade.instance();
 
     const guildGameData = await db.findGuildGameByRole(role.guild.id, role.id);
@@ -55,24 +55,21 @@ export default class GameInviteOperator {
     const gameData = await db.gameData(guildGameData.id);
     if (!gameData) return;
 
-    const joinersId = message.mentions.users
-      .filter(user => !user.bot)
-      .map(user => user.id)
-      .filter(Utils.filterUnique);
-
-    const reply = GameInviteComponent.createInteractable(
-      message.author.id,
+    const interactable = GameInviteComponent.createInteractable(
+      inviterId,
       gameData,
       guildGameData,
       role,
-      joinersId,
+      joinerIds?.filter(Utils.filterUnique),
     );
 
-    const invite = await message.reply(reply);
+    const message = await channel.send(interactable);
     setTimeout(async () => {
       try {
-        await invite.delete();
+        await message.delete();
       } catch (_) {}
     }, Constants.GAME_INVITE_EXPIRATION_MINS * 60000);
+
+    return message;
   }
 }

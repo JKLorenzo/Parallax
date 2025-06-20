@@ -22,7 +22,7 @@ import {
   type MessageReplyOptions,
 } from 'discord.js';
 import type { GameData, GuildGameData } from '../../database/database_defs.js';
-import { Constants, GameInviteComponents } from '../../misc/constants.js';
+import { Constants, GameInviteComponents, QGConstants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import { Component } from '../../modules/component.js';
@@ -70,6 +70,7 @@ export default class GameInviteComponent extends Component {
       [
         `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
         `-# **Last Played**: ${guildData.lastPlayed ?? 'Not played yet'}`,
+        `-# **Role**: ${role}`,
       ].join('\n'),
     );
     container.addTextDisplayComponents(gameInfo);
@@ -237,7 +238,7 @@ export default class GameInviteComponent extends Component {
         await this.close(interaction, inviterId, gameData, guildGameData, role, joinerIds);
         break;
       case Id.Notify:
-        await this.notify(interaction, inviterId, gameData, guildGameData, role, joinerIds);
+        await this.notify(interaction, role);
         break;
       default:
     }
@@ -351,25 +352,19 @@ export default class GameInviteComponent extends Component {
     }
   }
 
-  async notify(
-    interaction: MessageComponentInteraction<CacheType>,
-    inviter: string,
-    data: GameData,
-    guildData: GuildGameData,
-    role: Role,
-    joinerIds: string[],
-  ) {
+  async notify(interaction: MessageComponentInteraction<CacheType>, role: Role) {
     const member = interaction.member;
     if (!(member instanceof GuildMember)) return;
 
     const channels = role.guild.channels.cache.filter(
       c =>
-        c.parentId === Constants.DEDICATED_CHANNEL_CATEGORY_ID &&
+        c.parentId === QGConstants.DEDICATED_CHANNEL_CATEGORY_ID &&
         c.permissionsFor(role).has('ViewChannel'),
     );
 
+    let content;
     if (member.roles.cache.has(role.id)) {
-      const content = [
+      content = [
         `You will no longer be notified when there is a game invite for ${role}.`,
         `However, this role will automatically be added to you once you play this game again.`,
       ];
@@ -380,13 +375,8 @@ export default class GameInviteComponent extends Component {
       }
 
       await member.roles.remove(role, Constants.GAME_MANAGER_TITLE);
-
-      await interaction.reply({
-        content: content.join('\n'),
-        flags: MessageFlags.Ephemeral,
-      });
     } else {
-      const content = [`You will now be notified when there is a game invite for ${role}.`];
+      content = [`You will now be notified when there is a game invite for ${role}.`];
       if (channels.size > 0) {
         content.push(
           `Also, you now have access to the following channel: ${channels.map(c => c.toString()).join(', ')}`,
@@ -394,11 +384,11 @@ export default class GameInviteComponent extends Component {
       }
 
       await member.roles.add(role, Constants.GAME_MANAGER_TITLE);
-
-      await interaction.reply({
-        content: content.join('\n'),
-        flags: MessageFlags.Ephemeral,
-      });
     }
+
+    await interaction.reply({
+      content: content.join('\n'),
+      flags: MessageFlags.Ephemeral,
+    });
   }
 }

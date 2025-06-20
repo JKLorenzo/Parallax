@@ -10,8 +10,10 @@ import {
   type MemberData,
   type MusicConfig,
   type Executable,
+  GameStatus,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
+import Utils from '../misc/utils.js';
 
 export default class DatabaseFacade {
   private static _instance: DatabaseFacade;
@@ -244,6 +246,62 @@ export default class DatabaseFacade {
     }
 
     return this.gameDataCache.get(applicationId);
+  }
+
+  async loadGameData() {
+    const results = await this.mongoClient
+      .db('global')
+      .collection('games')
+      .find({ status: GameStatus.Approved })
+      .toArray();
+
+    for (const result of results) {
+      const game: GameData = {
+        id: result.id,
+        name: result.name,
+        status: result.status,
+        iconURLs: result.iconURLs,
+        iconIndex: result.iconIndex,
+        bannerURLs: result.bannerURLs,
+        bannerIndex: result.bannerIndex,
+        moderatorId: result.moderatorId,
+      };
+
+      this.gameDataCache.set(result.id, game);
+    }
+  }
+
+  async findGamesByPartialName(name: string) {
+    let games = [...this.gameDataCache.values()];
+
+    if (name.trim().length > 0) {
+      games = games.filter(d => d.name && Utils.hasAny(d.name.toLowerCase(), name.toLowerCase()));
+    }
+
+    if (games.length === 0) {
+      // Find game similar to the name (case insensitive)
+      const result = await this.mongoClient
+        .db('global')
+        .collection('games')
+        .findOne({ name: { $regex: name, $options: 'i' }, status: GameStatus.Approved });
+
+      if (result?._id) {
+        const game: GameData = {
+          id: result.id,
+          name: result.name,
+          status: result.status,
+          iconURLs: result.iconURLs,
+          iconIndex: result.iconIndex,
+          bannerURLs: result.bannerURLs,
+          bannerIndex: result.bannerIndex,
+          moderatorId: result.moderatorId,
+        };
+
+        this.gameDataCache.set(result.id, game);
+      }
+    }
+
+    return games;
   }
 
   async guildGameData(guildId: string, applicationId: string, data?: GuildGameData) {

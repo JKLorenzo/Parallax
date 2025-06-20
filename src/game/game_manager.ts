@@ -5,6 +5,8 @@ import {
   EmbedBuilder,
   Guild,
   GuildMember,
+  Role,
+  type SendableChannels,
 } from 'discord.js';
 import Queuer from '../misc/queuer.js';
 import { Constants } from '../misc/constants.js';
@@ -18,6 +20,10 @@ import { client } from '../main.js';
 
 export default class GameManager extends Manager {
   private static _instance: GameManager;
+
+  private inviteOperator: GameInviteOperator;
+  private screeningOperator: GameScreeningOperator;
+
   private screeningQueue: Queuer;
   private roleQueue: Queuer;
   private timekeepingQueue: Queuer;
@@ -25,6 +31,9 @@ export default class GameManager extends Manager {
 
   private constructor() {
     super();
+
+    this.inviteOperator = new GameInviteOperator();
+    this.screeningOperator = new GameScreeningOperator();
 
     this.screeningQueue = new Queuer();
     this.roleQueue = new Queuer();
@@ -41,6 +50,9 @@ export default class GameManager extends Manager {
   }
 
   async init() {
+    const db = DatabaseFacade.instance();
+    await db.loadGameData();
+
     client.on('presenceUpdate', async (oldPresence, newPresence) => {
       const db = DatabaseFacade.instance();
 
@@ -56,8 +68,8 @@ export default class GameManager extends Manager {
       if (!config?.enabled) return;
 
       for (const game of games) {
-        this.screeningQueue.queue(() => GameScreeningOperator.screenGame(game));
-        this.screeningQueue.queue(() => GameScreeningOperator.screenGuildGame(game, member.guild));
+        this.screeningQueue.queue(() => this.screeningOperator.screenGame(game));
+        this.screeningQueue.queue(() => this.screeningOperator.screenGuildGame(game, member.guild));
         this.roleQueue.queue(() => this.addGameRole(game, member));
         this.timekeepingQueue.queue(() => this.updateGameLastPlayed(game, member.guild));
       }
@@ -73,9 +85,20 @@ export default class GameManager extends Manager {
       if (!config?.enabled) return;
 
       for (const role of message.mentions.roles.values()) {
-        this.messageQueue.queue(() => GameInviteOperator.gameInvite(message, role));
+        this.messageQueue.queue(() =>
+          this.gameInvite(
+            message.author.id,
+            message.channel,
+            role,
+            message.mentions.users.filter(u => !u.bot).map(u => u.id),
+          ),
+        );
       }
     });
+  }
+
+  gameInvite(inviterId: string, channel: SendableChannels, role: Role, joinerIds?: string[]) {
+    return this.inviteOperator.gameInvite(inviterId, channel, role, joinerIds);
   }
 
   static makeScreeningEmbed(data: GameData, guildData?: GuildGameData) {
