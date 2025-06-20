@@ -16,13 +16,18 @@ export abstract class Constants {
 
 export abstract class CSConstants {
   static readonly GUILD_ID = '806481618008539137';
+
+  static readonly PROCESSES_CHANNEL_CATEGORY_ID = '1385521799667646626';
+
   static readonly GENERAL_TEXT_CHANNEL_ID = '806481618465194015';
   static readonly GAME_SCREENING_CHANNEL_ID = '1354416171717361848';
 }
 
 export abstract class QGConstants {
   static readonly GUILD_ID = '351178660725915649';
+
   static readonly DEDICATED_CHANNEL_CATEGORY_ID = '778541774154891264';
+
   static readonly GENERAL_TEXT_CHANNEL_ID = '749661539908190258';
 }
 

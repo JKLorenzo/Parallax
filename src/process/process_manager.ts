@@ -4,10 +4,17 @@ import EnvironmentFacade from '../environment/environment_facade.js';
 import Utils from '../misc/utils.js';
 import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
-import { ActivityType, Colors, EmbedBuilder, type TextBasedChannel } from 'discord.js';
+import {
+  ActivityType,
+  CategoryChannel,
+  ChannelType,
+  Colors,
+  EmbedBuilder,
+} from 'discord.js';
 import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
 import stripAnsi from 'strip-ansi';
+import { CSConstants } from '../misc/constants.js';
 
 export default class ProcessManager extends Manager {
   private static _instance: ProcessManager;
@@ -46,13 +53,27 @@ export default class ProcessManager extends Manager {
     return this.executables;
   }
 
-  start(name: string, textChannel: TextBasedChannel | null) {
+  async start(name: string) {
     const env = EnvironmentFacade.instance();
+    const guild = client.guilds.cache.get(CSConstants.GUILD_ID);
+
     if (this.process) return;
-    if (!textChannel?.isSendable()) return;
 
     const executable = this.executables.find(p => p.name === name);
     if (!executable) return;
+
+    const categoryChannel = guild?.channels.cache.get(CSConstants.PROCESSES_CHANNEL_CATEGORY_ID);
+    if (!(categoryChannel instanceof CategoryChannel)) return;
+
+    const channelName = name.split(' ')[0].toLowerCase();
+    let textChannel = categoryChannel.children.cache.find(c => c.name === channelName);
+    if (!textChannel) {
+      textChannel = await categoryChannel.children.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+      });
+    }
+    if (!textChannel?.isSendable()) return;
 
     this.process = execFile(Utils.joinPaths(...executable.path), {
       cwd: Utils.joinPaths(env.cwd, '../../../'),

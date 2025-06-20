@@ -60,7 +60,7 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
     const command = interaction.options.getSubcommand();
     if (command === 'start') {
       const process = interaction.options.getString('process', true);
-      const pid = ProcessManager.instance().start(process, interaction.channel);
+      const pid = await ProcessManager.instance().start(process);
       if (!pid) return interaction.editReply(`Process failed to start.`);
 
       await interaction.editReply(`Process started with PID: \`${pid}\``);
