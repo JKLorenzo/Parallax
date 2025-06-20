@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
 import { CommandScope, SlashCommandAutoComplete, type Command } from '../../modules/command.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 import type InteractionManager from '../interaction_manager.js';
 import { client } from '../../main.js';
 import Telemetry from '../../telemetry/telemetry.js';

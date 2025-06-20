@@ -1,5 +1,5 @@
 import type { SendableChannels } from 'discord.js';
-import Utils from '../modules/utils.js';
+import Utils from '../misc/utils.js';
 import { TELEMETRY_END_STR, TELEMETRY_START_STR, type TelemetryOptions } from './telemetry_defs.js';
 import TelemetryFacade from './telemetry_facade.js';
 

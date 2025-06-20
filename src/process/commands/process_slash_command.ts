@@ -9,7 +9,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
 import ProcessManager from '../process_manager.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 import { Constants } from '../../misc/constants.js';
 
 export default class ProcessSlashCommand extends SlashCommandAutoComplete {

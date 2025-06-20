@@ -7,8 +7,8 @@ import {
   Invite,
   type PartialGuildMember,
 } from 'discord.js';
-import Queuer from '../modules/queuer.js';
-import Utils from '../modules/utils.js';
+import Queuer from '../misc/queuer.js';
+import Utils from '../misc/utils.js';
 import Manager from '../modules/manager.js';
 import DatabaseFacade from '../database/database_facade.js';
 import GatewayComponent from './components/gateway_component.js';

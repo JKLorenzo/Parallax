@@ -12,7 +12,7 @@ import {
   type MessageActionRowComponentData,
 } from 'discord.js';
 import DatabaseFacade from '../../database/database_facade.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 import { Component } from '../../modules/component.js';
 
 enum Id {

@@ -6,9 +6,9 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import Queuer from '../modules/queuer.js';
+import Queuer from '../misc/queuer.js';
 import { Constants } from '../misc/constants.js';
-import Utils from '../modules/utils.js';
+import Utils from '../misc/utils.js';
 import GameScreeningOperator from './operators/game_screening_operator.js';
 import GameInviteOperator from './operators/game_invite_operator.js';
 import Manager from '../modules/manager.js';

@@ -1,7 +1,7 @@
 import type { VoiceState } from 'discord.js';
 import { client } from '../main.js';
 import Manager from '../modules/manager.js';
-import Queuer from '../modules/queuer.js';
+import Queuer from '../misc/queuer.js';
 import VoiceChannelOperator from './operators/voice_channel_operator.js';
 
 export default class VoiceManager extends Manager {

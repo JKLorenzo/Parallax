@@ -6,7 +6,7 @@ import {
   Colors,
   EmbedBuilder,
 } from 'discord.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 import { Constants } from '../../misc/constants.js';
 import { CommandScope, SlashCommand } from '../../modules/command.js';
 

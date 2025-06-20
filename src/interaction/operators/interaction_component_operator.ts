@@ -3,7 +3,7 @@ import InteractionManager from '../interaction_manager.js';
 import type { Component } from '../../modules/component.js';
 import Telemetry from '../../telemetry/telemetry.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 
 export default class InteractionComponentOperator {
   private telemetry: Telemetry;

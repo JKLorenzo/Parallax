@@ -1,6 +1,6 @@
 import { Colors, ContainerBuilder, MessageFlags, type Message, type Snowflake } from 'discord.js';
 import { AutoModComponents, Constants } from '../../misc/constants.js';
-import Queuer from '../../modules/queuer.js';
+import Queuer from '../../misc/queuer.js';
 
 export default class AutomodAntiSpamOperator {
   private messages: Message[];

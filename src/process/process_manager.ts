@@ -1,7 +1,7 @@
 import { execFile, ChildProcess } from 'node:child_process';
 import Manager from '../modules/manager.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
-import Utils from '../modules/utils.js';
+import Utils from '../misc/utils.js';
 import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
 import { ActivityType, Colors, EmbedBuilder, type TextBasedChannel } from 'discord.js';

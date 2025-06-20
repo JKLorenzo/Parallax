@@ -1,7 +1,7 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
 import type { TelemetryData } from './telemetry_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
-import Utils from '../modules/utils.js';
+import Utils from '../misc/utils.js';
 import { client } from '../main.js';
 
 export default class TelemetryFacade {
