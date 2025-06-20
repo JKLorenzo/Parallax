@@ -10,6 +10,7 @@ import {
   ChannelType,
   Colors,
   EmbedBuilder,
+  type SendableChannels,
 } from 'discord.js';
 import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
@@ -21,6 +22,7 @@ export default class ProcessManager extends Manager {
   private static _instance: ProcessManager;
   private _executables: Executable[];
   private process?: ChildProcess;
+  private channel?: SendableChannels;
   private processTelemetry?: Telemetry;
   private processOutput: string[];
   private interval?: NodeJS.Timeout;
@@ -42,6 +44,13 @@ export default class ProcessManager extends Manager {
 
   async init() {
     await this.updateExecutables();
+
+    client.on('messageCreate', message => {
+      if (message.author.bot) return;
+      if (message.channelId !== this.channel?.id) return;
+
+      this.process?.send(message.content);
+    });
   }
 
   get executables() {
@@ -76,22 +85,23 @@ export default class ProcessManager extends Manager {
     }
     if (!textChannel?.isSendable()) return;
 
-    this.process = execFile(Utils.joinPaths(...executable.path), {
+    const process = execFile(Utils.joinPaths(...executable.path), {
       cwd: Utils.joinPaths(env.cwd, '../../../'),
       shell: true,
     });
 
-    const pid = this.process.pid;
-    if (pid) {
-      this.processTelemetry = new Telemetry(name, {
-        id: pid.toString(),
-        parent: this.telemetry,
-        broadcast: true,
-        channel: textChannel,
-      });
+    const pid = process.pid;
+    if (!pid) return;
 
-      client.user?.setActivity(name, { type: ActivityType.Playing });
-    }
+    this.process = process;
+    this.channel = textChannel;
+
+    this.processTelemetry = new Telemetry(name, {
+      id: pid.toString(),
+      parent: this.telemetry,
+      broadcast: true,
+      channel: textChannel,
+    });
 
     this.process.stdout?.on('data', data => {
       this.processOutput.push(data);
@@ -106,6 +116,7 @@ export default class ProcessManager extends Manager {
       this.processOutput.push(`Exited with code: ${code}`);
       this.sendOutputToChannel();
       this.process = undefined;
+      this.channel = undefined;
       client.user?.setActivity();
       this.processTelemetry?.end();
     });
@@ -113,6 +124,8 @@ export default class ProcessManager extends Manager {
     this.interval = setInterval(() => {
       this.sendOutputToChannel();
     }, 5000);
+
+    client.user?.setActivity(name, { type: ActivityType.Playing });
 
     return pid;
   }
