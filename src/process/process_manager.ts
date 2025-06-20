@@ -15,6 +15,7 @@ import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
 import stripAnsi from 'strip-ansi';
 import { CSConstants } from '../misc/constants.js';
+import { kill } from 'node:process';
 
 export default class ProcessManager extends Manager {
   private static _instance: ProcessManager;
@@ -116,7 +117,8 @@ export default class ProcessManager extends Manager {
     return pid;
   }
 
-  stop() {
+  stop(pid: number | null) {
+    if (pid) return kill(pid);
     return this.process?.kill();
   }
 

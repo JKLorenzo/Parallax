@@ -39,6 +39,13 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
             name: 'stop',
             description: 'Stop the running process.',
             type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'pid',
+                description: 'The process id to stop.',
+                type: ApplicationCommandOptionType.Integer,
+              },
+            ],
           },
           {
             name: 'update',
@@ -65,7 +72,8 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
 
       await interaction.editReply(`Process started with PID: \`${pid}\``);
     } else if (command === 'stop') {
-      const stopped = ProcessManager.instance().stop();
+      const pid = interaction.options.getInteger('pid');
+      const stopped = ProcessManager.instance().stop(pid);
       if (!stopped) return interaction.editReply(`Process failed to exit.`);
 
       await interaction.editReply(`Process exited successfully.`);
