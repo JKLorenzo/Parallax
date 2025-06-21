@@ -36,13 +36,20 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
             ],
           },
           {
-            name: 'stop',
-            description: 'Stop the running process.',
+            name: 'kill',
+            description: 'Kill the running process.',
             type: ApplicationCommandOptionType.Subcommand,
             options: [
               {
                 name: 'pid',
-                description: 'The process id to stop.',
+                description: 'The process id to kill.',
+                type: ApplicationCommandOptionType.Integer,
+                required: true,
+              },
+              {
+                name: 'signal',
+                description:
+                  "If no argument is given, the process will be sent the 'SIGTERM' signal.",
                 type: ApplicationCommandOptionType.Integer,
               },
             ],
@@ -71,12 +78,11 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
       if (!pid) return interaction.editReply(`Process failed to start.`);
 
       await interaction.editReply(`Process started with PID: \`${pid}\``);
-    } else if (command === 'stop') {
-      const pid = interaction.options.getInteger('pid');
-      const stopped = ProcessManager.instance().stop(pid);
-      if (!stopped) return interaction.editReply(`Process failed to exit.`);
-
-      await interaction.editReply(`Process exited successfully.`);
+    } else if (command === 'kill') {
+      const pid = interaction.options.getInteger('pid', true);
+      const signal = interaction.options.getInteger('signal', false) ?? undefined;
+      const result = ProcessManager.instance().kill(pid, signal);
+      await interaction.editReply(result);
     } else if (command === 'update') {
       const executables = await ProcessManager.instance().updateExecutables();
       await interaction.editReply(`Loaded ${executables.length} executables.`);
@@ -87,13 +93,10 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
     const focused = interaction.options.getFocused(true);
 
     if (focused.name === 'process') {
-      const executables = ProcessManager.instance().executables;
-      const choices: ApplicationCommandOptionChoiceData<string>[] = executables
-        .filter(pd => Utils.hasAny(pd.name.toLowerCase(), focused.value.toLowerCase()))
-        .map(data => ({
-          name: data.name,
-          value: data.name,
-        }));
+      const execNames = ProcessManager.instance().getExecutableNames();
+      const choices: ApplicationCommandOptionChoiceData<string>[] = execNames
+        .filter(name => Utils.hasAny(name.toLowerCase(), focused.value.toLowerCase()))
+        .map(name => ({ name: name, value: name }));
 
       await interaction.respond(choices);
     }

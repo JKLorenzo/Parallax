@@ -1,37 +1,30 @@
-import { execFile, ChildProcess } from 'node:child_process';
 import Manager from '../modules/manager.js';
-import EnvironmentFacade from '../environment/environment_facade.js';
-import Utils from '../misc/utils.js';
 import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
 import {
   ActivityType,
   CategoryChannel,
   ChannelType,
-  Colors,
-  EmbedBuilder,
-  type SendableChannels,
+  Collection,
+  TextChannel,
+  type ActivityOptions,
 } from 'discord.js';
-import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
-import stripAnsi from 'strip-ansi';
 import { CSConstants } from '../misc/constants.js';
-import { kill } from 'node:process';
+import ProcessInstanceOperator from './operators/process_instance_operator.js';
+import Telemetry from '../telemetry/telemetry.js';
 
 export default class ProcessManager extends Manager {
   private static _instance: ProcessManager;
-  private _executables: Executable[];
-  private process?: ChildProcess;
-  private channel?: SendableChannels;
-  private processTelemetry?: Telemetry;
-  private processOutput: string[];
-  private interval?: NodeJS.Timeout;
+
+  private executables: Executable[];
+  private operators: Collection<number, ProcessInstanceOperator>;
 
   constructor() {
     super();
 
-    this._executables = [];
-    this.processOutput = [];
+    this.executables = [];
+    this.operators = new Collection();
   }
 
   static instance() {
@@ -43,31 +36,35 @@ export default class ProcessManager extends Manager {
   }
 
   async init() {
+    const telemetry = new Telemetry(this.init, { parent: this.telemetry });
+
     await this.updateExecutables();
 
-    client.on('messageCreate', message => {
-      if (message.author.bot) return;
-      if (message.channelId !== this.channel?.id) return;
+    setInterval(() => this.updateActivities(), 1000 * 60 * 30);
 
-      this.process?.send(message.content);
-    });
+    telemetry.end();
   }
 
-  get executables() {
-    return this._executables;
+  getExecutableNames() {
+    return this.executables.map(e => e.name);
   }
 
   async updateExecutables() {
+    const telemetry = new Telemetry(this.updateExecutables, { parent: this.telemetry });
     const db = DatabaseFacade.instance();
-    this._executables = await db.fetchExecutables();
+
+    this.executables = await db.fetchExecutables();
+
+    telemetry.end();
+
     return this.executables;
   }
 
   async start(name: string) {
-    const env = EnvironmentFacade.instance();
+    const telemetry = new Telemetry(this.start, { parent: this.telemetry });
     const guild = client.guilds.cache.get(CSConstants.GUILD_ID);
 
-    if (this.process) return;
+    if (this.operators.some(o => o.executable.name === name)) return;
 
     const executable = this.executables.find(p => p.name === name);
     if (!executable) return;
@@ -85,81 +82,66 @@ export default class ProcessManager extends Manager {
     }
     if (!textChannel?.isSendable()) return;
 
-    const process = execFile(Utils.joinPaths(...executable.path), {
-      cwd: Utils.joinPaths(env.cwd, '../../../'),
-      shell: true,
-    });
+    const operator = new ProcessInstanceOperator(this, executable, textChannel);
 
-    const pid = process.pid;
+    const pid = await operator.start();
     if (!pid) return;
 
-    this.process = process;
-    this.channel = textChannel;
+    if (textChannel instanceof TextChannel) {
+      await textChannel.setTopic(pid.toString());
+    }
 
-    this.processTelemetry = new Telemetry(name, {
-      id: pid.toString(),
-      parent: this.telemetry,
-      broadcast: true,
-      channel: textChannel,
-    });
-
-    this.process.stdout?.on('data', data => {
-      this.processOutput.push(data);
-    });
-
-    this.process.stderr?.on('data', data => {
-      this.processOutput.push(`[ERR] ${data}`);
-    });
-
-    this.process.on('close', code => {
-      clearInterval(this.interval);
-      this.processOutput.push(`Exited with code: ${code}`);
-      this.sendOutputToChannel();
-      this.process = undefined;
-      this.channel = undefined;
-      client.user?.setActivity();
-      this.processTelemetry?.end();
-    });
-
-    this.interval = setInterval(() => {
-      this.sendOutputToChannel();
-    }, 5000);
-
-    client.user?.setActivity(name, { type: ActivityType.Playing });
+    telemetry.end();
 
     return pid;
   }
 
-  stop(pid: number | null) {
-    if (pid) return kill(pid);
-    return this.process?.kill();
+  async setOperator(pid: number, operator: ProcessInstanceOperator) {
+    const telemetry = new Telemetry(this.setOperator, { parent: this.telemetry });
+
+    this.operators.set(pid, operator);
+
+    await this.updateActivities();
+
+    telemetry.end();
   }
 
-  private async sendOutputToChannel() {
-    const telemetry = new Telemetry(this.sendOutputToChannel, { parent: this.telemetry });
-    if (this.processOutput.length === 0) return;
+  async deleteOperator(pid: number) {
+    const telemetry = new Telemetry(this.deleteOperator, { parent: this.telemetry });
 
-    const message = [];
-    while (this.processOutput.length > 0) {
-      const data = this.processOutput.shift()?.trim();
-      if (data?.length) message.push(stripAnsi(data));
-    }
+    this.operators.delete(pid);
 
-    const embed = new EmbedBuilder({
-      author: {
-        name: client.user?.username ?? '',
-        icon_url: client.user?.displayAvatarURL(),
-      },
-      title: this.processTelemetry?.identifier,
-      description: `\`\`\`${message.join('\n')}\`\`\``,
-      color: Colors.Blurple,
-      footer: { text: `${this.processTelemetry?.origin}` },
-    });
+    await this.updateActivities();
 
-    await this.processTelemetry?.channel?.send({
-      embeds: [embed],
+    telemetry.end();
+  }
+
+  async updateActivities() {
+    const telemetry = new Telemetry(this.updateActivities, { parent: this.telemetry });
+
+    await client.user?.setPresence({
+      activities: this.operators.map(o => {
+        const activity: ActivityOptions = {
+          name: o.executable.name,
+          type: ActivityType.Playing,
+        };
+        return activity;
+      }),
     });
 
     telemetry.end();
+  }
+
+  kill(pid: number, signal?: number | NodeJS.Signals) {
+    const telemetry = new Telemetry(this.kill, { parent: this.telemetry });
+
+    const operator = this.operators.get(pid);
+    if (!operator) return `Operator not found for pid=${pid}`;
+
+    const killed = operator.kill(signal);
+
+    telemetry.end();
+
+    return `Process \`${pid}\` kill(\`${signal ?? 2}\`) result=\`${killed}\`.`;
   }
 }
