@@ -52,6 +52,20 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
                 description:
                   "If no argument is given, the process will be sent the 'SIGTERM' signal.",
                 type: ApplicationCommandOptionType.Integer,
+                choices: [
+                  {
+                    name: 'SIGINT - Interrupt the process.',
+                    value: 2,
+                  },
+                  {
+                    name: 'SIGTERM - Request termination.',
+                    value: 15,
+                  },
+                  {
+                    name: 'SIGKILL - Terminate immediately.',
+                    value: 7,
+                  },
+                ],
               },
             ],
           },
