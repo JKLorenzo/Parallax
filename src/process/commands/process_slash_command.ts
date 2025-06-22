@@ -45,6 +45,7 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
                 description: 'The process id to kill.',
                 type: ApplicationCommandOptionType.Integer,
                 required: true,
+                autocomplete: true,
               },
               {
                 name: 'signal',
@@ -97,6 +98,16 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
       const choices: ApplicationCommandOptionChoiceData<string>[] = execNames
         .filter(name => Utils.hasAny(name.toLowerCase(), focused.value.toLowerCase()))
         .map(name => ({ name: name, value: name }));
+
+      await interaction.respond(choices);
+    } else if (focused.name === 'pid') {
+      const opInfo = ProcessManager.instance().getOperatorInfo();
+      const choices: ApplicationCommandOptionChoiceData<number>[] = opInfo
+        .filter(info => typeof info.pid === 'number')
+        .map(info => ({
+          name: `${info.pid} - ${info.name}`,
+          value: info.pid!,
+        }));
 
       await interaction.respond(choices);
     }

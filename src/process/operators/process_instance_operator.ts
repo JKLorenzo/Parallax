@@ -46,6 +46,14 @@ export default class ProcessInstanceOperator {
     });
   }
 
+  get name() {
+    return this.executable.name;
+  }
+
+  get pid() {
+    return this.process?.pid;
+  }
+
   async start() {
     const telemetry = new Telemetry(this.start, { parent: this.telemetry });
     const env = EnvironmentFacade.instance();
@@ -55,8 +63,7 @@ export default class ProcessInstanceOperator {
       detached: true,
     });
 
-    const pid = this.process.pid;
-    if (pid) ProcessManager.instance().setOperator(pid, this);
+    if (this.pid) ProcessManager.instance().setOperator(this.pid, this);
 
     this.process.stdout?.on('data', data => {
       this.processOutput(data);
@@ -67,13 +74,13 @@ export default class ProcessInstanceOperator {
     });
 
     this.process.once('close', code => {
-      if (pid) ProcessManager.instance().deleteOperator(pid);
+      if (this.pid) ProcessManager.instance().deleteOperator(this.pid);
       this.processOutput(`Exited with code: ${code}`, true);
     });
 
     telemetry.end();
 
-    return pid;
+    return this.pid;
   }
 
   kill(signal?: number | NodeJS.Signals) {

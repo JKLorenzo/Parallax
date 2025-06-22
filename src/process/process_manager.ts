@@ -49,6 +49,10 @@ export default class ProcessManager extends Manager {
     return this.executables.map(e => e.name);
   }
 
+  getOperatorInfo() {
+    return this.operators.map(o => ({ name: o.name, pid: o.pid }));
+  }
+
   async updateExecutables() {
     const telemetry = new Telemetry(this.updateExecutables, { parent: this.telemetry });
     const db = DatabaseFacade.instance();
