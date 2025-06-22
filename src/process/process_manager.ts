@@ -77,23 +77,17 @@ export default class ProcessManager extends Manager {
     if (!(categoryChannel instanceof CategoryChannel)) return;
 
     const channelName = name.split(' ')[0].toLowerCase();
-    let textChannel = categoryChannel.children.cache.find(c => c.name === channelName);
-    if (!textChannel) {
-      textChannel = await categoryChannel.children.create({
+    let channel = categoryChannel.children.cache.find(c => c.name === channelName);
+    if (!channel) {
+      channel = await categoryChannel.children.create({
         name: channelName,
         type: ChannelType.GuildText,
       });
     }
-    if (!textChannel?.isSendable()) return;
+    if (!(channel instanceof TextChannel)) return;
 
-    const operator = new ProcessInstanceOperator(this, executable, textChannel);
-
+    const operator = new ProcessInstanceOperator(this, executable, channel);
     const pid = await operator.start();
-    if (!pid) return;
-
-    if (textChannel instanceof TextChannel) {
-      await textChannel.setTopic(pid.toString());
-    }
 
     telemetry.end();
 

@@ -1,4 +1,4 @@
-import { TextChannel, type SendableChannels } from 'discord.js';
+import { TextChannel } from 'discord.js';
 import { ChildProcess, spawn } from 'node:child_process';
 import type { Executable } from '../../database/database_defs.js';
 import ProcessManager from '../process_manager.js';
@@ -13,11 +13,11 @@ export default class ProcessInstanceOperator {
   readonly executable: Executable;
 
   private process?: ChildProcess;
-  private channel: SendableChannels;
+  private channel: TextChannel;
   private outputBuffer: string[];
   private isSending: boolean;
 
-  constructor(manager: ProcessManager, executable: Executable, channel: SendableChannels) {
+  constructor(manager: ProcessManager, executable: Executable, channel: TextChannel) {
     this.telemetry = new Telemetry(this.constructor.name, {
       id: executable.name,
       parent: manager.telemetry,
@@ -30,7 +30,6 @@ export default class ProcessInstanceOperator {
     this.isSending = false;
 
     client.on('messageCreate', message => {
-      if (!(this.channel instanceof TextChannel)) return;
       if (!(message.channel instanceof TextChannel)) return;
 
       if (message.author.bot) return;
@@ -63,19 +62,26 @@ export default class ProcessInstanceOperator {
       detached: true,
     });
 
-    if (this.pid) ProcessManager.instance().setOperator(this.pid, this);
+    if (this.pid) {
+      await ProcessManager.instance().setOperator(this.pid, this);
+      await this.channel.setTopic(this.pid.toString());
+    }
 
-    this.process.stdout?.on('data', data => {
-      this.processOutput(data);
+    this.process.stdout?.on('data', async data => {
+      await this.processOutput(data);
     });
 
-    this.process.stderr?.on('data', data => {
-      this.processOutput(`\x1b[2;31m[ERR]\x1b[0m ${data}`);
+    this.process.stderr?.on('data', async data => {
+      await this.processOutput(`\x1b[2;31m[ERR]\x1b[0m ${data}`);
     });
 
-    this.process.once('close', code => {
-      if (this.pid) ProcessManager.instance().deleteOperator(this.pid);
-      this.processOutput(`Exited with code: ${code}`, true);
+    this.process.once('close', async code => {
+      if (this.pid) {
+        await ProcessManager.instance().deleteOperator(this.pid);
+        await this.channel.setTopic(null);
+      }
+
+      await this.processOutput(`Exited with code: ${code}`, true);
     });
 
     telemetry.end();
@@ -113,7 +119,7 @@ export default class ProcessInstanceOperator {
       if (data?.length) message.push(data);
     }
 
-    if (message.length && this.channel.isSendable()) {
+    if (message.length) {
       await this.channel?.send(`\`\`\`ansi\n${message.join('\n')}\`\`\``);
     }
 
