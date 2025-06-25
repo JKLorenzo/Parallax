@@ -98,6 +98,7 @@ export default class ProcessManager extends Manager {
     const telemetry = new Telemetry(this.setOperator, { parent: this.telemetry });
 
     this.operators.set(pid, operator);
+    client.addListener('messageCreate', operator.onMessageCreate);
 
     await this.updateActivities();
 
@@ -107,7 +108,9 @@ export default class ProcessManager extends Manager {
   async deleteOperator(pid: number) {
     const telemetry = new Telemetry(this.deleteOperator, { parent: this.telemetry });
 
-    this.operators.delete(pid);
+    const operator = this.operators.get(pid);
+    if (operator) client.removeListener('messageCreate', operator.onMessageCreate);
+    if (operator?.pid) this.operators.delete(operator.pid);
 
     await this.updateActivities();
 

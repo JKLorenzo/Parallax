@@ -1,10 +1,9 @@
-import { TextChannel } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 import { ChildProcess, spawn } from 'node:child_process';
 import type { Executable } from '../../database/database_defs.js';
 import ProcessManager from '../process_manager.js';
 import Telemetry from '../../telemetry/telemetry.js';
 import Utils from '../../misc/utils.js';
-import { client } from '../../main.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
 
 export default class ProcessInstanceOperator {
@@ -28,21 +27,6 @@ export default class ProcessInstanceOperator {
 
     this.outputBuffer = [];
     this.isSending = false;
-
-    client.on('messageCreate', message => {
-      if (!(message.channel instanceof TextChannel)) return;
-
-      if (message.author.bot) return;
-      if (message.channelId !== this.channel?.id) return;
-      if (message.channel.topic !== this.channel.topic) return;
-      if (message.content.length === 0) return;
-
-      this.process?.stdin?.write(`${message.content}\r\n`, err => {
-        if (!err) return message.react('✅');
-        message.react('❌');
-        message.reply(err.message);
-      });
-    });
   }
 
   get name() {
@@ -100,6 +84,21 @@ export default class ProcessInstanceOperator {
     return process.kill(-pid, signal);
   }
 
+  onMessageCreate(message: Message) {
+    if (!(message.channel instanceof TextChannel)) return;
+
+    if (message.author.bot) return;
+    if (message.channelId !== this.channel?.id) return;
+    if (message.channel.topic !== this.channel.topic) return;
+    if (message.content.length === 0) return;
+
+    this.process?.stdin?.write(`${message.content}\r\n`, 'utf-8', err => {
+      if (!err) return message.react('✅');
+      message.react('❌');
+      message.reply(err.message);
+    });
+  }
+
   private async processOutput(log?: string | Buffer, now?: boolean) {
     const telemetry = new Telemetry(this.processOutput, { parent: this.telemetry });
 
@@ -107,7 +106,7 @@ export default class ProcessInstanceOperator {
     if (log) this.outputBuffer.push(log);
     telemetry.log(log);
 
-    if (this.outputBuffer.join('\n').length > 2000) now = true;
+    if (this.outputBuffer.join('\n').length >= 1000) now = true;
     if (!now && this.isSending) return telemetry.end();
 
     this.isSending = true;
