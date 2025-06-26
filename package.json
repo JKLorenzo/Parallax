@@ -39,7 +39,8 @@
     "lodash": "^4.17.21",
     "mongodb": "^6.17.0",
     "public-ip": "^7.0.1",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "systeminformation": "^5.27.6"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
