@@ -38,11 +38,8 @@ enum Containers {
 
 export enum GameInviteComponents {
   GAME_INVITE_CONTAINER = Containers.GAME_INVITE,
-  GAME_NAME_TEXT,
-  APP_ID_TEXT,
   HEADER_SECTION,
-  INVITER_TEXT,
-  JOINER_TEXT_RANGE_START, // SHOULD ALWAYS BE LAST
+  INVITE_ID,
 }
 
 export enum AutoModComponents {

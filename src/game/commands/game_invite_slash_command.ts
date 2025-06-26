@@ -59,6 +59,12 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
             description: 'Reserve a slot for a user.',
             type: ApplicationCommandOptionType.User,
           },
+          {
+            name: 'max_slots',
+            description: 'Automatically close the game invite once this number is reached.',
+            type: ApplicationCommandOptionType.Integer,
+            choices: [2, 3, 4, 5, 6, 7, 8, 9, 10].map(e => ({ name: `${e}`, value: e })),
+          },
         ],
       },
       {
@@ -98,7 +104,8 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
       if (joiner) joinerIds.push(joiner.id);
     }
 
-    const message = await gm.gameInvite(interaction.user.id, channel, role, joinerIds);
+    const maxSlots = interaction.options.getInteger('max_slots') ?? undefined;
+    const message = await gm.gameInvite(interaction.user.id, channel, role, joinerIds, maxSlots);
     if (!message) return await interaction.editReply('This game is not available.');
 
     await interaction.editReply(`A [game invite](${message.url}) has been created!`);

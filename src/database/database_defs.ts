@@ -64,3 +64,16 @@ export type Executable = {
   name: string;
   path: string[];
 };
+
+export type GameInviteData = {
+  id: string;
+  name: string;
+  appId: string;
+  guildId: Snowflake;
+  roleId: Snowflake;
+  messageId: Snowflake;
+  inviterId: Snowflake;
+  joinersId: Snowflake[];
+  inviteDate: Date;
+  maxSlot?: number;
+};

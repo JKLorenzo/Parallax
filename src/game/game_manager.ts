@@ -97,8 +97,14 @@ export default class GameManager extends Manager {
     });
   }
 
-  gameInvite(inviterId: string, channel: SendableChannels, role: Role, joinerIds?: string[]) {
-    return this.inviteOperator.gameInvite(inviterId, channel, role, joinerIds);
+  gameInvite(
+    inviterId: string,
+    channel: SendableChannels,
+    role: Role,
+    joinerIds: string[],
+    maxSlot?: number,
+  ) {
+    return this.inviteOperator.createGameInvite(inviterId, channel, role, joinerIds, maxSlot);
   }
 
   static makeScreeningEmbed(data: GameData, guildData?: GuildGameData) {

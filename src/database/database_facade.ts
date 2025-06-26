@@ -11,6 +11,7 @@ import {
   type MusicConfig,
   type Executable,
   GameStatus,
+  type GameInviteData,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 import Utils from '../misc/utils.js';
@@ -23,6 +24,7 @@ export default class DatabaseFacade {
   private memberDataCache: Map<string, Map<string, MemberData>>;
   private gameDataCache: Map<string, GameData>;
   private guildGameDataCache: Map<string, Map<string, GuildGameData>>;
+  private gameInviteDataCache: Map<string, GameInviteData>;
 
   private constructor() {
     this.botConfigCache = new Map();
@@ -30,6 +32,7 @@ export default class DatabaseFacade {
     this.memberDataCache = new Map();
     this.gameDataCache = new Map();
     this.guildGameDataCache = new Map();
+    this.gameInviteDataCache = new Map();
   }
 
   static instance() {
@@ -382,5 +385,41 @@ export default class DatabaseFacade {
     }));
 
     return executables;
+  }
+
+  async gameInviteData(inviteId: string, data?: Omit<GameInviteData, 'id'>) {
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const invite = this.gameInviteDataCache.get(inviteId) ?? { id: inviteId, ...data };
+      this.gameInviteDataCache.set(inviteId, invite);
+
+      await this.mongoClient
+        .db('global')
+        .collection('game_invites')
+        .updateOne({ id: inviteId }, { $set: invite }, { upsert: true });
+    } else if (!this.gameInviteDataCache.get(inviteId)) {
+      // Get
+      const result = await this.mongoClient
+        .db('global')
+        .collection('game_invites')
+        .findOne({ id: inviteId });
+
+      if (result?._id) {
+        this.gameInviteDataCache.set(inviteId, {
+          id: inviteId,
+          name: result.name,
+          appId: result.appId,
+          guildId: result.guildId,
+          roleId: result.roleId,
+          messageId: result.messageId,
+          inviterId: result.inviterId,
+          joinersId: result.joinersId,
+          maxSlot: result.maxSlot,
+          inviteDate: result.inviteDate,
+        });
+      }
+    }
+
+    return this.gameInviteDataCache.get(inviteId);
   }
 }

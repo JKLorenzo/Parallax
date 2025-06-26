@@ -11,9 +11,8 @@ import {
   SeparatorSpacingSize,
   ButtonStyle,
   ButtonBuilder,
-  SectionComponent,
-  Role,
   GuildMember,
+  SectionComponent,
 } from 'discord.js';
 import {
   ActivityType,
@@ -21,11 +20,12 @@ import {
   type ContainerComponent,
   type MessageReplyOptions,
 } from 'discord.js';
-import type { GameData, GuildGameData } from '../../database/database_defs.js';
+import type { GameData, GameInviteData, GuildGameData } from '../../database/database_defs.js';
 import { Constants, GameInviteComponents, QGConstants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import { Component } from '../../modules/component.js';
+import { client } from '../../main.js';
 
 enum Id {
   Join = 'join',
@@ -35,28 +35,20 @@ enum Id {
 }
 
 export default class GameInviteComponent extends Component {
-  static createInteractable(
-    inviterId: string,
-    data: GameData,
-    guildData: GuildGameData,
-    role: Role,
-    joinerIds?: string[],
-  ): MessageReplyOptions {
+  static createInteractable(data: Omit<GameInviteData, 'messageId'>): MessageReplyOptions {
+    const guild = client.guilds.cache.get(data.guildId);
+    const role = guild?.roles.cache.get(data.roleId);
+
     const container = new ContainerBuilder({
       id: GameInviteComponents.GAME_INVITE_CONTAINER,
     });
 
-    const gameName = new TextDisplayBuilder()
-      .setId(GameInviteComponents.GAME_NAME_TEXT)
-      .setContent(`# ${data.name}`);
-
-    const appId = new TextDisplayBuilder()
-      .setId(GameInviteComponents.APP_ID_TEXT)
-      .setContent(`-# ${data.id}`);
-
     const headerSection = new SectionBuilder()
       .setId(GameInviteComponents.HEADER_SECTION)
-      .addTextDisplayComponents(gameName, appId)
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(`# ${data.name}`),
+        new TextDisplayBuilder().setId(GameInviteComponents.INVITE_ID).setContent(`-# ${data.id}`),
+      )
       .setButtonAccessory(
         new ButtonBuilder()
           .setCustomId(this.makeId(Id.Notify))
@@ -66,35 +58,33 @@ export default class GameInviteComponent extends Component {
     container.addSectionComponents(headerSection);
 
     const onlineMembers = role?.members.filter(m => m.presence && m.presence.status != 'offline');
-    const gameInfo = new TextDisplayBuilder().setContent(
-      [
-        `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
-        `-# **Last Played**: ${guildData.lastPlayed ?? 'Not played yet'}`,
-        `-# **Role**: ${role}`,
-      ].join('\n'),
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        [
+          `-# **Role**: ${Utils.mentionRoleById(data.roleId)}`,
+          `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
+        ].join('\n'),
+      ),
     );
-    container.addTextDisplayComponents(gameInfo);
 
     container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
 
     const inviterComponent: TextDisplayBuilder[] = [
       new TextDisplayBuilder().setContent('## Inviter'),
-      new TextDisplayBuilder()
-        .setId(GameInviteComponents.INVITER_TEXT)
-        .setContent(Utils.mentionUserById(inviterId)),
+      new TextDisplayBuilder().setContent(Utils.mentionUserById(data.inviterId)),
     ];
 
-    const inviter = role.guild.members.cache.get(inviterId);
+    const inviter = role?.guild.members.cache.get(data.inviterId);
+
+    const inviterInfo: string[] = [];
     const inviterPresence = inviter?.presence?.activities
       .filter(a => a.type === ActivityType.Playing)
       .map(a => a.name);
-    const inviterChannel = inviter?.voice.channel;
-
-    const inviterInfo: string[] = [];
     if (inviterPresence?.length) {
-      inviterInfo.push(`-# **Now playing**: ${inviterPresence.map(i => `**${i}**`).join(', ')}`);
+      inviterInfo.push(`-# **Now playing**: ${inviterPresence.join(', ')}`);
     }
 
+    const inviterChannel = inviter?.voice.channel;
     if (inviterChannel) {
       inviterInfo.push(`-# **In voice**: ${inviterChannel}`);
     }
@@ -107,30 +97,36 @@ export default class GameInviteComponent extends Component {
       new SectionBuilder()
         .addTextDisplayComponents(inviterComponent)
         .setThumbnailAccessory(builder =>
-          builder.setURL(inviter?.displayAvatarURL() ?? role.guild.iconURL()!),
+          builder.setURL(inviter?.displayAvatarURL() ?? guild?.iconURL()!),
         ),
     );
 
-    if (joinerIds?.length) {
-      for (let i = 0; i < joinerIds.length; i++) {
-        const joinerComponent: TextDisplayBuilder[] = [
-          new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
-          new TextDisplayBuilder()
-            .setId(GameInviteComponents.JOINER_TEXT_RANGE_START + i)
-            .setContent(Utils.mentionUserById(joinerIds[i])),
-        ];
+    let slotCount = data.joinersId.length;
+    if (data.maxSlot && data.maxSlot - 1 > slotCount) slotCount = data.maxSlot - 1;
 
-        const joiner = role.guild.members.cache.get(joinerIds[i]);
+    for (let i = 0; i < slotCount; i++) {
+      const joinerId = data.joinersId.at(i);
+
+      const joinerComponent: TextDisplayBuilder[] = [
+        new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
+        new TextDisplayBuilder().setContent(
+          joinerId ? Utils.mentionUserById(joinerId) : 'Slot Available',
+        ),
+      ];
+
+      let joiner: GuildMember | undefined;
+      if (joinerId) {
+        joiner = role?.guild.members.cache.get(joinerId);
+
+        const joinerInfo: string[] = [];
         const joinerPresence = joiner?.presence?.activities
           .filter(a => a.type === ActivityType.Playing)
           .map(a => a.name);
-        const joinerChannel = joiner?.voice.channel;
-
-        const joinerInfo: string[] = [];
         if (joinerPresence?.length) {
           joinerInfo.push(`-# **Now playing**: ${joinerPresence.map(i => `**${i}**`).join(', ')}`);
         }
 
+        const joinerChannel = joiner?.voice.channel;
         if (joinerChannel) {
           joinerInfo.push(`-# **In voice**: ${joinerChannel}`);
         }
@@ -138,15 +134,15 @@ export default class GameInviteComponent extends Component {
         if (joinerInfo.length) {
           joinerComponent.push(new TextDisplayBuilder().setContent(joinerInfo.join('\n')));
         }
-
-        container.addSectionComponents(
-          new SectionBuilder()
-            .addTextDisplayComponents(joinerComponent)
-            .setThumbnailAccessory(builder =>
-              builder.setURL(joiner?.displayAvatarURL() ?? role.guild.iconURL()!),
-            ),
-        );
       }
+
+      container.addSectionComponents(
+        new SectionBuilder()
+          .addTextDisplayComponents(joinerComponent)
+          .setThumbnailAccessory(builder =>
+            builder.setURL(joiner?.displayAvatarURL() ?? guild?.iconURL()!),
+          ),
+      );
     }
 
     container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
@@ -188,57 +184,36 @@ export default class GameInviteComponent extends Component {
     const headerSection = container.components.find(
       c => c.type === ComponentType.Section && c.id === GameInviteComponents.HEADER_SECTION,
     ) as SectionComponent | undefined;
+    if (!headerSection) return;
 
-    const applicationIdComponent = (headerSection ?? container).components.find(
-      c => c.type === ComponentType.TextDisplay && c.id === GameInviteComponents.APP_ID_TEXT,
+    const inviteIdComponent = headerSection.components.find(
+      c => c.type === ComponentType.TextDisplay && c.id === GameInviteComponents.INVITE_ID,
     ) as TextDisplayComponent | undefined;
-    if (!applicationIdComponent?.content) return;
-    const applicationId = Utils.removeLeadingWord(applicationIdComponent.content);
 
-    const inviterMentionComponent = container.components
-      .filter(c => c.type === ComponentType.Section)
-      .find(c => c.components.find(c => c.id === GameInviteComponents.INVITER_TEXT))
-      ?.components.find(c => c.id === GameInviteComponents.INVITER_TEXT) as
-      | TextDisplayComponent
-      | undefined;
+    const inviteId = inviteIdComponent?.content;
+    if (!inviteId) return;
 
-    if (!inviterMentionComponent?.content) return;
+    const inviteData = await db.gameInviteData(Utils.removeLeadingWord(inviteId));
+    if (!inviteData) return;
 
-    const joinerIds: string[] = [];
-    for (const section of container.components.filter(c => c.type === ComponentType.Section)) {
-      const joinerMentionComponent = section.components.find(
-        c => (c.id ?? 0) >= GameInviteComponents.JOINER_TEXT_RANGE_START,
-      );
-      if (!joinerMentionComponent?.content) continue;
-
-      joinerIds.push(Utils.parseMention(joinerMentionComponent.content));
-    }
-
-    const gameData = await db.gameData(applicationId);
+    const gameData = await db.gameData(inviteData.appId);
     if (!gameData) return;
 
-    const guildGameData = await db.guildGameData(interaction.guildId, applicationId);
-    if (!guildGameData) return;
-
-    if (!guildGameData.roleId) return;
-
-    const role = interaction.guild?.roles.cache.get(guildGameData.roleId);
-    if (!role) return;
-
-    const inviterId = Utils.parseMention(inviterMentionComponent.content);
+    const guild = client.guilds.cache.get(inviteData.guildId);
+    if (guild?.id !== interaction.guildId) return;
 
     switch (customId) {
       case Id.Join:
-        await this.join(interaction, inviterId, gameData, guildGameData, role, joinerIds);
+        await this.join(interaction, inviteData, gameData);
         break;
       case Id.Leave:
-        await this.leave(interaction, inviterId, gameData, guildGameData, role, joinerIds);
+        await this.leave(interaction, inviteData);
         break;
       case Id.Close:
-        await this.close(interaction, inviterId, gameData, guildGameData, role, joinerIds);
+        await this.close(interaction, inviteData, gameData);
         break;
       case Id.Notify:
-        await this.notify(interaction, role);
+        await this.notify(interaction, inviteData);
         break;
       default:
     }
@@ -246,26 +221,22 @@ export default class GameInviteComponent extends Component {
 
   async join(
     interaction: MessageComponentInteraction<CacheType>,
-    inviter: string,
-    data: GameData,
-    guildData: GuildGameData,
-    role: Role,
-    joinerIds: string[],
+    data: GameInviteData,
+    gameData: GameData,
   ) {
-    if (inviter === interaction.user.id) {
-      return interaction.deferUpdate();
+    if (data.inviterId === interaction.user.id) {
+      return interaction.deferUpdate({ withResponse: false });
     }
 
-    const willUpdate = !joinerIds.some(joinerId => joinerId === interaction.user.id);
-    if (willUpdate) joinerIds.push(interaction.user.id);
+    const willUpdate = !data.joinersId.some(joinerId => joinerId === interaction.user.id);
+    if (willUpdate) data.joinersId.push(interaction.user.id);
 
-    const reply = GameInviteComponent.createInteractable(inviter, data, guildData, role, joinerIds);
+    const reply = GameInviteComponent.createInteractable(data);
     await interaction.update({ components: reply.components });
 
     if (willUpdate) {
-      for (const player of [inviter, ...joinerIds].filter(
-        player => player != interaction.user.id,
-      )) {
+      const players = [data.inviterId, ...data.joinersId];
+      for (const player of players.filter(player => player != interaction.user.id)) {
         try {
           const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
           dmChannel?.send(
@@ -273,29 +244,56 @@ export default class GameInviteComponent extends Component {
           );
         } catch (_) {}
       }
+
+      if (data.maxSlot && players.length >= data.maxSlot) {
+        await interaction.message.delete();
+
+        const inviteClosedEmbed = new EmbedBuilder({
+          author: { name: Constants.GAME_MANAGER_TITLE },
+          title: data.name,
+          fields: [
+            ...players.map((players, i) => ({
+              name: `Player ${i + 1}`,
+              value: Utils.mentionUserById(players),
+              inline: true,
+            })),
+          ],
+          footer: { text: `${new Date()}` },
+          color: Colors.Blurple,
+        });
+
+        if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
+          inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
+        }
+
+        for (const player of players) {
+          try {
+            const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
+            dmChannel?.send({
+              content: `The **${data.name}** party is now closed. Good luck!`,
+              embeds: [inviteClosedEmbed],
+            });
+          } catch (_) {}
+        }
+      }
     }
   }
 
-  async leave(
-    interaction: MessageComponentInteraction<CacheType>,
-    inviter: string,
-    data: GameData,
-    guildData: GuildGameData,
-    role: Role,
-    joinerIds: string[],
-  ) {
-    if (inviter === interaction.user.id) {
-      return interaction.deferUpdate();
+  async leave(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {
+    if (data.inviterId === interaction.user.id) {
+      return interaction.deferUpdate({ withResponse: false });
     }
 
-    const willUpdate = joinerIds.some(joinerId => joinerId === interaction.user.id);
-    if (willUpdate) joinerIds = joinerIds.filter(joinerId => joinerId !== interaction.user.id);
+    const willUpdate = data.joinersId?.some(joinerId => joinerId === interaction.user.id);
+    if (willUpdate) {
+      data.joinersId = data.joinersId.filter(joinerId => joinerId !== interaction.user.id);
+    }
 
-    const reply = GameInviteComponent.createInteractable(inviter, data, guildData, role, joinerIds);
+    const reply = GameInviteComponent.createInteractable(data);
     await interaction.update({ components: reply.components });
 
     if (willUpdate) {
-      for (const player of [inviter, ...joinerIds]) {
+      for (const player of [data.inviterId, ...data.joinersId]) {
         try {
           const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
           dmChannel?.send(
@@ -308,13 +306,10 @@ export default class GameInviteComponent extends Component {
 
   async close(
     interaction: MessageComponentInteraction<CacheType>,
-    inviter: string,
-    data: GameData,
-    guildData: GuildGameData,
-    role: Role,
-    joinerIds: string[],
+    data: GameInviteData,
+    gameData: GameData,
   ) {
-    if (Utils.parseMention(inviter) !== interaction.user.id) {
+    if (data.inviterId !== interaction.user.id) {
       return interaction.reply({
         content: 'Only the inviter can close this invitation.',
         flags: MessageFlags.Ephemeral,
@@ -323,11 +318,13 @@ export default class GameInviteComponent extends Component {
 
     await interaction.message.delete();
 
+    const players = [data.inviterId, ...data.joinersId];
+
     const inviteClosedEmbed = new EmbedBuilder({
       author: { name: Constants.GAME_MANAGER_TITLE },
       title: data.name,
       fields: [
-        ...[inviter, ...joinerIds].map((players, i) => ({
+        ...players.map((players, i) => ({
           name: `Player ${i + 1}`,
           value: Utils.mentionUserById(players),
           inline: true,
@@ -337,11 +334,11 @@ export default class GameInviteComponent extends Component {
       color: Colors.Blurple,
     });
 
-    if (data.iconURLs?.length && typeof data.iconIndex === 'number') {
-      inviteClosedEmbed.setThumbnail(data.iconURLs[data.iconIndex]);
+    if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
+      inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
     }
 
-    for (const player of [inviter, ...joinerIds]) {
+    for (const player of players) {
       try {
         const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
         dmChannel?.send({
@@ -352,11 +349,17 @@ export default class GameInviteComponent extends Component {
     }
   }
 
-  async notify(interaction: MessageComponentInteraction<CacheType>, role: Role) {
+  async notify(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {
     const member = interaction.member;
     if (!(member instanceof GuildMember)) return;
 
-    const channels = role.guild.channels.cache.filter(
+    const guild = client.guilds.cache.get(data.guildId);
+    if (guild?.id !== interaction.guildId) return;
+
+    const role = guild.roles.cache.get(data.roleId);
+    if (!role) return;
+
+    const channels = guild.channels.cache.filter(
       c =>
         c.parentId === QGConstants.DEDICATED_CHANNEL_CATEGORY_ID &&
         c.permissionsFor(role).has('ViewChannel'),

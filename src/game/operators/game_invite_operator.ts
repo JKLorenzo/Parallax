@@ -1,6 +1,6 @@
 import { Colors, EmbedBuilder, type Role } from 'discord.js';
 import type { SendableChannels } from 'discord.js';
-import type { GameData } from '../../database/database_defs.js';
+import type { GameData, GameInviteData } from '../../database/database_defs.js';
 import { Constants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
@@ -46,24 +46,38 @@ export default class GameInviteOperator {
     return embed;
   }
 
-  async gameInvite(inviterId: string, channel: SendableChannels, role: Role, joinerIds?: string[]) {
+  async createGameInvite(
+    inviterId: string,
+    channel: SendableChannels,
+    role: Role,
+    joinerIds: string[],
+    maxSlot?: number,
+  ) {
     const db = DatabaseFacade.instance();
 
     const guildGameData = await db.findGuildGameByRole(role.guild.id, role.id);
     if (!guildGameData?.id) return;
 
     const gameData = await db.gameData(guildGameData.id);
-    if (!gameData) return;
+    if (!gameData?.id || !gameData?.name) return;
 
-    const interactable = GameInviteComponent.createInteractable(
-      inviterId,
-      gameData,
-      guildGameData,
-      role,
-      joinerIds?.filter(Utils.filterUnique),
-    );
+    const data: Omit<GameInviteData, 'messageId'> = {
+      id: Utils.makeId(17, '0123456789'),
+      name: gameData.name,
+      appId: gameData.id,
+      guildId: role.guild.id,
+      roleId: role.id,
+      inviterId: inviterId,
+      inviteDate: new Date(),
+      joinersId: joinerIds.filter(Utils.filterUnique),
+      maxSlot: maxSlot,
+    };
 
+    const interactable = GameInviteComponent.createInteractable(data);
     const message = await channel.send(interactable);
+
+    await db.gameInviteData(data.id, { messageId: message.id, ...data });
+
     setTimeout(async () => {
       try {
         await message.delete();
