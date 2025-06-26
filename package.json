@@ -31,7 +31,7 @@
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
     "async-g-i-s": "^1.5.5",
-    "discord.js": "^14.20.0",
+    "discord.js": "^14.21.0",
     "dotenv": "^16.5.0",
     "humanize-duration": "^3.33.0",
     "husky": "^9.1.7",
