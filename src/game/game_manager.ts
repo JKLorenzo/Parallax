@@ -49,6 +49,20 @@ export default class GameManager extends Manager {
     return this._instance;
   }
 
+  static get rsvpMin() {
+    return 2;
+  }
+
+  static get rsvpMax() {
+    return 10;
+  }
+
+  static get rsvpArray() {
+    const rsvp: number[] = [];
+    for (let i = this.rsvpMin; i <= this.rsvpMax; i++) rsvp.push(i);
+    return rsvp;
+  }
+
   async init() {
     const db = DatabaseFacade.instance();
     await db.loadGameData();
