@@ -6,6 +6,7 @@ import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import GameInviteComponent from '../components/game_invite_component.js';
 import { client } from '../../main.js';
+import GameManager from '../game_manager.js';
 
 export default class GameInviteOperator {
   makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
@@ -69,6 +70,8 @@ export default class GameInviteOperator {
 
       return true;
     });
+
+    if (maxSlot && maxSlot > GameManager.rsvpMax) maxSlot = GameManager.rsvpMax;
 
     const data: Omit<GameInviteData, 'messageId'> = {
       id: Utils.makeId(17, '0123456789'),

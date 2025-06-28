@@ -18,6 +18,8 @@ import DatabaseFacade from '../../database/database_facade.js';
 import GameManager from '../game_manager.js';
 import Utils from '../../misc/utils.js';
 
+const slot = (i: number) => `reserve_slot_${i}`;
+
 export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
   constructor() {
     super(
@@ -39,7 +41,7 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
           },
           ...GameManager.rsvpArray.map(i => {
             const data: ApplicationCommandOptionData = {
-              name: `reserve_slot_${i}`,
+              name: slot(i),
               description: 'Reserve a slot for a user.',
               type: ApplicationCommandOptionType.String,
               autocomplete: true,
@@ -50,7 +52,7 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
             name: 'max_slots',
             description: 'Automatically close the game invite once this number is reached.',
             type: ApplicationCommandOptionType.Integer,
-            choices: GameManager.rsvpArray.map(e => ({ name: `${e}`, value: e })),
+            autocomplete: true,
           },
         ],
       },
@@ -90,7 +92,7 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
 
     const joinerIds: string[] = [];
     for (let i = 2; i <= 10; i++) {
-      const joinerId = interaction.options.getString(`reserve_slot_${i}`);
+      const joinerId = interaction.options.getString(slot(i));
       if (!joinerId) continue;
       const joiner = guild.members.cache.get(joinerId);
       if (joiner) joinerIds.push(joiner.id);
@@ -111,6 +113,8 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
       choices = await this.gameAutocomplete(focused.value);
     } else if (focused.name.startsWith('reserve_slot')) {
       choices = await this.reserveSlotAutocomplete(interaction, focused.value);
+    } else if (focused.name === 'max_slots') {
+      choices = await this.maxSlotsAutocomplete(interaction);
     }
 
     await interaction.respond(choices.slice(0, 25));
@@ -139,7 +143,7 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
 
     const joinerIds: string[] = [];
     for (let i = GameManager.rsvpMin; i <= GameManager.rsvpMax; i++) {
-      const joinerId = interaction.options.getString(`reserve_slot_${i}`);
+      const joinerId = interaction.options.getString(slot(i));
       if (!joinerId) continue;
       const joiner = guild.members.cache.get(joinerId);
       if (joiner) joinerIds.push(joiner.id);
@@ -158,6 +162,28 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
         value: m.id,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    return choices;
+  }
+
+  async maxSlotsAutocomplete(interaction: AutocompleteInteraction<CacheType>) {
+    let guild = interaction.guild ?? undefined;
+    guild ??= client.guilds.cache.get(QGConstants.GUILD_ID);
+    guild ??= client.guilds.cache.get(CSConstants.GUILD_ID);
+
+    if (!guild) return [];
+
+    const joinerIds: string[] = [];
+    for (let i = GameManager.rsvpMin; i <= GameManager.rsvpMax; i++) {
+      const joinerId = interaction.options.getString(slot(i));
+      if (!joinerId) continue;
+      const joiner = guild.members.cache.get(joinerId);
+      if (joiner) joinerIds.push(joiner.id);
+    }
+
+    const minSlot = GameManager.rsvpMin + joinerIds.length;
+    const choices: ApplicationCommandOptionChoiceData<number>[] = [];
+    for (let i = minSlot; i <= GameManager.rsvpMax; i++) choices.push({ name: `${i}`, value: i });
 
     return choices;
   }
