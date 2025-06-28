@@ -39,7 +39,7 @@ enum Containers {
 export enum GameInviteComponents {
   GAME_INVITE_CONTAINER = Containers.GAME_INVITE,
   HEADER_SECTION,
-  INVITE_ID,
+  HEADER_TEXT,
 }
 
 export enum AutoModComponents {

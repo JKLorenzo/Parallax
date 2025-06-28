@@ -43,11 +43,21 @@ export default class GameInviteComponent extends Component {
       id: GameInviteComponents.GAME_INVITE_CONTAINER,
     });
 
+    const onlineMembers = role?.members.filter(m => m.presence && m.presence.status != 'offline');
     const headerSection = new SectionBuilder()
       .setId(GameInviteComponents.HEADER_SECTION)
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`# ${data.name}`),
-        new TextDisplayBuilder().setId(GameInviteComponents.INVITE_ID).setContent(`-# ${data.id}`),
+        new TextDisplayBuilder()
+          .setId(GameInviteComponents.HEADER_TEXT)
+          .setContent(
+            [
+              `# ${data.name}`,
+              `-# ${data.id}`,
+              '',
+              `-# **Role**: ${Utils.mentionRoleById(data.roleId)}`,
+              `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
+            ].join('\n'),
+          ),
       )
       .setButtonAccessory(
         new ButtonBuilder()
@@ -57,26 +67,10 @@ export default class GameInviteComponent extends Component {
       );
     container.addSectionComponents(headerSection);
 
-    const onlineMembers = role?.members.filter(m => m.presence && m.presence.status != 'offline');
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        [
-          `-# **Role**: ${Utils.mentionRoleById(data.roleId)}`,
-          `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
-        ].join('\n'),
-      ),
-    );
-
     container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
 
-    const inviterComponent: TextDisplayBuilder[] = [
-      new TextDisplayBuilder().setContent('## Inviter'),
-      new TextDisplayBuilder().setContent(Utils.mentionUserById(data.inviterId)),
-    ];
-
     const inviter = role?.guild.members.cache.get(data.inviterId);
-
-    const inviterInfo: string[] = [];
+    const inviterInfo: string[] = ['## Inviter', Utils.mentionUserById(data.inviterId)];
     const inviterPresence = inviter?.presence?.activities
       .filter(a => a.type === ActivityType.Playing)
       .map(a => a.name);
@@ -89,13 +83,9 @@ export default class GameInviteComponent extends Component {
       inviterInfo.push(`-# **In voice**: ${inviterChannel}`);
     }
 
-    if (inviterInfo.length) {
-      inviterComponent.push(new TextDisplayBuilder().setContent(inviterInfo.join('\n')));
-    }
-
     container.addSectionComponents(
       new SectionBuilder()
-        .addTextDisplayComponents(inviterComponent)
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(inviterInfo.join('\n')))
         .setThumbnailAccessory(builder =>
           builder.setURL(inviter?.displayAvatarURL() ?? guild?.iconURL()!),
         ),
@@ -107,18 +97,15 @@ export default class GameInviteComponent extends Component {
     for (let i = 0; i < slotCount; i++) {
       const joinerId = data.joinersId.at(i);
 
-      const joinerComponent: TextDisplayBuilder[] = [
-        new TextDisplayBuilder().setContent(`## Player ${i + 2}`),
-        new TextDisplayBuilder().setContent(
-          joinerId ? Utils.mentionUserById(joinerId) : 'Slot Available',
-        ),
+      const joinerInfo: string[] = [
+        `## Player ${i + 2}`,
+        joinerId ? Utils.mentionUserById(joinerId) : 'Slot Available',
       ];
 
       let joiner: GuildMember | undefined;
       if (joinerId) {
         joiner = role?.guild.members.cache.get(joinerId);
 
-        const joinerInfo: string[] = [];
         const joinerPresence = joiner?.presence?.activities
           .filter(a => a.type === ActivityType.Playing)
           .map(a => a.name);
@@ -130,15 +117,11 @@ export default class GameInviteComponent extends Component {
         if (joinerChannel) {
           joinerInfo.push(`-# **In voice**: ${joinerChannel}`);
         }
-
-        if (joinerInfo.length) {
-          joinerComponent.push(new TextDisplayBuilder().setContent(joinerInfo.join('\n')));
-        }
       }
 
       container.addSectionComponents(
         new SectionBuilder()
-          .addTextDisplayComponents(joinerComponent)
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(joinerInfo.join('\n')))
           .setThumbnailAccessory(builder =>
             builder.setURL(joiner?.displayAvatarURL() ?? guild?.iconURL()!),
           ),
@@ -164,6 +147,8 @@ export default class GameInviteComponent extends Component {
       ]),
     );
 
+    console.log(JSON.stringify(container.toJSON()).split('type').length);
+
     return {
       components: [container],
       flags: MessageFlags.IsComponentsV2,
@@ -186,11 +171,11 @@ export default class GameInviteComponent extends Component {
     ) as SectionComponent | undefined;
     if (!headerSection) return;
 
-    const inviteIdComponent = headerSection.components.find(
-      c => c.type === ComponentType.TextDisplay && c.id === GameInviteComponents.INVITE_ID,
+    const headerText = headerSection.components.find(
+      c => c.type === ComponentType.TextDisplay && c.id === GameInviteComponents.HEADER_TEXT,
     ) as TextDisplayComponent | undefined;
 
-    const inviteId = inviteIdComponent?.content;
+    const inviteId = headerText?.content.split('\n').at(1);
     if (!inviteId) return;
 
     const inviteData = await db.gameInviteData(Utils.removeLeadingWord(inviteId));
