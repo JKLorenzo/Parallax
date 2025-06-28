@@ -5,6 +5,7 @@ import { Constants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import GameInviteComponent from '../components/game_invite_component.js';
+import { client } from '../../main.js';
 
 export default class GameInviteOperator {
   makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
@@ -61,6 +62,14 @@ export default class GameInviteOperator {
     const gameData = await db.gameData(guildGameData.id);
     if (!gameData?.id || !gameData?.name) return;
 
+    joinerIds = joinerIds.filter(id => {
+      const user = client.users.cache.get(id);
+      if (!user || user.bot) return false;
+      if (user.id === inviterId) return false;
+
+      return true;
+    });
+
     const data: Omit<GameInviteData, 'messageId'> = {
       id: Utils.makeId(17, '0123456789'),
       name: gameData.name,
@@ -69,7 +78,7 @@ export default class GameInviteOperator {
       roleId: role.id,
       inviterId: inviterId,
       inviteDate: new Date(),
-      joinersId: joinerIds.filter(Utils.filterUnique).filter(id => id !== inviterId),
+      joinersId: joinerIds.filter(Utils.filterUnique),
       maxSlot: maxSlot,
     };
 
