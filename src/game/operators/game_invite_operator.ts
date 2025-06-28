@@ -69,7 +69,7 @@ export default class GameInviteOperator {
       roleId: role.id,
       inviterId: inviterId,
       inviteDate: new Date(),
-      joinersId: joinerIds.filter(Utils.filterUnique),
+      joinersId: joinerIds.filter(Utils.filterUnique).filter(id => id !== inviterId),
       maxSlot: maxSlot,
     };
 
