@@ -1,7 +1,7 @@
 import { Colors, EmbedBuilder, WebhookClient } from 'discord.js';
 import type { TelemetryData } from './telemetry_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
-import Utils from '../modules/utils.js';
+import Utils from '../misc/utils.js';
 import { client } from '../main.js';
 
 export default class TelemetryFacade {
@@ -39,110 +39,110 @@ export default class TelemetryFacade {
   }
 
   async logMessage(data: TelemetryData) {
-    const { origin, identifier, value, broadcast } = data;
+    const { origin, identifier, value, broadcast, channel } = data;
     console.log(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (broadcast && this.webhook) {
-      const embed = new EmbedBuilder({
-        author: {
-          name: client.user?.username ?? '',
-          icon_url: client.user?.displayAvatarURL(),
-        },
-        title: identifier,
-        color: Colors.Blurple,
-        footer: { text: `Session (${this.sessionId}) ${origin ?? ''}` },
-      });
+    if (!broadcast) return;
 
-      try {
-        await this.webhook.send({
-          embeds: Utils.formatToJs(value).map(
-            e => new EmbedBuilder({ ...embed.data, description: e }),
-          ),
-        });
-      } catch (_) {
-        await this.webhook.send({
-          embeds: [
-            new EmbedBuilder({
-              ...embed.data,
-              description:
-                'Message exceeds the allowable length. Refer to console for the actual data.',
-            }),
-          ],
-        });
-        console.error(value);
-      }
+    const embed = new EmbedBuilder({
+      author: {
+        name: client.user?.username ?? '',
+        icon_url: client.user?.displayAvatarURL(),
+      },
+      title: identifier,
+      color: Colors.Blurple,
+      footer: { text: `Session (${this.sessionId}) ${origin ?? ''}` },
+    });
+
+    try {
+      await (channel ?? this.webhook)?.send({
+        embeds: Utils.formatToJs(value).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
+        ),
+      });
+    } catch (_) {
+      await (channel ?? this.webhook)?.send({
+        embeds: [
+          new EmbedBuilder({
+            ...embed.data,
+            description:
+              'Message exceeds the allowable length. Refer to console for the actual data.',
+          }),
+        ],
+      });
+      console.error(value);
     }
   }
 
   async logError(data: TelemetryData) {
-    const { origin, identifier, value, broadcast } = data;
+    const { origin, identifier, value, broadcast, channel } = data;
     console.warn(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (broadcast && this.webhook) {
-      const embed = new EmbedBuilder({
-        author: {
-          name: client.user?.username ?? '',
-          icon_url: client.user?.displayAvatarURL(),
-        },
-        title: identifier,
-        color: Colors.Fuchsia,
-        footer: { text: origin ?? 'Unknown' },
-      });
+    if (!broadcast) return;
 
-      try {
-        await this.webhook.send({
-          embeds: Utils.formatToJs(value).map(
-            e => new EmbedBuilder({ ...embed.data, description: e }),
-          ),
-        });
-      } catch (_) {
-        await this.webhook.send({
-          embeds: [
-            new EmbedBuilder({
-              ...embed.data,
-              description:
-                'Message exceeds the allowable length. Refer to console for the actual data.',
-            }),
-          ],
-        });
-        console.error(value);
-      }
+    const embed = new EmbedBuilder({
+      author: {
+        name: client.user?.username ?? '',
+        icon_url: client.user?.displayAvatarURL(),
+      },
+      title: identifier,
+      color: Colors.Fuchsia,
+      footer: { text: origin ?? 'Unknown' },
+    });
+
+    try {
+      await (channel ?? this.webhook)?.send({
+        embeds: Utils.formatToJs(value).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
+        ),
+      });
+    } catch (_) {
+      await (channel ?? this.webhook)?.send({
+        embeds: [
+          new EmbedBuilder({
+            ...embed.data,
+            description:
+              'Message exceeds the allowable length. Refer to console for the actual data.',
+          }),
+        ],
+      });
+      console.error(value);
     }
   }
 
   logUncaughtException(data: TelemetryData) {
-    const { origin, identifier, value, broadcast } = data;
+    const { origin, identifier, value, broadcast, channel } = data;
     console.error(broadcast ? '[B]' : '[D]', origin, identifier, value);
 
-    if (broadcast && this.webhook) {
-      const embed = new EmbedBuilder({
-        author: {
-          name: client.user?.username ?? '',
-          icon_url: client.user?.displayAvatarURL(),
-        },
-        title: 'Uncaught Exception',
-        color: Colors.Red,
-        footer: { text: origin ?? 'Unknown' },
-      });
+    if (!broadcast) return;
 
-      try {
-        this.webhook.send({
-          embeds: Utils.formatToJs(value).map(
-            e => new EmbedBuilder({ ...embed.data, description: e }),
-          ),
-        });
-      } catch (_) {
-        this.webhook.send({
-          embeds: [
-            new EmbedBuilder({
-              ...embed.data,
-              description:
-                'Message exceeds the allowable length. Refer to console for the actual data.',
-            }),
-          ],
-        });
-        console.error(value);
-      }
+    const embed = new EmbedBuilder({
+      author: {
+        name: client.user?.username ?? '',
+        icon_url: client.user?.displayAvatarURL(),
+      },
+      title: 'Uncaught Exception',
+      color: Colors.Red,
+      footer: { text: origin ?? 'Unknown' },
+    });
+
+    try {
+      (channel ?? this.webhook)?.send({
+        embeds: Utils.formatToJs(value).map(
+          e => new EmbedBuilder({ ...embed.data, description: e }),
+        ),
+      });
+    } catch (_) {
+      (channel ?? this.webhook)?.send({
+        embeds: [
+          new EmbedBuilder({
+            ...embed.data,
+            description:
+              'Message exceeds the allowable length. Refer to console for the actual data.',
+          }),
+        ],
+      });
+      console.error(value);
     }
   }
 }

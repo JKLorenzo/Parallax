@@ -1,6 +1,6 @@
 import type { Snowflake } from 'discord.js';
 
-export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL' | 'GameScreeningChannelId';
+export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL';
 
 export type MusicConfig = {
   enabled?: boolean;
@@ -58,4 +58,22 @@ export type GuildGameData = {
   roleId?: Snowflake;
   moderatorId?: Snowflake;
   lastPlayed?: Date;
+};
+
+export type Executable = {
+  name: string;
+  path: string[];
+};
+
+export type GameInviteData = {
+  id: string;
+  name: string;
+  appId: string;
+  guildId: Snowflake;
+  roleId: Snowflake;
+  messageId: Snowflake;
+  inviterId: Snowflake;
+  joinersId: Snowflake[];
+  inviteDate: Date;
+  maxSlot?: number;
 };

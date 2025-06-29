@@ -1,11 +1,14 @@
 import 'dotenv/config';
-import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import DatabaseFacade from './database/database_facade.js';
 import TelemetryFacade from './telemetry/telemetry_facade.js';
 import GatewayManager from './gateway/gateway_manager.js';
 import EnvironmentFacade from './environment/environment_facade.js';
 import InteractionManager from './interaction/interaction_manager.js';
 import GameManager from './game/game_manager.js';
+import VoiceManager from './voice/voice_manager.js';
+import AutomodManager from './automod/automod_manager.js';
+import ProcessManager from './process/process_manager.js';
 
 const database = DatabaseFacade.instance();
 const telemetry = TelemetryFacade.instance();
@@ -31,30 +34,24 @@ export const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
   ],
-  presence: {
-    activities: [
-      {
-        name: '/',
-        type: ActivityType.Listening,
-      },
-    ],
-    status: 'online',
-    afk: false,
-  },
 });
 
 client.once('ready', async () => {
-  // Initialize other managers
-  await Promise.all([GatewayManager.instance().init(), GameManager.instance().init()]);
+  await Promise.all([
+    AutomodManager.instance().init(),
+    GatewayManager.instance().init(),
+    GameManager.instance().init(),
+    VoiceManager.instance().init(),
+    ProcessManager.instance().init(),
+  ]);
 
-  // Initialize interaction manager last to accept user commands
+  // Accept commands once all managers are intiialized.
   await InteractionManager.instance().init();
 
   telemetry.logMessage({
     identifier: 'Client',
     value: `Online on ${client.guilds.cache.size} servers.`,
     broadcast: true,
-    origin: 'Main',
   });
 });
 

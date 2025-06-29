@@ -8,11 +8,10 @@ import {
   type APIEmbedField,
   Colors,
   MessageFlags,
-  ApplicationIntegrationType,
 } from 'discord.js';
-import DatabaseFacade from '../../../database/database_facade.js';
-import Utils from '../../../modules/utils.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import DatabaseFacade from '../../database/database_facade.js';
+import Utils from '../../misc/utils.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
 
 export default class InfoSlashCommand extends SlashCommand {
   constructor() {

@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { AssetsPath, EnvKeys, InteractionPath } from './environment_defs.js';
+import { BatteryKeys, EnvKeys, type BatteryData } from './environment_defs.js';
+import child_process from 'node:child_process';
 
 export default class EnvironmentFacade {
   private static _instance: EnvironmentFacade;
@@ -35,11 +36,43 @@ export default class EnvironmentFacade {
     return process.env.NODE_ENV === 'production';
   }
 
-  assetsPath(path: string) {
-    return join(process.cwd(), 'build', AssetsPath, path);
+  get cwd() {
+    return join(process.cwd(), 'build');
   }
 
-  interactionsPath() {
-    return join(process.cwd(), 'build', InteractionPath);
+  assetsPath(name: string) {
+    return join(process.cwd(), 'src', 'assets', name);
+  }
+
+  battery(): BatteryData {
+    const raw = child_process.execSync('sudo pwrstat -status', {
+      encoding: 'utf-8',
+    });
+    const data = raw
+      .split('\n')
+      .map(s => [s.split('.. ')[0].replaceAll('.', '').trim(), s.split('.. ')[1]?.trim()]);
+
+    const getVal = (key: keyof typeof BatteryKeys) =>
+      data.find(d => d[0] === BatteryKeys[key])?.at(1);
+
+    return {
+      properties: {
+        model: getVal('model'),
+        firmware: getVal('firmware'),
+        powerRated: getVal('powerRated'),
+        voltageRated: getVal('voltageRated'),
+      },
+      status: {
+        capacity: getVal('capacity'),
+        lastEvent: getVal('lastEvent'),
+        lineInteraction: getVal('lineInteraction'),
+        powerLoad: getVal('powerLoad'),
+        remainingRuntime: getVal('remainingRuntime'),
+        state: getVal('state'),
+        source: getVal('source'),
+        voltageOutput: getVal('voltageOutput'),
+        voltageUtility: getVal('voltageUtility'),
+      },
+    };
   }
 }

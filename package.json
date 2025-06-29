@@ -8,7 +8,6 @@
     "start": "node .",
     "clean": "rimraf build",
     "build": "tsc",
-    "postbuild": "copyfiles -u 1 \"src/assets/**/*.*\" build",
     "prepare": "is-ci || husky install",
     "rebuild": "npm run clean && npm run build"
   },
@@ -32,15 +31,16 @@
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
     "async-g-i-s": "^1.5.5",
-    "copyfiles": "^2.4.1",
-    "discord.js": "^14.19.3",
-    "dotenv": "^16.5.0",
-    "humanize-duration": "^3.32.1",
+    "discord.js": "^14.21.0",
+    "dotenv": "^16.6.1",
+    "humanize-duration": "^3.33.0",
     "husky": "^9.1.7",
     "is-ci": "^4.1.0",
     "lodash": "^4.17.21",
-    "mongodb": "^6.16.0",
-    "rimraf": "^6.0.1"
+    "mongodb": "^6.17.0",
+    "public-ip": "^7.0.1",
+    "rimraf": "^6.0.1",
+    "systeminformation": "^5.27.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

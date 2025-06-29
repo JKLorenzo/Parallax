@@ -1,13 +1,15 @@
 import { Colors, EmbedBuilder, type Role } from 'discord.js';
-import type { Message } from 'discord.js';
-import type { GameData } from '../../database/database_defs.js';
+import type { SendableChannels } from 'discord.js';
+import type { GameData, GameInviteData } from '../../database/database_defs.js';
 import { Constants } from '../../misc/constants.js';
-import Utils from '../../modules/utils.js';
+import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
-import GameInviteComponent from '../../interaction/components/game_invite_component.js';
+import GameInviteComponent from '../components/game_invite_component.js';
+import { client } from '../../main.js';
+import GameManager from '../game_manager.js';
 
 export default class GameInviteOperator {
-  static makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
+  makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
     const embed = new EmbedBuilder({
       author: { name: Constants.GAME_MANAGER_TITLE },
       title: data.name,
@@ -46,33 +48,54 @@ export default class GameInviteOperator {
     return embed;
   }
 
-  static async gameInvite(message: Message<boolean>, role: Role) {
+  async createGameInvite(
+    inviterId: string,
+    channel: SendableChannels,
+    role: Role,
+    joinerIds: string[],
+    maxSlot?: number,
+  ) {
     const db = DatabaseFacade.instance();
 
     const guildGameData = await db.findGuildGameByRole(role.guild.id, role.id);
     if (!guildGameData?.id) return;
 
     const gameData = await db.gameData(guildGameData.id);
-    if (!gameData) return;
+    if (!gameData?.id || !gameData?.name) return;
 
-    const joinersId = message.mentions.users
-      .filter(user => !user.bot)
-      .map(user => user.id)
-      .filter(Utils.filterUnique);
+    joinerIds = joinerIds.filter(id => {
+      const user = client.users.cache.get(id);
+      if (!user || user.bot) return false;
+      if (user.id === inviterId) return false;
 
-    const reply = GameInviteComponent.createInteractable(
-      message.author.id,
-      gameData,
-      guildGameData,
-      role,
-      joinersId,
-    );
+      return true;
+    });
 
-    const invite = await message.reply(reply);
+    if (maxSlot && maxSlot > GameManager.rsvpMax) maxSlot = GameManager.rsvpMax;
+
+    const data: Omit<GameInviteData, 'messageId'> = {
+      id: Utils.makeId(17, '0123456789'),
+      name: gameData.name,
+      appId: gameData.id,
+      guildId: role.guild.id,
+      roleId: role.id,
+      inviterId: inviterId,
+      inviteDate: new Date(),
+      joinersId: joinerIds.filter(Utils.filterUnique),
+      maxSlot: maxSlot,
+    };
+
+    const interactable = GameInviteComponent.createInteractable(data);
+    const message = await channel.send(interactable);
+
+    await db.gameInviteData(data.id, { messageId: message.id, ...data });
+
     setTimeout(async () => {
       try {
-        await invite.delete();
+        await message.delete();
       } catch (_) {}
     }, Constants.GAME_INVITE_EXPIRATION_MINS * 60000);
+
+    return message;
   }
 }

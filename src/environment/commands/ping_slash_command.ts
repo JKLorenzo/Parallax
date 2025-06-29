@@ -5,7 +5,8 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { publicIpv4 } from 'public-ip';
 
 export default class PingSlashCommand extends SlashCommand {
   constructor() {
@@ -27,10 +28,14 @@ export default class PingSlashCommand extends SlashCommand {
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
     const ping = Math.round(interaction.client.ws.ping ?? 999);
+    const ipv4 = await publicIpv4();
 
     await interaction.reply({
-      content: `My current ping to the discord server is ${ping} ms.`,
-      flags: [MessageFlags.Ephemeral],
+      content: [
+        `My current ping to the discord server is ${ping} ms.`,
+        `My public IP address is \`${ipv4}\`.`,
+      ].join('\n'),
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

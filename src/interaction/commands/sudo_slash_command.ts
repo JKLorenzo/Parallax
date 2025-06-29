@@ -6,9 +6,9 @@ import {
   Colors,
   EmbedBuilder,
 } from 'discord.js';
-import Utils from '../../../modules/utils.js';
-import { Constants } from '../../../misc/constants.js';
-import { CommandScope, SlashCommand } from '../../../modules/command.js';
+import Utils from '../../misc/utils.js';
+import { CSConstants } from '../../misc/constants.js';
+import { CommandScope, SlashCommand } from '../../modules/command.js';
 
 export default class SudoSlashCommand extends SlashCommand {
   private _lastResult?: unknown;
@@ -32,7 +32,7 @@ export default class SudoSlashCommand extends SlashCommand {
       },
       {
         scope: CommandScope.Guild,
-        guilds: guild => guild.id === Constants.CONTROL_SERVER_ID,
+        guilds: guild => guild.id === CSConstants.GUILD_ID,
       },
     );
   }

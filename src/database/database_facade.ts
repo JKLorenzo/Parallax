@@ -9,8 +9,12 @@ import {
   type GuildGameData,
   type MemberData,
   type MusicConfig,
+  type Executable,
+  GameStatus,
+  type GameInviteData,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
+import Utils from '../misc/utils.js';
 
 export default class DatabaseFacade {
   private static _instance: DatabaseFacade;
@@ -20,6 +24,7 @@ export default class DatabaseFacade {
   private memberDataCache: Map<string, Map<string, MemberData>>;
   private gameDataCache: Map<string, GameData>;
   private guildGameDataCache: Map<string, Map<string, GuildGameData>>;
+  private gameInviteDataCache: Map<string, GameInviteData>;
 
   private constructor() {
     this.botConfigCache = new Map();
@@ -27,6 +32,7 @@ export default class DatabaseFacade {
     this.memberDataCache = new Map();
     this.gameDataCache = new Map();
     this.guildGameDataCache = new Map();
+    this.gameInviteDataCache = new Map();
   }
 
   static instance() {
@@ -245,6 +251,62 @@ export default class DatabaseFacade {
     return this.gameDataCache.get(applicationId);
   }
 
+  async loadGameData() {
+    const results = await this.mongoClient
+      .db('global')
+      .collection('games')
+      .find({ status: GameStatus.Approved })
+      .toArray();
+
+    for (const result of results) {
+      const game: GameData = {
+        id: result.id,
+        name: result.name,
+        status: result.status,
+        iconURLs: result.iconURLs,
+        iconIndex: result.iconIndex,
+        bannerURLs: result.bannerURLs,
+        bannerIndex: result.bannerIndex,
+        moderatorId: result.moderatorId,
+      };
+
+      this.gameDataCache.set(result.id, game);
+    }
+  }
+
+  async findGamesByPartialName(name: string) {
+    let games = [...this.gameDataCache.values()];
+
+    if (name.trim().length > 0) {
+      games = games.filter(d => d.name && Utils.hasAny(d.name.toLowerCase(), name.toLowerCase()));
+    }
+
+    if (games.length === 0) {
+      // Find game similar to the name (case insensitive)
+      const result = await this.mongoClient
+        .db('global')
+        .collection('games')
+        .findOne({ name: { $regex: name, $options: 'i' }, status: GameStatus.Approved });
+
+      if (result?._id) {
+        const game: GameData = {
+          id: result.id,
+          name: result.name,
+          status: result.status,
+          iconURLs: result.iconURLs,
+          iconIndex: result.iconIndex,
+          bannerURLs: result.bannerURLs,
+          bannerIndex: result.bannerIndex,
+          moderatorId: result.moderatorId,
+        };
+
+        this.gameDataCache.set(result.id, game);
+      }
+    }
+
+    return games;
+  }
+
   async guildGameData(guildId: string, applicationId: string, data?: GuildGameData) {
     if (data && Object.keys(data).length > 0) {
       // Upsert
@@ -313,5 +375,51 @@ export default class DatabaseFacade {
     if (!newGuildGames) return;
 
     return [...newGuildGames.values()].find(guildGame => guildGame.roleId === roleId);
+  }
+
+  async fetchExecutables() {
+    const results = await this.mongoClient.db('global').collection('executables').find().toArray();
+    const executables: Executable[] = results.map(result => ({
+      name: result.name,
+      path: result.path,
+    }));
+
+    return executables;
+  }
+
+  async gameInviteData(inviteId: string, data?: Omit<GameInviteData, 'id'>) {
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const invite = this.gameInviteDataCache.get(inviteId) ?? { id: inviteId, ...data };
+      this.gameInviteDataCache.set(inviteId, invite);
+
+      await this.mongoClient
+        .db('global')
+        .collection('game_invites')
+        .updateOne({ id: inviteId }, { $set: invite }, { upsert: true });
+    } else if (!this.gameInviteDataCache.get(inviteId)) {
+      // Get
+      const result = await this.mongoClient
+        .db('global')
+        .collection('game_invites')
+        .findOne({ id: inviteId });
+
+      if (result?._id) {
+        this.gameInviteDataCache.set(inviteId, {
+          id: inviteId,
+          name: result.name,
+          appId: result.appId,
+          guildId: result.guildId,
+          roleId: result.roleId,
+          messageId: result.messageId,
+          inviterId: result.inviterId,
+          joinersId: result.joinersId,
+          maxSlot: result.maxSlot,
+          inviteDate: result.inviteDate,
+        });
+      }
+    }
+
+    return this.gameInviteDataCache.get(inviteId);
   }
 }
