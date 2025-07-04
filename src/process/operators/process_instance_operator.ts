@@ -54,7 +54,7 @@ export default class ProcessInstanceOperator {
 
     if (this.pid) {
       await ProcessManager.instance().setOperator(this.pid, this);
-      await this.channel.setTopic(this.pid.toString());
+      await this.channel.send(`Process started \`${this.name}\` with id \`${this.pid}\`.`);
     }
 
     this.process.stdout?.on('data', async data => {
@@ -68,10 +68,9 @@ export default class ProcessInstanceOperator {
     this.process.once('close', async code => {
       if (this.pid) {
         await ProcessManager.instance().deleteOperator(this.pid);
-        await this.channel.setTopic(null);
       }
 
-      await this.processOutput(`Exited with code: ${code}`, true);
+      await this.processOutput('Process closed' + code ? ` with code \`${code}\`.` : '.', true);
     });
 
     telemetry.end();
