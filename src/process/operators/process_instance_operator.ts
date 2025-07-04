@@ -40,7 +40,7 @@ export default class ProcessInstanceOperator {
 
   async connectionInfo() {
     const ipv4 = await publicIpv4();
-    return this.executable.connectionInfo.replaceAll('<ipv4>', ipv4);
+    return this.executable.connectionInfo.replaceAll('<ipv4>', ipv4).replaceAll('`', `\``);
   }
 
   async start() {
