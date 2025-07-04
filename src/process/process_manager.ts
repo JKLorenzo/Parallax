@@ -68,14 +68,14 @@ export default class ProcessManager extends Manager {
     const telemetry = new Telemetry(this.start, { parent: this.telemetry });
     const guild = client.guilds.cache.get(CSConstants.GUILD_ID);
 
+    const executable = this.executables.find(p => p.name === name);
+    if (!executable) return;
+
     let operator = this.operators.find(o => o.executable.name === name);
     if (operator) return operator;
 
     // Disable execution of a similar running process
-    if (this.executables.some(e => e.name.startsWith(name.split(' ')[0]))) return;
-
-    const executable = this.executables.find(p => p.name === name);
-    if (!executable) return;
+    if (this.operators.some(e => e.name.startsWith(name.split(' ')[0]))) return;
 
     const categoryChannel = guild?.channels.cache.get(CSConstants.PROCESSES_CHANNEL_CATEGORY_ID);
     if (!(categoryChannel instanceof CategoryChannel)) return;
