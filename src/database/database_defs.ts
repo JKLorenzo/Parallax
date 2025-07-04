@@ -63,6 +63,7 @@ export type GuildGameData = {
 export type Executable = {
   name: string;
   path: string[];
+  connectionInfo: string;
 };
 
 export type GameInviteData = {

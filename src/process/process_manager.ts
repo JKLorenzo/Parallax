@@ -68,7 +68,11 @@ export default class ProcessManager extends Manager {
     const telemetry = new Telemetry(this.start, { parent: this.telemetry });
     const guild = client.guilds.cache.get(CSConstants.GUILD_ID);
 
-    if (this.operators.some(o => o.executable.name === name)) return;
+    let operator = this.operators.find(o => o.executable.name === name);
+    if (operator) return operator;
+
+    // Disable execution of a similar running process
+    if (this.executables.some(e => e.name.startsWith(name.split(' ')[0]))) return;
 
     const executable = this.executables.find(p => p.name === name);
     if (!executable) return;
@@ -86,12 +90,12 @@ export default class ProcessManager extends Manager {
     }
     if (!(channel instanceof TextChannel)) return;
 
-    const operator = new ProcessInstanceOperator(this, executable, channel);
-    const pid = await operator.start();
+    operator = new ProcessInstanceOperator(this, executable, channel);
+    await operator.start();
 
     telemetry.end();
 
-    return pid;
+    return operator;
   }
 
   async setOperator(pid: number, operator: ProcessInstanceOperator) {

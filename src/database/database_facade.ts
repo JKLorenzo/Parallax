@@ -382,6 +382,7 @@ export default class DatabaseFacade {
     const executables: Executable[] = results.map(result => ({
       name: result.name,
       path: result.path,
+      connectionInfo: result.connectionInfo,
     }));
 
     return executables;

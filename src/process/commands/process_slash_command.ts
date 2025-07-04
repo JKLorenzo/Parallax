@@ -1,16 +1,16 @@
 import {
   ChatInputCommandInteraction,
   type CacheType,
-  PermissionFlagsBits,
   ApplicationCommandType,
   ApplicationCommandOptionType,
   AutocompleteInteraction,
   type ApplicationCommandOptionChoiceData,
+  ApplicationIntegrationType,
 } from 'discord.js';
 import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
 import ProcessManager from '../process_manager.js';
 import Utils from '../../misc/utils.js';
-import { CSConstants } from '../../misc/constants.js';
+import DatabaseFacade from '../../database/database_facade.js';
 
 export default class ProcessSlashCommand extends SlashCommandAutoComplete {
   constructor() {
@@ -18,8 +18,11 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
       {
         name: 'process',
         description: 'Process Manager',
-        defaultMemberPermissions: PermissionFlagsBits.ModerateMembers,
         type: ApplicationCommandType.ChatInput,
+        integrationTypes: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
         options: [
           {
             name: 'start',
@@ -37,7 +40,7 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
           },
           {
             name: 'kill',
-            description: 'Kill the running process.',
+            description: 'Kill a running process.',
             type: ApplicationCommandOptionType.Subcommand,
             options: [
               {
@@ -77,8 +80,7 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
         ],
       },
       {
-        scope: CommandScope.Guild,
-        guilds: guild => guild.id === CSConstants.GUILD_ID,
+        scope: CommandScope.Global,
       },
     );
   }
@@ -86,19 +88,31 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
     await interaction.deferReply();
 
+    const db = DatabaseFacade.instance();
+    const botOwnerId = await db.botConfig('BotOwnerId');
+
     const command = interaction.options.getSubcommand();
     if (command === 'start') {
       const process = interaction.options.getString('process', true);
-      const pid = await ProcessManager.instance().start(process);
-      if (!pid) return interaction.editReply(`Process failed to start.`);
+      const operator = await ProcessManager.instance().start(process);
+      if (!operator) return interaction.editReply(`Process failed to start.`);
 
-      await interaction.editReply(`Process started with PID: \`${pid}\``);
+      const connectionInfo = await operator.connectionInfo();
+      await interaction.editReply(connectionInfo);
     } else if (command === 'kill') {
+      if (interaction.user.id !== botOwnerId) {
+        return interaction.editReply(`Permission denied.`);
+      }
+
       const pid = interaction.options.getInteger('pid', true);
       const signal = interaction.options.getInteger('signal', false) ?? undefined;
       const result = ProcessManager.instance().kill(pid, signal);
       await interaction.editReply(result);
     } else if (command === 'update') {
+      if (interaction.user.id !== botOwnerId) {
+        return interaction.editReply(`Permission denied.`);
+      }
+
       const executables = await ProcessManager.instance().updateExecutables();
       await interaction.editReply(`Loaded ${executables.length} executables.`);
     }

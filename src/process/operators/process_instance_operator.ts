@@ -5,6 +5,7 @@ import ProcessManager from '../process_manager.js';
 import Telemetry from '../../telemetry/telemetry.js';
 import Utils from '../../misc/utils.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
+import { publicIpv4 } from 'public-ip';
 
 export default class ProcessInstanceOperator {
   private telemetry: Telemetry;
@@ -35,6 +36,11 @@ export default class ProcessInstanceOperator {
 
   get pid() {
     return this.process?.pid;
+  }
+
+  async connectionInfo() {
+    const ipv4 = await publicIpv4();
+    return this.executable.connectionInfo.replaceAll('<ipv4>', ipv4);
   }
 
   async start() {
