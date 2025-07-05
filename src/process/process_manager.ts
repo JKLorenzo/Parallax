@@ -69,33 +69,37 @@ export default class ProcessManager extends Manager {
     const guild = client.guilds.cache.get(CSConstants.GUILD_ID);
 
     const executable = this.executables.find(p => p.name === name);
-    if (!executable) return;
+    if (!executable) return `Invalid executable: \`${name}\``;
 
     let operator = this.operators.find(o => o.executable.name === name);
-    if (operator) return operator;
+    if (!operator) {
+      // Disable execution of a similar running process
+      if (this.operators.some(e => e.name.startsWith(name.split(' ')[0])))
+        return `Could not start when a similar process is running.`;
 
-    // Disable execution of a similar running process
-    if (this.operators.some(e => e.name.startsWith(name.split(' ')[0]))) return;
+      const categoryChannel = guild?.channels.cache.get(CSConstants.PROCESSES_CHANNEL_CATEGORY_ID);
+      if (!(categoryChannel instanceof CategoryChannel)) return;
 
-    const categoryChannel = guild?.channels.cache.get(CSConstants.PROCESSES_CHANNEL_CATEGORY_ID);
-    if (!(categoryChannel instanceof CategoryChannel)) return;
+      const channelName = name.split(' ')[0].toLowerCase();
+      let channel = categoryChannel.children.cache.find(c => c.name === channelName);
+      if (!channel) {
+        channel = await categoryChannel.children.create({
+          name: channelName,
+          type: ChannelType.GuildText,
+        });
+      }
+      if (!(channel instanceof TextChannel)) return;
 
-    const channelName = name.split(' ')[0].toLowerCase();
-    let channel = categoryChannel.children.cache.find(c => c.name === channelName);
-    if (!channel) {
-      channel = await categoryChannel.children.create({
-        name: channelName,
-        type: ChannelType.GuildText,
-      });
+      operator = new ProcessInstanceOperator(this, executable, channel);
+      await operator.start();
     }
-    if (!(channel instanceof TextChannel)) return;
 
-    operator = new ProcessInstanceOperator(this, executable, channel);
-    await operator.start();
+    let info: string | undefined;
+    if (operator.pid) info = await operator.connectionInfo();
 
     telemetry.end();
 
-    return operator;
+    return info;
   }
 
   async setOperator(pid: number, operator: ProcessInstanceOperator) {

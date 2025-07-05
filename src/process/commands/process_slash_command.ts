@@ -94,11 +94,10 @@ export default class ProcessSlashCommand extends SlashCommandAutoComplete {
     const command = interaction.options.getSubcommand();
     if (command === 'start') {
       const process = interaction.options.getString('process', true);
-      const operator = await ProcessManager.instance().start(process);
-      if (!operator) return interaction.editReply(`Process failed to start.`);
+      const result = await ProcessManager.instance().start(process);
+      if (!result) return interaction.editReply(`Process failed to start.`);
 
-      const connectionInfo = await operator.connectionInfo();
-      await interaction.editReply(connectionInfo);
+      await interaction.editReply(result);
     } else if (command === 'kill') {
       if (interaction.user.id !== botOwnerId) {
         return interaction.editReply(`Permission denied.`);
