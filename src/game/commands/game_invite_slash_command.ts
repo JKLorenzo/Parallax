@@ -70,8 +70,8 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
     let channel: Channel | undefined = interaction.channel ?? undefined;
 
     if (!interaction.inGuild()) {
-      guild ??= client.guilds.cache.get(QGConstants.GUILD_ID);
-      channel ??= guild?.channels.cache.get(QGConstants.GENERAL_TEXT_CHANNEL_ID);
+      guild = client.guilds.cache.get(QGConstants.GUILD_ID);
+      channel = guild?.channels.cache.get(QGConstants.GENERAL_TEXT_CHANNEL_ID);
 
       guild ??= client.guilds.cache.get(CSConstants.GUILD_ID);
       channel ??= guild?.channels.cache.get(CSConstants.GENERAL_TEXT_CHANNEL_ID);
