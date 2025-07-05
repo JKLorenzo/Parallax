@@ -416,6 +416,7 @@ export default class DatabaseFacade {
           inviterId: result.inviterId,
           joinersId: result.joinersId,
           maxSlot: result.maxSlot,
+          time: result.time,
           inviteDate: result.inviteDate,
         });
       }

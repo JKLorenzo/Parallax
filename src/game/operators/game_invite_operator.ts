@@ -9,51 +9,13 @@ import { client } from '../../main.js';
 import GameManager from '../game_manager.js';
 
 export default class GameInviteOperator {
-  makeInviteEmbed(inviterId: string, data: GameData, joinersId?: string[]) {
-    const embed = new EmbedBuilder({
-      author: { name: Constants.GAME_MANAGER_TITLE },
-      title: data.name,
-      fields: [
-        {
-          name: Constants.GAME_EMBED_INVITER_FIELD,
-          value: Utils.mentionUserById(inviterId),
-          inline: true,
-        },
-      ],
-      footer: { text: `${new Date()}` },
-      color: Colors.Yellow,
-    });
-
-    if (data.id) {
-      embed.addFields({ name: Constants.GAME_EMBED_APPID_FIELD, value: data.id, inline: true });
-    }
-
-    if (joinersId?.length) {
-      embed.addFields(
-        joinersId.map((joiner, i) => ({
-          name: `Player ${i + 2}`,
-          value: Utils.mentionUserById(joiner),
-        })),
-      );
-    }
-
-    if (data.iconURLs?.length && typeof data.iconIndex === 'number') {
-      embed.setThumbnail(data.iconURLs[data.iconIndex]);
-    }
-
-    if (data.bannerURLs?.length && typeof data.bannerIndex === 'number') {
-      embed.setImage(data.bannerURLs[data.bannerIndex]);
-    }
-
-    return embed;
-  }
-
   async createGameInvite(
     inviterId: string,
     channel: SendableChannels,
     role: Role,
     joinerIds: string[],
     maxSlot?: number,
+    time?: number,
   ) {
     const db = DatabaseFacade.instance();
 
@@ -73,29 +35,72 @@ export default class GameInviteOperator {
 
     if (maxSlot && maxSlot > GameManager.rsvpMax) maxSlot = GameManager.rsvpMax;
 
-    const data: Omit<GameInviteData, 'messageId'> = {
+    const partialData: Omit<GameInviteData, 'messageId'> = {
       id: Utils.makeId(17, '0123456789'),
       name: gameData.name,
       appId: gameData.id,
       guildId: role.guild.id,
       roleId: role.id,
       inviterId: inviterId,
-      inviteDate: new Date(),
       joinersId: joinerIds.filter(Utils.filterUnique),
       maxSlot: maxSlot,
+      time: time,
+      inviteDate: new Date(),
     };
 
-    const interactable = GameInviteComponent.createInteractable(data);
+    const interactable = GameInviteComponent.createInteractable(partialData);
     const message = await channel.send(interactable);
 
-    await db.gameInviteData(data.id, { messageId: message.id, ...data });
+    const data = { messageId: message.id, ...partialData };
+    await db.gameInviteData(data.id, data);
 
+    const expireAtMins = data.time ?? Constants.GAME_INVITE_EXPIRATION_MINS;
     setTimeout(async () => {
       try {
         await message.delete();
+        if (data.time) await this.closeGameInvite(data, gameData);
       } catch (_) {}
-    }, Constants.GAME_INVITE_EXPIRATION_MINS * 60000);
+    }, expireAtMins * 60000);
 
     return message;
+  }
+
+  async closeGameInvite(data: GameInviteData, gameData: GameData) {
+    const guild = client.guilds.cache.get(data.guildId);
+    if (!guild) return;
+
+    const players = [data.inviterId, ...data.joinersId];
+
+    const inviteClosedEmbed = new EmbedBuilder({
+      author: { iconURL: guild.iconURL() ?? undefined, name: guild.name },
+      title: data.name,
+      description: data.id,
+      fields: [
+        ...players.map((players, i) => ({
+          name: `Player ${i + 1}`,
+          value: Utils.mentionUserById(players),
+          inline: true,
+        })),
+      ],
+      color: Colors.Blurple,
+    });
+
+    if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
+      inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
+    }
+
+    if (gameData.bannerURLs?.length && typeof gameData.bannerIndex === 'number') {
+      inviteClosedEmbed.setImage(gameData.bannerURLs[gameData.bannerIndex]);
+    }
+
+    for (const player of players) {
+      try {
+        const dmChannel = await guild?.members.cache.get(player)?.createDM();
+        dmChannel?.send({
+          content: `The **${data.name}** party is now closed. Good luck!`,
+          embeds: [inviteClosedEmbed],
+        });
+      } catch (_) {}
+    }
   }
 }

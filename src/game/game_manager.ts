@@ -5,8 +5,6 @@ import {
   EmbedBuilder,
   Guild,
   GuildMember,
-  Role,
-  type SendableChannels,
 } from 'discord.js';
 import Queuer from '../misc/queuer.js';
 import { Constants } from '../misc/constants.js';
@@ -15,30 +13,34 @@ import GameScreeningOperator from './operators/game_screening_operator.js';
 import GameInviteOperator from './operators/game_invite_operator.js';
 import Manager from '../modules/manager.js';
 import DatabaseFacade from '../database/database_facade.js';
-import { GameStatus, type GameData, type GuildGameData } from '../database/database_defs.js';
+import {
+  GameStatus,
+  type GameData,
+  type GuildGameData,
+} from '../database/database_defs.js';
 import { client } from '../main.js';
 
 export default class GameManager extends Manager {
   private static _instance: GameManager;
-
-  private inviteOperator: GameInviteOperator;
-  private screeningOperator: GameScreeningOperator;
 
   private screeningQueue: Queuer;
   private roleQueue: Queuer;
   private timekeepingQueue: Queuer;
   private messageQueue: Queuer;
 
+  inviteOperator: GameInviteOperator;
+  screeningOperator: GameScreeningOperator;
+
   private constructor() {
     super();
-
-    this.inviteOperator = new GameInviteOperator();
-    this.screeningOperator = new GameScreeningOperator();
 
     this.screeningQueue = new Queuer();
     this.roleQueue = new Queuer();
     this.timekeepingQueue = new Queuer();
     this.messageQueue = new Queuer();
+
+    this.inviteOperator = new GameInviteOperator();
+    this.screeningOperator = new GameScreeningOperator();
   }
 
   static instance() {
@@ -100,7 +102,7 @@ export default class GameManager extends Manager {
 
       for (const role of message.mentions.roles.values()) {
         this.messageQueue.queue(() =>
-          this.gameInvite(
+          this.inviteOperator.createGameInvite(
             message.author.id,
             message.channel,
             role,
@@ -109,16 +111,6 @@ export default class GameManager extends Manager {
         );
       }
     });
-  }
-
-  gameInvite(
-    inviterId: string,
-    channel: SendableChannels,
-    role: Role,
-    joinerIds: string[],
-    maxSlot?: number,
-  ) {
-    return this.inviteOperator.createGameInvite(inviterId, channel, role, joinerIds, maxSlot);
   }
 
   static makeScreeningEmbed(data: GameData, guildData?: GuildGameData) {

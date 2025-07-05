@@ -54,6 +54,41 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
             type: ApplicationCommandOptionType.Integer,
             autocomplete: true,
           },
+          {
+            name: 'time',
+            description: 'Automatically close the game invite after the set time.',
+            type: ApplicationCommandOptionType.Integer,
+            choices: [
+              {
+                name: '5 minutes',
+                value: 5,
+              },
+              {
+                name: '10 minutes',
+                value: 10,
+              },
+              {
+                name: '15 minutes',
+                value: 15,
+              },
+              {
+                name: '30 minutes',
+                value: 30,
+              },
+              {
+                name: '1 hour',
+                value: 60,
+              },
+              {
+                name: '1 hour and 30 minutes',
+                value: 90,
+              },
+              {
+                name: '2 hours',
+                value: 120,
+              },
+            ],
+          },
         ],
       },
       {
@@ -65,6 +100,8 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
     const db = DatabaseFacade.instance();
     const gm = GameManager.instance();
+
+    await interaction.deferReply();
 
     let guild: Guild | undefined = interaction.guild ?? undefined;
     let channel: Channel | undefined = interaction.channel ?? undefined;
@@ -79,8 +116,6 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
 
     if (!guild) return await interaction.editReply("Can't determine guild.");
     if (!channel?.isSendable()) return await interaction.editReply("Can't determine channel.");
-
-    await interaction.deferReply();
 
     const applicationId = interaction.options.getString('game', true);
     const guildGame = await db.guildGameData(guild.id, applicationId);
@@ -99,7 +134,16 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
     }
 
     const maxSlots = interaction.options.getInteger('max_slots') ?? undefined;
-    const message = await gm.gameInvite(interaction.user.id, channel, role, joinerIds, maxSlots);
+    const time = interaction.options.getInteger('time') ?? undefined;
+
+    const message = await gm.inviteOperator.createGameInvite(
+      interaction.user.id,
+      channel,
+      role,
+      joinerIds,
+      maxSlots,
+      time,
+    );
     if (!message) return await interaction.editReply('This game is not available.');
 
     await interaction.editReply(`A [game invite](${message.url}) has been created!`);

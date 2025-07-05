@@ -152,6 +152,24 @@ export default abstract class Utils {
     };
   }
 
+  static addToDate(date: Date, units: number, unit?: 'seconds' | 'minutes' | 'hours') {
+    let ms;
+    switch (unit) {
+      case 'seconds':
+        ms = units * 1000;
+        break;
+      case 'minutes':
+        ms = units * 60000;
+        break;
+      case 'hours':
+        ms = units * 600000;
+        break;
+      default:
+        ms = units;
+    }
+    return new Date(date.getTime() + ms);
+  }
+
   static parseMention(mention: string) {
     return String(mention).replace(/\W/g, '');
   }

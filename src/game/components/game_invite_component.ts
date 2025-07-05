@@ -20,12 +20,13 @@ import {
   type ContainerComponent,
   type MessageReplyOptions,
 } from 'discord.js';
-import type { GameData, GameInviteData, GuildGameData } from '../../database/database_defs.js';
+import type { GameData, GameInviteData } from '../../database/database_defs.js';
 import { Constants, GameInviteComponents, QGConstants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import { Component } from '../../modules/component.js';
 import { client } from '../../main.js';
+import GameManager from '../game_manager.js';
 
 enum Id {
   Join = 'join',
@@ -44,20 +45,26 @@ export default class GameInviteComponent extends Component {
     });
 
     const onlineMembers = role?.members.filter(m => m.presence && m.presence.status != 'offline');
+
+    const header = [
+      `# ${data.name}`,
+      `-# ${data.id}`,
+      '',
+      `-# **Role**: ${Utils.mentionRoleById(data.roleId)}`,
+      `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
+    ];
+
+    if (data.time) {
+      const startDate = Utils.addToDate(data.inviteDate, data.time, 'minutes');
+      header.push(`-# **Start time**: ${startDate.toLocaleString()}`);
+    }
+
     const headerSection = new SectionBuilder()
       .setId(GameInviteComponents.HEADER_SECTION)
       .addTextDisplayComponents(
         new TextDisplayBuilder()
           .setId(GameInviteComponents.HEADER_TEXT)
-          .setContent(
-            [
-              `# ${data.name}`,
-              `-# ${data.id}`,
-              '',
-              `-# **Role**: ${Utils.mentionRoleById(data.roleId)}`,
-              `-# **Player Count**: ${role?.members.size ?? 0} (${onlineMembers?.size ?? 0} online)`,
-            ].join('\n'),
-          ),
+          .setContent(header.join('\n')),
       )
       .setButtonAccessory(
         new ButtonBuilder()
@@ -146,8 +153,6 @@ export default class GameInviteComponent extends Component {
           .setStyle(ButtonStyle.Secondary),
       ]),
     );
-
-    console.log(JSON.stringify(container.toJSON()).split('type').length);
 
     return {
       components: [container],
@@ -302,36 +307,7 @@ export default class GameInviteComponent extends Component {
     }
 
     await interaction.message.delete();
-
-    const players = [data.inviterId, ...data.joinersId];
-
-    const inviteClosedEmbed = new EmbedBuilder({
-      author: { name: Constants.GAME_MANAGER_TITLE },
-      title: data.name,
-      fields: [
-        ...players.map((players, i) => ({
-          name: `Player ${i + 1}`,
-          value: Utils.mentionUserById(players),
-          inline: true,
-        })),
-      ],
-      footer: { text: `${new Date()}` },
-      color: Colors.Blurple,
-    });
-
-    if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
-      inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
-    }
-
-    for (const player of players) {
-      try {
-        const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
-        dmChannel?.send({
-          content: `The **${data.name}** party is now closed. Good luck!`,
-          embeds: [inviteClosedEmbed],
-        });
-      } catch (_) {}
-    }
+    await GameManager.instance().inviteOperator.closeGameInvite(data, gameData);
   }
 
   async notify(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {

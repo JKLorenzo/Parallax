@@ -77,4 +77,5 @@ export type GameInviteData = {
   joinersId: Snowflake[];
   inviteDate: Date;
   maxSlot?: number;
+  time?: number;
 };
