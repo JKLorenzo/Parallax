@@ -70,7 +70,7 @@ export default class ProcessInstanceOperator {
         await ProcessManager.instance().deleteOperator(this.pid);
       }
 
-      await this.processOutput('Process closed' + code ? ` with code \`${code}\`.` : '.', true);
+      await this.processOutput(`Process exited${code ? ` with code \`${code}\`.` : '.'}`, true);
     });
 
     telemetry.end();
