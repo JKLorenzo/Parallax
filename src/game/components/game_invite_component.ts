@@ -3,8 +3,6 @@ import {
   type CacheType,
   ComponentType,
   MessageFlags,
-  Colors,
-  EmbedBuilder,
   ContainerBuilder,
   SectionBuilder,
   TextDisplayBuilder,
@@ -20,7 +18,7 @@ import {
   type ContainerComponent,
   type MessageReplyOptions,
 } from 'discord.js';
-import type { GameData, GameInviteData } from '../../database/database_defs.js';
+import type { GameInviteData } from '../../database/database_defs.js';
 import { Constants, GameInviteComponents, QGConstants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
@@ -186,21 +184,18 @@ export default class GameInviteComponent extends Component {
     const inviteData = await db.gameInviteData(Utils.removeLeadingWord(inviteId));
     if (!inviteData) return;
 
-    const gameData = await db.gameData(inviteData.appId);
-    if (!gameData) return;
-
     const guild = client.guilds.cache.get(inviteData.guildId);
     if (guild?.id !== interaction.guildId) return;
 
     switch (customId) {
       case Id.Join:
-        await this.join(interaction, inviteData, gameData);
+        await this.join(interaction, inviteData);
         break;
       case Id.Leave:
         await this.leave(interaction, inviteData);
         break;
       case Id.Close:
-        await this.close(interaction, inviteData, gameData);
+        await this.close(interaction, inviteData);
         break;
       case Id.Notify:
         await this.notify(interaction, inviteData);
@@ -209,11 +204,9 @@ export default class GameInviteComponent extends Component {
     }
   }
 
-  async join(
-    interaction: MessageComponentInteraction<CacheType>,
-    data: GameInviteData,
-    gameData: GameData,
-  ) {
+  async join(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {
+    const gm = GameManager.instance();
+
     if (data.inviterId === interaction.user.id) {
       return interaction.deferUpdate({ withResponse: false });
     }
@@ -235,37 +228,7 @@ export default class GameInviteComponent extends Component {
         } catch (_) {}
       }
 
-      if (data.maxSlot && players.length >= data.maxSlot) {
-        await interaction.message.delete();
-
-        const inviteClosedEmbed = new EmbedBuilder({
-          author: { name: Constants.GAME_MANAGER_TITLE },
-          title: data.name,
-          fields: [
-            ...players.map((players, i) => ({
-              name: `Player ${i + 1}`,
-              value: Utils.mentionUserById(players),
-              inline: true,
-            })),
-          ],
-          footer: { text: `${new Date()}` },
-          color: Colors.Blurple,
-        });
-
-        if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
-          inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
-        }
-
-        for (const player of players) {
-          try {
-            const dmChannel = await interaction.guild?.members.cache.get(player)?.createDM();
-            dmChannel?.send({
-              content: `The **${data.name}** party is now closed. Good luck!`,
-              embeds: [inviteClosedEmbed],
-            });
-          } catch (_) {}
-        }
-      }
+      await gm.inviteOperator.closeGameInvite(data);
     }
   }
 
@@ -294,11 +257,7 @@ export default class GameInviteComponent extends Component {
     }
   }
 
-  async close(
-    interaction: MessageComponentInteraction<CacheType>,
-    data: GameInviteData,
-    gameData: GameData,
-  ) {
+  async close(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {
     if (data.inviterId !== interaction.user.id) {
       return interaction.reply({
         content: 'Only the inviter can close this invitation.',
@@ -306,8 +265,7 @@ export default class GameInviteComponent extends Component {
       });
     }
 
-    await interaction.message.delete();
-    await GameManager.instance().inviteOperator.closeGameInvite(data, gameData);
+    await GameManager.instance().inviteOperator.closeGameInvite(data);
   }
 
   async notify(interaction: MessageComponentInteraction<CacheType>, data: GameInviteData) {

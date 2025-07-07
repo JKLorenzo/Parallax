@@ -40,6 +40,7 @@ export default class GameInviteOperator {
       name: gameData.name,
       appId: gameData.id,
       guildId: role.guild.id,
+      channelId: channel.id,
       roleId: role.id,
       inviterId: inviterId,
       joinersId: joinerIds.filter(Utils.filterUnique),
@@ -56,51 +57,69 @@ export default class GameInviteOperator {
 
     const expireAtMins = data.time ?? Constants.GAME_INVITE_EXPIRATION_MINS;
     setTimeout(async () => {
-      try {
-        await message.delete();
-        if (data.time) await this.closeGameInvite(data, gameData);
-      } catch (_) {}
+      await this.closeGameInvite(data);
     }, expireAtMins * 60000);
 
     return message;
   }
 
-  async closeGameInvite(data: GameInviteData, gameData: GameData) {
+  async closeGameInvite(data: GameInviteData) {
+    const db = DatabaseFacade.instance();
+
     const guild = client.guilds.cache.get(data.guildId);
     if (!guild) return;
 
-    const players = [data.inviterId, ...data.joinersId];
+    const channel = guild.channels.cache.get(data.channelId);
+    if (channel?.isTextBased()) {
+      const message = await channel.messages.fetch(data.messageId);
 
-    const inviteClosedEmbed = new EmbedBuilder({
-      author: { iconURL: guild.iconURL() ?? undefined, name: guild.name },
-      title: data.name,
-      description: data.id,
-      fields: [
-        ...players.map((players, i) => ({
-          name: `Player ${i + 1}`,
-          value: Utils.mentionUserById(players),
-          inline: true,
-        })),
-      ],
-      color: Colors.Blurple,
-    });
-
-    if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
-      inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
-    }
-
-    if (gameData.bannerURLs?.length && typeof gameData.bannerIndex === 'number') {
-      inviteClosedEmbed.setImage(gameData.bannerURLs[gameData.bannerIndex]);
-    }
-
-    for (const player of players) {
       try {
-        const dmChannel = await guild?.members.cache.get(player)?.createDM();
-        dmChannel?.send({
-          content: `The **${data.name}** party is now closed. Good luck!`,
-          embeds: [inviteClosedEmbed],
-        });
+        if (message?.deletable) await message.delete();
       } catch (_) {}
     }
+
+    const gameData = await db.gameData(data.appId);
+    if (!gameData) return;
+
+    const players = [data.inviterId, ...data.joinersId];
+    const isFull = data.maxSlot && players.length >= data.maxSlot;
+    const isTime =
+      data.time && Utils.addToDate(data.inviteDate, data.time, 'minutes') >= new Date();
+
+    if (isFull || isTime) {
+      const inviteClosedEmbed = new EmbedBuilder({
+        author: { iconURL: guild.iconURL() ?? undefined, name: guild.name },
+        title: data.name,
+        description: data.id,
+        fields: [
+          ...players.map((players, i) => ({
+            name: `Player ${i + 1}`,
+            value: Utils.mentionUserById(players),
+            inline: true,
+          })),
+        ],
+        color: Colors.Blurple,
+      });
+
+      if (gameData.iconURLs?.length && typeof gameData.iconIndex === 'number') {
+        inviteClosedEmbed.setThumbnail(gameData.iconURLs[gameData.iconIndex]);
+      }
+
+      if (gameData.bannerURLs?.length && typeof gameData.bannerIndex === 'number') {
+        inviteClosedEmbed.setImage(gameData.bannerURLs[gameData.bannerIndex]);
+      }
+
+      for (const player of players) {
+        try {
+          const dmChannel = await guild?.members.cache.get(player)?.createDM();
+          dmChannel?.send({
+            content: `The **${data.name}** party is now ${isFull ? 'full' : 'closed'}. Good luck!`,
+            embeds: [inviteClosedEmbed],
+          });
+        } catch (_) {}
+      }
+    }
+
+    await db.deleteGameInvite(data.id);
   }
 }

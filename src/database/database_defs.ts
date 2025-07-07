@@ -71,8 +71,9 @@ export type GameInviteData = {
   name: string;
   appId: string;
   guildId: Snowflake;
-  roleId: Snowflake;
+  channelId: Snowflake;
   messageId: Snowflake;
+  roleId: Snowflake;
   inviterId: Snowflake;
   joinersId: Snowflake[];
   inviteDate: Date;

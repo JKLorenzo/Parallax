@@ -411,8 +411,9 @@ export default class DatabaseFacade {
           name: result.name,
           appId: result.appId,
           guildId: result.guildId,
-          roleId: result.roleId,
+          channelId: result.channelId,
           messageId: result.messageId,
+          roleId: result.roleId,
           inviterId: result.inviterId,
           joinersId: result.joinersId,
           maxSlot: result.maxSlot,
@@ -423,5 +424,10 @@ export default class DatabaseFacade {
     }
 
     return this.gameInviteDataCache.get(inviteId);
+  }
+
+  async deleteGameInvite(inviteId: string) {
+    await this.mongoClient.db('global').collection('game_invites').deleteOne({ id: inviteId });
+    this.gameInviteDataCache.delete(inviteId);
   }
 }
