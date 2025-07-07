@@ -17,6 +17,7 @@ import { CSConstants, QGConstants } from '../../misc/constants.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import GameManager from '../game_manager.js';
 import Utils from '../../misc/utils.js';
+import { GameStatus } from '../../database/database_defs.js';
 
 const slot = (i: number) => `reserve_slot_${i}`;
 
@@ -168,6 +169,7 @@ export default class GameInviteSlashCommand extends SlashCommandAutoComplete {
     const db = DatabaseFacade.instance();
     const results = await db.findGamesByPartialName(value);
     const choices: ApplicationCommandOptionChoiceData<string>[] = results
+      .filter(r => r.status === GameStatus.Approved)
       .map(r => ({
         name: r.name!,
         value: r.id!,
