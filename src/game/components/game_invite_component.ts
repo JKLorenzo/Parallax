@@ -228,7 +228,9 @@ export default class GameInviteComponent extends Component {
         } catch (_) {}
       }
 
-      await gm.inviteOperator.closeGameInvite(data);
+      if (data.maxSlot && players.length >= data.maxSlot) {
+        await gm.inviteOperator.closeGameInvite(data);
+      }
     }
   }
 
