@@ -84,6 +84,7 @@ export default class GameScreeningComponent extends Component {
 
   async approve(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     const gameData = await db.gameData(applicationId, {
       status: GameStatus.Approved,
@@ -91,12 +92,13 @@ export default class GameScreeningComponent extends Component {
     });
     if (!gameData) return;
 
-    const embed = GameManager.makeScreeningEmbed(gameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData);
     await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
   async deny(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     const gameData = await db.gameData(applicationId, {
       status: GameStatus.Denied,
@@ -104,7 +106,7 @@ export default class GameScreeningComponent extends Component {
     });
     if (!gameData) return;
 
-    const embed = GameManager.makeScreeningEmbed(gameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData);
     await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
@@ -114,6 +116,7 @@ export default class GameScreeningComponent extends Component {
     gameData: GameData,
   ) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     if (typeof gameData.iconIndex === 'undefined') return;
     if (typeof gameData.iconURLs === 'undefined') return;
@@ -127,7 +130,7 @@ export default class GameScreeningComponent extends Component {
       moderatorId: interaction.user.id,
     });
 
-    const embed = GameManager.makeScreeningEmbed(gameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData);
     await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 
@@ -137,6 +140,7 @@ export default class GameScreeningComponent extends Component {
     gameData: GameData,
   ) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     if (typeof gameData.bannerIndex === 'undefined') return;
     if (typeof gameData.bannerURLs === 'undefined') return;
@@ -150,7 +154,7 @@ export default class GameScreeningComponent extends Component {
       moderatorId: interaction.user.id,
     });
 
-    const embed = GameManager.makeScreeningEmbed(gameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData);
     await interaction.update({ embeds: [embed], components: GameScreeningComponent.data() });
   }
 }

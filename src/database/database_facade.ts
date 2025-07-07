@@ -430,4 +430,29 @@ export default class DatabaseFacade {
     await this.mongoClient.db('global').collection('game_invites').deleteOne({ id: inviteId });
     this.gameInviteDataCache.delete(inviteId);
   }
+
+  async loadGameInviteData() {
+    const results = await this.mongoClient.db('global').collection('game_invites').find().toArray();
+
+    for (const result of results) {
+      this.gameInviteDataCache.set(result.id, {
+        id: result.id,
+        name: result.name,
+        appId: result.appId,
+        guildId: result.guildId,
+        channelId: result.channelId,
+        messageId: result.messageId,
+        roleId: result.roleId,
+        inviterId: result.inviterId,
+        joinersId: result.joinersId,
+        maxSlot: result.maxSlot,
+        time: result.time,
+        inviteDate: result.inviteDate,
+      });
+    }
+  }
+
+  async findGameInvitesOfInviter(inviterId: string) {
+    return [...this.gameInviteDataCache.values()].filter(d => d.inviterId === inviterId);
+  }
 }

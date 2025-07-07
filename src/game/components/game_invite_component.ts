@@ -100,6 +100,8 @@ export default class GameInviteComponent extends Component {
     if (data.maxSlot && data.maxSlot - 1 > slotCount) slotCount = data.maxSlot - 1;
 
     for (let i = 0; i < slotCount; i++) {
+      if (i >= GameManager.rsvpMax - 1) break;
+
       const joinerId = data.joinersId.at(i);
 
       const joinerInfo: string[] = [

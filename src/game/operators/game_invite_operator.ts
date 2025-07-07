@@ -1,14 +1,47 @@
 import { Colors, EmbedBuilder, type Role } from 'discord.js';
 import type { SendableChannels } from 'discord.js';
-import type { GameData, GameInviteData } from '../../database/database_defs.js';
+import type { GameInviteData } from '../../database/database_defs.js';
 import { Constants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import GameInviteComponent from '../components/game_invite_component.js';
 import { client } from '../../main.js';
 import GameManager from '../game_manager.js';
+import Queuer from '../../misc/queuer.js';
 
 export default class GameInviteOperator {
+  private messageQueue: Queuer;
+
+  constructor() {
+    this.messageQueue = new Queuer();
+  }
+
+  async init() {
+    const db = DatabaseFacade.instance();
+    await db.loadGameInviteData();
+
+    client.on('messageCreate', async message => {
+      const db = DatabaseFacade.instance();
+
+      if (message.author.bot) return;
+      if (!message.inGuild()) return;
+
+      const config = await db.gameConfig(message.guildId);
+      if (!config?.enabled) return;
+
+      for (const role of message.mentions.roles.values()) {
+        this.messageQueue.queue(() =>
+          this.createGameInvite(
+            message.author.id,
+            message.channel,
+            role,
+            message.mentions.users.filter(u => !u.bot).map(u => u.id),
+          ),
+        );
+      }
+    });
+  }
+
   async createGameInvite(
     inviterId: string,
     channel: SendableChannels,

@@ -81,6 +81,7 @@ export default class GameScreeningGuildComponent extends Component {
 
   async approve(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     const guild = interaction.guild;
     if (!guild) return;
@@ -120,12 +121,13 @@ export default class GameScreeningGuildComponent extends Component {
 
     guildGameData = await db.guildGameData(guild.id, applicationId, updateData);
 
-    const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData, guildGameData);
     await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 
   async deny(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     const guild = interaction.guild;
     if (!guild) return;
@@ -153,12 +155,13 @@ export default class GameScreeningGuildComponent extends Component {
       moderatorId: interaction.user.id,
     });
 
-    const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData, guildGameData);
     await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 
   async refresh(interaction: MessageComponentInteraction<CacheType>, applicationId: string) {
     const db = DatabaseFacade.instance();
+    const gm = GameManager.instance();
 
     const guild = interaction.guild;
     if (!guild) return;
@@ -172,7 +175,7 @@ export default class GameScreeningGuildComponent extends Component {
     const guildGameData = await db.guildGameData(guild.id, applicationId);
     if (!guildGameData) return;
 
-    const embed = GameManager.makeScreeningEmbed(gameData, guildGameData);
+    const embed = gm.screeningOperator.makeScreeningEmbed(gameData, guildGameData);
     await interaction.update({ embeds: [embed], components: GameScreeningGuildComponent.data() });
   }
 }
