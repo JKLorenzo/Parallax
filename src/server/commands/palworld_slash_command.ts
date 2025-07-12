@@ -3,6 +3,7 @@ import {
   type CacheType,
   ApplicationCommandOptionType,
   ApplicationCommandType,
+  ApplicationIntegrationType,
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../modules/command.js';
 import ServerManager from '../server_manager.js';
@@ -14,6 +15,10 @@ export default class PalworldSlashCommand extends SlashCommand {
         name: 'palworld',
         description: 'Palworld Dedicated Server commands.',
         type: ApplicationCommandType.ChatInput,
+        integrationTypes: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
         options: [
           {
             name: 'start',
