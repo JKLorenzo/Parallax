@@ -64,6 +64,9 @@ export type Executable = {
   name: string;
   path: string[];
   connectionInfo: string;
+  apiPort?: number;
+  apiUser?: string;
+  apiPassword?: string;
 };
 
 export type GameInviteData = {

@@ -383,6 +383,9 @@ export default class DatabaseFacade {
       name: result.name,
       path: result.path,
       connectionInfo: result.connectionInfo,
+      apiPort: result.apiPort,
+      apiUser: result.apiUser,
+      apiPassword: result.apiPassword,
     }));
 
     return executables;

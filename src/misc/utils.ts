@@ -35,7 +35,7 @@ export default abstract class Utils {
     const dirs = await readdir(dir, { withFileTypes: true });
     const dirNames = dirs
       .filter(dirent => dirent.isDirectory())
-      .map(dirent => this.joinPaths(dirent.path, dirent.name));
+      .map(dirent => this.joinPaths(dirent.parentPath, dirent.name));
     return dirNames;
   }
 
