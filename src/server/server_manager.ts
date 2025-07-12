@@ -5,6 +5,7 @@ import { client } from '../main.js';
 import Manager from '../modules/manager.js';
 import Telemetry from '../telemetry/telemetry.js';
 import PalworldServerOperator from './operators/palworld_server_operator.js';
+import SatisfactoryServerOperator from './operators/satisfactory_server_operator.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
@@ -14,6 +15,7 @@ export default class ServerManager extends Manager {
   private activityInterval?: NodeJS.Timeout;
 
   private _palworld?: PalworldServerOperator;
+  private _satisfactory?: SatisfactoryServerOperator;
 
   constructor() {
     super();
@@ -37,6 +39,11 @@ export default class ServerManager extends Manager {
   get palworld() {
     if (!this._palworld) this._palworld = new PalworldServerOperator(this);
     return this._palworld;
+  }
+
+  get satisfactory() {
+    if (!this._satisfactory) this._satisfactory = new SatisfactoryServerOperator(this);
+    return this._satisfactory;
   }
 
   async init() {
