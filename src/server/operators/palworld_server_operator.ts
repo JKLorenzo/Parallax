@@ -92,7 +92,8 @@ export default class PalworldServerOperator {
     const pid = await this.process.run();
     if (!pid) return 'Palworld failed to update due to an error.';
 
-    this.process.once('stdlog', (log, process) => {
+    this.process.once('stdlog', async (log, process) => {
+      await interaction.editReply('Updating Palworld...');
       ServerManager.instance().addActivity(process.executable);
     });
 
