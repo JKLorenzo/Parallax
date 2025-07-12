@@ -65,7 +65,7 @@ export default class SatisfactoryServerOperator {
           ?.replace('++FactoryGame+rel-', '');
       }
 
-      if (Utils.hasAny(log, 'Server startup time elapsed and saving/level loading is done')) {
+      if (Utils.hasAny(log, 'Match State Changed from EnteringMap to WaitingToStart')) {
         this.process?.removeAllListeners('stdlog');
         const info = await this.info();
         await interaction.editReply(info);
