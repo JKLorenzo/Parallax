@@ -59,13 +59,17 @@ export default class Process extends EventEmitter<ProcessEvents> {
     });
 
     this.childProcess.stdout?.on('data', data => {
-      this.processOutput(this.name, `${data}`);
-      this.emit('stdlog', `${data}`, this);
+      for (const line of `${data}`.split('\n')) {
+        this.processOutput(this.name, line);
+        this.emit('stdlog', line, this);
+      }
     });
 
     this.childProcess.stderr?.on('data', data => {
-      this.processOutput(this.name, `\x1b[2;31m[ERR]\x1b[0m ${data}`);
-      this.emit('stderr', `${data}`, this);
+      for (const line of `${data}`.split('\n')) {
+        this.processOutput(this.name, `\x1b[2;31m[ERR]\x1b[0m  ${line}`);
+        this.emit('stdlog', line, this);
+      }
     });
 
     this.childProcess.once('close', code => {
