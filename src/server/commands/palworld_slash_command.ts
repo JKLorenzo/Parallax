@@ -5,7 +5,6 @@ import {
   ApplicationCommandType,
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../modules/command.js';
-import { CSConstants } from '../../misc/constants.js';
 import ServerManager from '../server_manager.js';
 
 export default class PalworldSlashCommand extends SlashCommand {
@@ -53,7 +52,7 @@ export default class PalworldSlashCommand extends SlashCommand {
           },
         ],
       },
-      { scope: CommandScope.Guild, guilds: guild => guild.id === CSConstants.GUILD_ID },
+      { scope: CommandScope.Global },
     );
   }
 
