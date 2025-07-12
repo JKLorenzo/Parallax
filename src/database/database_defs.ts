@@ -63,6 +63,7 @@ export type GuildGameData = {
 export type Executable = {
   name: string;
   path: string[];
+  args?: string[];
   connectionInfo: string;
   apiPort?: number;
   apiUser?: string;
