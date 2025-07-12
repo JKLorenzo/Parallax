@@ -68,7 +68,7 @@ export default class ServerManager extends Manager {
   async removeActivity(executable: Executable) {
     if (!this.activities.some(a => a === executable.name)) return;
 
-    this.activities = this.activities.filter(a => a === executable.name);
+    this.activities = this.activities.filter(a => a !== executable.name);
     await this.updateActivities();
   }
 
