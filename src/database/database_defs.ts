@@ -68,6 +68,7 @@ export type Executable = {
   apiPort?: number;
   apiUser?: string;
   apiPassword?: string;
+  logFilters?: string[];
 };
 
 export type GameInviteData = {

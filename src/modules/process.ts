@@ -60,13 +60,15 @@ export default class Process extends EventEmitter<ProcessEvents> {
 
     this.childProcess.stdout?.on('data', data => {
       for (const line of `${data}`.split('\n')) {
+        if (line.trim().length === 0) continue;
         this.processOutput(this.name, line);
         this.emit('stdlog', line, this);
       }
     });
 
     this.childProcess.stderr?.on('data', data => {
-      for (const line of `${data}`.split('\n')) {
+      for (let line of `${data}`.split('\n')) {
+        if (line.trim().length === 0) continue;
         this.processOutput(this.name, `\x1b[2;31m[ERR]\x1b[0m  ${line}`);
         this.emit('stdlog', line, this);
       }
@@ -102,8 +104,12 @@ export default class Process extends EventEmitter<ProcessEvents> {
 
   private async processOutput(processName: string, log: string, now?: boolean) {
     const telemetry = new Telemetry(this.processOutput, { parent: this.telemetry });
-    if (log) this.outputBuffer.push(log);
     telemetry.log(log);
+
+    const filters = this.executable.logFilters;
+    if (filters && !Utils.hasAny(log, filters)) return telemetry.end();
+
+    this.outputBuffer.push(log);
 
     if (this.outputBuffer.join('\n').length >= 1000) now = true;
     if (!now && this.isSending) return telemetry.end();
