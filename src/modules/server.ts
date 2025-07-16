@@ -1,20 +1,24 @@
-import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
-import Process from '../../modules/process.js';
-import Telemetry from '../../telemetry/telemetry.js';
-import ServerManager from '../server_manager.js';
-import Utils from '../../misc/utils.js';
+import type { CacheType, ChatInputCommandInteraction, InteractionResponse } from 'discord.js';
+import Process from './process.js';
+import Telemetry from '../telemetry/telemetry.js';
+import ServerManager from '../server/server_manager.js';
+import Utils from '../misc/utils.js';
 
-export default class SatisfactoryServerOperator {
-  private telemetry: Telemetry;
+export default abstract class Server {
+  protected name: string;
+  protected telemetry: Telemetry;
+  protected isRunning: boolean;
 
-  private process?: Process;
+  protected process?: Process;
+  protected gameVersion?: string;
 
-  private gameVersion?: string;
-
-  constructor(manager: ServerManager) {
+  constructor(name: string, manager: ServerManager) {
+    this.name = name;
     this.telemetry = new Telemetry(this.constructor.name, {
+      id: name,
       parent: manager.telemetry,
     });
+    this.isRunning = false;
   }
 
   async info() {
@@ -27,10 +31,22 @@ export default class SatisfactoryServerOperator {
     return info.length > 0 ? info.join('\n') : 'No information available.';
   }
 
+  abstract parseGameVersion(log: string): string | undefined;
+  abstract parseReady(log: string): boolean;
+
+  notRunning(interaction: ChatInputCommandInteraction<CacheType>): boolean {
+    if (!this.isRunning) {
+      interaction.reply(`${this.name} Dedicated Server is not running.`);
+      return true;
+    }
+
+    return false;
+  }
+
   async start(interaction: ChatInputCommandInteraction<CacheType>) {
     const sm = ServerManager.instance();
 
-    const executable = sm.executables.find(e => e.name === 'Satisfactory Dedicated Server');
+    const executable = sm.executables.find(e => e.name === `${this.name} Dedicated Server`);
     if (!executable) return await interaction.reply('Could not find the executable information.');
 
     if (this.process?.executable === executable) {
@@ -44,28 +60,26 @@ export default class SatisfactoryServerOperator {
 
     this.process = new Process(executable, this.telemetry);
     const pid = await this.process.run();
-    if (!pid) return `Satisfactory failed to start due to an error.`;
+    if (!pid) return await interaction.editReply(`${this.name} failed to start due to an error.`);
 
     this.process.once('stdlog', async (log, process) => {
-      await interaction.editReply('Starting Satisfactory Dedicated Server...');
+      await interaction.editReply(`Starting ${this.name}...`);
       await ServerManager.instance().addActivity(process.executable);
     });
 
     this.process.once('close', async (code, process) => {
+      this.isRunning = false;
       this.process?.removeAllListeners();
       this.process = undefined;
       await ServerManager.instance().removeActivity(process.executable);
     });
 
     this.process.on('stdlog', async log => {
-      if (Utils.hasAny(log, 'Set ProjectVersion to')) {
-        this.gameVersion = log
-          .split(' ')
-          .find(l => l.startsWith('++FactoryGame+'))
-          ?.replace('++FactoryGame+rel-', '');
-      }
+      const version = this.parseGameVersion(log);
+      if (version) this.gameVersion = version;
 
-      if (Utils.hasAny(log, 'Match State Changed from EnteringMap to WaitingToStart')) {
+      if (this.parseReady(log)) {
+        this.isRunning = true;
         this.process?.removeAllListeners('stdlog');
         const info = await this.info();
         await interaction.editReply(info);
@@ -76,7 +90,7 @@ export default class SatisfactoryServerOperator {
   async update(interaction: ChatInputCommandInteraction<CacheType>) {
     const sm = ServerManager.instance();
 
-    const executable = sm.executables.find(e => e.name === 'Satisfactory Update');
+    const executable = sm.executables.find(e => e.name === `${this.name} Update`);
     if (!executable) return await interaction.reply('Could not find the executable information.');
 
     if (this.process?.executable === executable) {
@@ -90,10 +104,10 @@ export default class SatisfactoryServerOperator {
 
     this.process = new Process(executable, this.telemetry);
     const pid = await this.process.run();
-    if (!pid) return 'Satisfactory failed to update due to an error.';
+    if (!pid) return await interaction.editReply(`${this.name} failed to start due to an error.`);
 
     this.process.once('stdlog', async (log, process) => {
-      await interaction.editReply('Updating Satisfactory...');
+      await interaction.editReply(`Updating ${this.name}...`);
       ServerManager.instance().addActivity(process.executable);
     });
 
@@ -111,7 +125,7 @@ export default class SatisfactoryServerOperator {
       if (Utils.hasAny(log, 'Success!')) {
         this.gameVersion = undefined;
         this.process?.removeAllListeners('stdlog');
-        await interaction.editReply('Satisfactory has been updated successfully.');
+        await interaction.editReply(`${this.name} has been updated successfully.`);
       }
     });
   }

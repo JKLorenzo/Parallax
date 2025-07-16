@@ -4,8 +4,9 @@ import DatabaseFacade from '../database/database_facade.js';
 import { client } from '../main.js';
 import Manager from '../modules/manager.js';
 import Telemetry from '../telemetry/telemetry.js';
-import PalworldServerOperator from './operators/palworld_server_operator.js';
-import SatisfactoryServerOperator from './operators/satisfactory_server_operator.js';
+import PalworldServer from './servers/palworld_server.js';
+import SatisfactoryServer from './servers/satisfactory_server.js';
+import type Server from '../modules/server.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
@@ -14,8 +15,8 @@ export default class ServerManager extends Manager {
   private activities: string[];
   private activityInterval?: NodeJS.Timeout;
 
-  private _palworld?: PalworldServerOperator;
-  private _satisfactory?: SatisfactoryServerOperator;
+  private _palworld?: PalworldServer;
+  private _satisfactory?: SatisfactoryServer;
 
   constructor() {
     super();
@@ -37,12 +38,12 @@ export default class ServerManager extends Manager {
   }
 
   get palworld() {
-    if (!this._palworld) this._palworld = new PalworldServerOperator(this);
+    if (!this._palworld) this._palworld = new PalworldServer(this);
     return this._palworld;
   }
 
   get satisfactory() {
-    if (!this._satisfactory) this._satisfactory = new SatisfactoryServerOperator(this);
+    if (!this._satisfactory) this._satisfactory = new SatisfactoryServer(this);
     return this._satisfactory;
   }
 
