@@ -387,6 +387,7 @@ export default class DatabaseFacade {
       apiPort: result.apiPort,
       apiUser: result.apiUser,
       apiPassword: result.apiPassword,
+      apiToken: result.apiToken,
       logFilters: result.logFilters,
     }));
 
