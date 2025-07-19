@@ -32,7 +32,7 @@ export default class PalworldSlashCommand extends SlashCommand {
           },
           {
             name: 'info',
-            description: 'Shows the server information and metics.',
+            description: 'Shows the server information and metrics.',
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
