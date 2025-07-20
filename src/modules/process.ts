@@ -91,6 +91,10 @@ export default class Process extends EventEmitter<ProcessEvents> {
     return this.pid;
   }
 
+  write(chunk: any, callback?: (error: Error | null | undefined) => void) {
+    return this.childProcess?.stdin?.write(chunk, callback);
+  }
+
   kill(signal?: number | NodeJS.Signals) {
     const telemetry = new Telemetry(this.kill, { parent: this.telemetry });
 
