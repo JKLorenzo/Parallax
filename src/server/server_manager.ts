@@ -6,7 +6,7 @@ import Manager from '../modules/manager.js';
 import Telemetry from '../telemetry/telemetry.js';
 import PalworldServer from './servers/palworld_server.js';
 import SatisfactoryServer from './servers/satisfactory_server.js';
-import type Server from '../modules/server.js';
+import AbioticFactorServer from './servers/abiotic_server.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
@@ -15,6 +15,7 @@ export default class ServerManager extends Manager {
   private activities: string[];
   private activityInterval?: NodeJS.Timeout;
 
+  private _abiotic?: AbioticFactorServer;
   private _palworld?: PalworldServer;
   private _satisfactory?: SatisfactoryServer;
 
@@ -35,6 +36,11 @@ export default class ServerManager extends Manager {
 
   get executables() {
     return this._executables;
+  }
+
+  get abiotic() {
+    if (!this._abiotic) this._abiotic = new AbioticFactorServer(this);
+    return this._abiotic;
   }
 
   get palworld() {
