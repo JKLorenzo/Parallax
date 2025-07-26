@@ -7,6 +7,7 @@ import Telemetry from '../telemetry/telemetry.js';
 import PalworldServer from './servers/palworld_server.js';
 import SatisfactoryServer from './servers/satisfactory_server.js';
 import AbioticFactorServer from './servers/abiotic_server.js';
+import RustServer from './servers/rust_server.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
@@ -17,6 +18,7 @@ export default class ServerManager extends Manager {
 
   private _abiotic?: AbioticFactorServer;
   private _palworld?: PalworldServer;
+  private _rust?: RustServer;
   private _satisfactory?: SatisfactoryServer;
 
   constructor() {
@@ -46,6 +48,11 @@ export default class ServerManager extends Manager {
   get palworld() {
     if (!this._palworld) this._palworld = new PalworldServer(this);
     return this._palworld;
+  }
+
+  get rust() {
+    if (!this._rust) this._rust = new RustServer(this);
+    return this._rust;
   }
 
   get satisfactory() {
