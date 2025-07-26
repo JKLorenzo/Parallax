@@ -55,6 +55,28 @@ export default class PalworldSlashCommand extends SlashCommand {
             description: 'Force a server shutdown.',
             type: ApplicationCommandOptionType.Subcommand,
           },
+          {
+            name: 'kill',
+            description: '[Admin] Kill the process.',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'signal',
+                description: "The kill signal to send. Default: 'SIGTERM'",
+                type: ApplicationCommandOptionType.Integer,
+                choices: [
+                  {
+                    name: 'SIGTERM - terminate whenever',
+                    value: 15,
+                  },
+                  {
+                    name: 'SIGKILL - terminate immediately',
+                    value: 9,
+                  },
+                ],
+              },
+            ],
+          },
         ],
       },
       { scope: CommandScope.Global },
@@ -79,7 +101,13 @@ export default class PalworldSlashCommand extends SlashCommand {
       case 'shutdown':
         return sm.palworld.shutdown(interaction);
       case 'stop':
+        if (this.notOwner(interaction)) return;
         return sm.palworld.stop(interaction);
+      case 'kill':
+        if (this.notOwner(interaction)) return;
+
+        const signal = interaction.options.getInteger('signal') ?? 15;
+        return sm.palworld.kill(interaction, signal);
     }
   }
 }

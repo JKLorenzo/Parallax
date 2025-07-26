@@ -45,6 +45,28 @@ export default class SatisfactorySlashCommand extends SlashCommand {
             description: 'Initiate a server shutdown.',
             type: ApplicationCommandOptionType.Subcommand,
           },
+          {
+            name: 'kill',
+            description: '[Admin] Kill the process.',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'signal',
+                description: "The kill signal to send. Default: 'SIGTERM'",
+                type: ApplicationCommandOptionType.Integer,
+                choices: [
+                  {
+                    name: 'SIGTERM - terminate whenever',
+                    value: 15,
+                  },
+                  {
+                    name: 'SIGKILL - terminate immediately',
+                    value: 9,
+                  },
+                ],
+              },
+            ],
+          },
         ],
       },
       { scope: CommandScope.Global },
@@ -66,6 +88,11 @@ export default class SatisfactorySlashCommand extends SlashCommand {
         return sm.satisfactory.save(interaction);
       case 'shutdown':
         return sm.satisfactory.shutdown(interaction);
+      case 'kill':
+        if (this.notOwner(interaction)) return;
+
+        const signal = interaction.options.getInteger('signal') ?? 15;
+        return sm.satisfactory.kill(interaction, signal);
     }
   }
 }

@@ -11,9 +11,11 @@ import {
   type MessageApplicationCommandData,
   ContextMenuCommandInteraction,
   AutocompleteInteraction,
+  MessageFlags,
 } from 'discord.js';
 import Telemetry from '../telemetry/telemetry.js';
 import { client } from '../main.js';
+import DatabaseFacade from '../database/database_facade.js';
 
 export enum CommandScope {
   Global,
@@ -29,6 +31,7 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
   data: T;
   options: CommandOptions;
   telemetry: Telemetry;
+  ownerId?: string;
 
   constructor(data: T, options: CommandOptions) {
     this.data = data;
@@ -38,6 +41,9 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
 
   async init(guild?: Guild) {
     const telemetry = this.telemetry.start(this.init, true);
+
+    const db = DatabaseFacade.instance();
+    this.ownerId = await db.botConfig('BotOwnerId');
 
     const type = ApplicationCommandType[this.data.type!].toLowerCase();
 
@@ -95,6 +101,17 @@ export abstract class Command<T extends ApplicationCommandData = ApplicationComm
     }
 
     telemetry.end();
+  }
+
+  notOwner(interaction: CommandInteraction) {
+    if (interaction.user.id === this.ownerId) return false;
+
+    interaction.reply({
+      content: 'Sorry! You dont have the necessary permission to execute this command.',
+      flags: MessageFlags.Ephemeral,
+    });
+
+    return true;
   }
 
   abstract exec(interaction: CommandInteraction): Awaitable<unknown>;

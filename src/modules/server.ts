@@ -129,4 +129,11 @@ export default abstract class Server {
       }
     });
   }
+
+  async kill(interaction: ChatInputCommandInteraction<CacheType>, signal: number) {
+    const res = this.process?.kill(signal);
+    if (!res) return await interaction.reply(`Process kill failed ${this.name}.`);
+
+    await interaction.reply(`Process killed ${this.name}.`);
+  }
 }

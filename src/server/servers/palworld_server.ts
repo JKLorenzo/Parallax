@@ -182,14 +182,6 @@ export default class PalworldServer extends Server {
   }
 
   async stop(interaction: ChatInputCommandInteraction<CacheType>) {
-    const db = DatabaseFacade.instance();
-    const ownerId = await db.botConfig('BotOwnerId');
-
-    if (interaction.user.id !== ownerId) {
-      await interaction.reply("You don't have a permission to use this command.");
-      return;
-    }
-
     if (this.notRunning(interaction)) return;
 
     if (!this.apiAuth()) {
