@@ -1,6 +1,6 @@
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
-import Server from '../../modules/server.js';
+import Server from '../modules/server.js';
 import axios from 'axios';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import humanizeDuration from 'humanize-duration';

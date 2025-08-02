@@ -4,7 +4,7 @@ import Utils from '../../misc/utils.js';
 import axios, { type AxiosBasicCredentials } from 'axios';
 import humanizeDuration from 'humanize-duration';
 import DatabaseFacade from '../../database/database_facade.js';
-import Server from '../../modules/server.js';
+import Server from '../modules/server.js';
 
 export default class PalworldServer extends Server {
   constructor(manager: ServerManager) {

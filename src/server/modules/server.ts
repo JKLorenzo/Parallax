@@ -1,8 +1,8 @@
 import type { CacheType, ChatInputCommandInteraction, InteractionResponse } from 'discord.js';
 import Process from './process.js';
-import Telemetry from '../telemetry/telemetry.js';
-import ServerManager from '../server/server_manager.js';
-import Utils from '../misc/utils.js';
+import Telemetry from '../../telemetry/telemetry.js';
+import ServerManager from '../server_manager.js';
+import Utils from '../../misc/utils.js';
 
 export default abstract class Server {
   protected name: string;

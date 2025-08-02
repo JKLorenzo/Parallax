@@ -1,12 +1,12 @@
 import { ChildProcess, spawn } from 'node:child_process';
-import type { Executable } from '../database/database_defs.js';
+import type { Executable } from '../../database/database_defs.js';
 import { publicIpv4 } from 'public-ip';
-import Telemetry from '../telemetry/telemetry.js';
-import EnvironmentFacade from '../environment/environment_facade.js';
-import Utils from '../misc/utils.js';
+import Telemetry from '../../telemetry/telemetry.js';
+import EnvironmentFacade from '../../environment/environment_facade.js';
+import Utils from '../../misc/utils.js';
 import EventEmitter from 'node:events';
-import { client } from '../main.js';
-import { CSConstants } from '../misc/constants.js';
+import { client } from '../../main.js';
+import { CSConstants } from '../../misc/constants.js';
 import { CategoryChannel, ChannelType, TextChannel } from 'discord.js';
 
 interface ProcessEvents {
