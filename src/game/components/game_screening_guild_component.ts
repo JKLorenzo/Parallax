@@ -11,7 +11,7 @@ import DatabaseFacade from '../../database/database_facade.js';
 import { Constants } from '../../misc/constants.js';
 import { GameStatus, type GuildGameData } from '../../database/database_defs.js';
 import GameManager from '../../game/game_manager.js';
-import { Component } from '../../modules/component.js';
+import { Component } from '../../interaction/modules/component.js';
 
 enum Id {
   Approve = 'approve',

@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import Utils from '../../misc/utils.js';
 import { CSConstants } from '../../misc/constants.js';
-import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { CommandScope, SlashCommand } from '../modules/command.js';
 
 export default class SudoSlashCommand extends SlashCommand {
   private _lastResult?: unknown;

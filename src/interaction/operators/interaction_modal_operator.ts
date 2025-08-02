@@ -1,5 +1,5 @@
 import { Collection, ModalSubmitInteraction } from 'discord.js';
-import type Modal from '../../modules/modal.js';
+import type Modal from '../modules/modal.js';
 import Telemetry from '../../telemetry/telemetry.js';
 import type InteractionManager from '../interaction_manager.js';
 import Utils from '../../misc/utils.js';

@@ -5,7 +5,7 @@ import {
   ApplicationCommandType,
   ApplicationIntegrationType,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
 
 export default class RustCommand extends SlashCommand {

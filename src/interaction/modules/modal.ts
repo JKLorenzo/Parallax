@@ -1,5 +1,5 @@
 import type { Awaitable, ModalComponentData, ModalSubmitInteraction } from 'discord.js';
-import Telemetry from '../telemetry/telemetry.js';
+import Telemetry from '../../telemetry/telemetry.js';
 
 export default abstract class Modal {
   data: ModalComponentData;

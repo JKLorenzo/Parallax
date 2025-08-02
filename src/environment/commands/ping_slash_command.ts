@@ -5,7 +5,7 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import { publicIpv4 } from 'public-ip';
 
 export default class PingSlashCommand extends SlashCommand {

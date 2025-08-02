@@ -10,7 +10,7 @@ import {
   User,
   GuildMember,
 } from 'discord.js';
-import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
+import { CommandScope, SlashCommandAutoComplete } from '../../interaction/modules/command.js';
 import GameManager from '../game_manager.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import { client } from '../../main.js';

@@ -11,7 +11,7 @@ import {
   Guild,
   GuildMember,
 } from 'discord.js';
-import { CommandScope, SlashCommandAutoComplete } from '../../modules/command.js';
+import { CommandScope, SlashCommandAutoComplete } from '../../interaction/modules/command.js';
 import { client } from '../../main.js';
 import { CSConstants, QGConstants } from '../../misc/constants.js';
 import DatabaseFacade from '../../database/database_facade.js';

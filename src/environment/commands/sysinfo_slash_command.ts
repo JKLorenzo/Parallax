@@ -6,7 +6,7 @@ import {
   EmbedBuilder,
   MessageFlags,
 } from 'discord.js';
-import { CommandScope, SlashCommand } from '../../modules/command.js';
+import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import si from 'systeminformation';
 import EnvironmentFacade from '../environment_facade.js';
 

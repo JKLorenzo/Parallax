@@ -13,9 +13,9 @@ import {
   AutocompleteInteraction,
   MessageFlags,
 } from 'discord.js';
-import Telemetry from '../telemetry/telemetry.js';
-import { client } from '../main.js';
-import DatabaseFacade from '../database/database_facade.js';
+import Telemetry from '../../telemetry/telemetry.js';
+import { client } from '../../main.js';
+import DatabaseFacade from '../../database/database_facade.js';
 
 export enum CommandScope {
   Global,

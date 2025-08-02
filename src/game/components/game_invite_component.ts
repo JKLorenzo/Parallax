@@ -22,7 +22,7 @@ import type { GameInviteData } from '../../database/database_defs.js';
 import { Constants, GameInviteComponents, QGConstants } from '../../misc/constants.js';
 import Utils from '../../misc/utils.js';
 import DatabaseFacade from '../../database/database_facade.js';
-import { Component } from '../../modules/component.js';
+import { Component } from '../../interaction/modules/component.js';
 import { client } from '../../main.js';
 import GameManager from '../game_manager.js';
 
