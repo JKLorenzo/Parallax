@@ -5,6 +5,7 @@ import {
   type PortMapping,
   type UPnPNAT,
 } from '@achingbrain/nat-port-mapper';
+import ip from 'ip';
 import type { Executable, Port } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
 import { client } from '../main.js';
@@ -82,18 +83,11 @@ export default class ServerManager extends Manager {
 
   async mapPorts(server: Server, ports: Port[]) {
     const telemetry = new Telemetry(this.mapPorts, { parent: this.telemetry });
-    const db = DatabaseFacade.instance();
-
-    const ip = await db.botConfig('ServerPrivateIP');
-    if (!ip) {
-      telemetry.error('ServerPrivateIP is not set.');
-      return;
-    }
 
     const upnp_ports = this.upnp_clients.get(server.name) ?? [];
     for await (const gateway of this.upnp.findGateways({ signal: AbortSignal.timeout(10000) })) {
       for (const port of ports) {
-        const mapping = await gateway.map(port.port, ip, {
+        const mapping = await gateway.map(port.port, ip.address(), {
           protocol: port.protocol,
           description: server.name,
         });

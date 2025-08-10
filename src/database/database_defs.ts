@@ -1,6 +1,6 @@
 import type { Snowflake } from 'discord.js';
 
-export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL' | 'ServerPrivateIP';
+export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL';
 
 export type MusicConfig = {
   enabled?: boolean;
