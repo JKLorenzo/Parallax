@@ -5,7 +5,7 @@ import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
 
 export default abstract class Server {
-  protected name: string;
+  readonly name: string;
   protected telemetry: Telemetry;
   protected isRunning: boolean;
 
@@ -71,6 +71,9 @@ export default abstract class Server {
       this.isRunning = false;
       this.process?.removeAllListeners();
       this.process = undefined;
+
+      await ServerManager.instance().unmapPorts(this);
+
       await ServerManager.instance().removeActivity(process.executable);
     });
 
@@ -81,6 +84,10 @@ export default abstract class Server {
       if (this.parseReady(log)) {
         this.isRunning = true;
         this.process?.removeAllListeners('stdlog');
+
+        const ports = this.process?.executable.ports;
+        if (ports) await ServerManager.instance().mapPorts(this, ports);
+
         const info = await this.info();
         await interaction.editReply(info);
       }

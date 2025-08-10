@@ -1,6 +1,6 @@
 import type { Snowflake } from 'discord.js';
 
-export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL';
+export type BotConfigKeys = 'BotOwnerId' | 'TelemetryWebhookURL' | 'ServerPrivateIP';
 
 export type MusicConfig = {
   enabled?: boolean;
@@ -60,6 +60,11 @@ export type GuildGameData = {
   lastPlayed?: Date;
 };
 
+export type Port = {
+  port: number;
+  protocol: 'TCP' | 'UDP';
+};
+
 export type Executable = {
   name: string;
   path: string[];
@@ -70,6 +75,7 @@ export type Executable = {
   apiPassword?: string;
   apiToken?: string;
   logFilters?: string[];
+  ports?: Port[];
 };
 
 export type GameInviteData = {

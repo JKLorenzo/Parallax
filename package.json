@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/JKLorenzo/Parallax#readme",
   "dependencies": {
+    "@achingbrain/nat-port-mapper": "github:JKLorenzo/nat-port-mapper",
     "async-g-i-s": "^1.5.5",
     "axios": "^1.11.0",
     "discord.js": "^14.21.0",
