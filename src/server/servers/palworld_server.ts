@@ -1,9 +1,8 @@
 import ServerManager from '../server_manager.js';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import Utils from '../../misc/utils.js';
-import axios, { type AxiosBasicCredentials } from 'axios';
+import axios, { HttpStatusCode, type AxiosBasicCredentials } from 'axios';
 import humanizeDuration from 'humanize-duration';
-import DatabaseFacade from '../../database/database_facade.js';
 import Server from '../modules/server.js';
 
 export default class PalworldServer extends Server {
@@ -60,6 +59,11 @@ export default class PalworldServer extends Server {
       },
     });
 
+    if (resInfo.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${resInfo.statusText}\``);
+      return;
+    }
+
     const resMetrics = await axios({
       method: 'get',
       url: this.apiURL('metrics'),
@@ -69,6 +73,11 @@ export default class PalworldServer extends Server {
         Accept: 'application/json',
       },
     });
+
+    if (resMetrics.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${resMetrics.statusText}\``);
+      return;
+    }
 
     const serverInfo = [
       `**${resInfo.data.servername}**`,
@@ -100,6 +109,11 @@ export default class PalworldServer extends Server {
         Accept: 'application/json',
       },
     });
+
+    if (res.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${res.statusText}\``);
+      return;
+    }
 
     const players: [] = res.data.players.map(
       (p: { accountName: string; name: string; level: number; ping: number }) => {
@@ -135,6 +149,11 @@ export default class PalworldServer extends Server {
       maxBodyLength: Infinity,
     });
 
+    if (res.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${res.statusText}\``);
+      return;
+    }
+
     await axios({
       method: 'post',
       url: this.apiURL('announce'),
@@ -148,7 +167,7 @@ export default class PalworldServer extends Server {
       }),
     });
 
-    await interaction.editReply(res.data);
+    await interaction.editReply('Game successfully saved.');
   }
 
   async shutdown(interaction: ChatInputCommandInteraction<CacheType>) {
@@ -178,7 +197,12 @@ export default class PalworldServer extends Server {
       }),
     });
 
-    await interaction.editReply(res.data);
+    if (res.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${res.statusText}\``);
+      return;
+    }
+
+    await interaction.editReply('The server will shutdown in 30 seconds.');
   }
 
   async stop(interaction: ChatInputCommandInteraction<CacheType>) {
@@ -197,6 +221,11 @@ export default class PalworldServer extends Server {
       auth: this.apiAuth(),
       maxBodyLength: Infinity,
     });
+
+    if (res.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${res.statusText}\``);
+      return;
+    }
 
     await interaction.editReply(res.data);
   }
