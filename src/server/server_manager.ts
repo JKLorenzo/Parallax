@@ -37,7 +37,11 @@ export default class ServerManager extends Manager {
     this._executables = [];
     this.activities = [];
 
-    this.upnp = upnpNat();
+    this.upnp = upnpNat({
+      ttl: 600_000,
+      autoRefresh: true,
+      refreshThreshold: 300_000
+    });
     this.upnp_clients = new Collection();
   }
 
