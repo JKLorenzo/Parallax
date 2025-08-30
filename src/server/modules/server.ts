@@ -114,7 +114,7 @@ export default abstract class Server {
     if (!pid) return await interaction.editReply(`${this.name} failed to start due to an error.`);
 
     this.process.once('stdlog', async (log, process) => {
-      await interaction.editReply(`Updating ${this.name}...`);
+      await interaction.editReply(`Preparing to update ${this.name}...`);
       ServerManager.instance().addActivity(process.executable);
     });
 
@@ -125,14 +125,17 @@ export default abstract class Server {
     });
 
     this.process.on('stdlog', async log => {
-      if (Utils.hasAny(log, 'Update state')) {
-        await interaction.editReply(`\`\`\`ansi\n${log}\n\`\`\``);
-      }
-
-      if (Utils.hasAny(log, 'Success!')) {
+      if (Utils.hasAny(log, ['Update state', '[----]'])) {
+        const message = [
+          '\`\`\`ansi',
+          log.replace('Update state', '[Updating Game] Update state').replace('[----]', '[Updating Steam]'),
+          '\`\`\`'
+        ];
+        await interaction.editReply(message.join('\n'));
+      } else if (Utils.hasAny(log, ['Success!', 'ERROR!'])) {
         this.gameVersion = undefined;
         this.process?.removeAllListeners('stdlog');
-        await interaction.editReply(`${this.name} has been updated successfully.`);
+        await interaction.editReply(log);
       }
     });
   }
