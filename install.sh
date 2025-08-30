@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Parallax Service Installation"
+printf "Parallax Service Installation\n"
 SVC=parallax.service
 
 # Ensure the user has sudo privileges
@@ -14,36 +14,36 @@ GRP=$(id -gn)
 CWD=$(pwd)
 
 NODE=$(which node)
-echo -e "\nChecking for existing Node.js..."
+printf "\nChecking for existing Node.js...\n"
 if [ -z $NODE ]; then
-  echo "Error: No Node.js install detected"
+  printf "Error: No Node.js install detected\n"
   exit 1
 fi
-echo -e "Found $NODE"
+printf "Found %s\n" $NODE
 
-echo -e "\nChecking for existing service..."
+printf "\nChecking for existing service...\n"
 if [[ -n $(systemctl status $SVC | grep "Active: active") ]]; then
-  echo "Stopping active service..."
+  printf "Stopping active service...\n"
   sudo systemctl stop $SVC
 fi
 
-echo -e "\nInstalling dependencies..."
+printf "\nInstalling dependencies...\n"
 npm ci
 
 if [ $? -ne 0 ]; then
-  echo "Failed to install dependencies."
+  printf "Failed to install dependencies.\n"
   exit 1
 fi
 
-echo -e "\nBuilding..."
+printf "\nBuilding...\n"
 npm run rebuild
 
 if [ $? -ne 0 ]; then
-  echo "Error building."
+  printf "Error building.\n"
   exit 1
 fi
 
-echo -e "\nCreating Parallax service..."
+printf "\nCreating Parallax service...\n"
 sudo bash -c "cat > /etc/systemd/system/$SVC << EOL
 [Unit]
 Description=Parallax
@@ -62,22 +62,22 @@ WantedBy=multi-user.target
 EOL"
 
 if [ $? -ne 0 ]; then
-  echo "Failed to create service."
+  printf "Failed to create service.\n"
   exit 1
 fi
 
-echo -e "\nEnabling service to start on boot..."
+printf "\nEnabling service to start on boot...\n"
 sudo systemctl enable parallax.service
 if [ $? -ne 0 ]; then
-  echo "Failed to enable service."
+  printf "Failed to enable service.\n"
   exit 1
 fi
 
-echo -e "\nStarting service..."
+printf "\nStarting service...\n"
 sudo systemctl start parallax.service
 if [ $? -ne 0 ]; then
-  echo "Failed to start service."
+  printf "Failed to start service.\n"
   exit 1
 fi
 
-echo -e "\nSuccess! Parallax service is now active."
+printf "\nSuccess! Parallax service is now active.\n"
