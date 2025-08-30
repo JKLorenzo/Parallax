@@ -8,6 +8,7 @@ import EventEmitter from 'node:events';
 import { client } from '../../main.js';
 import { CSConstants } from '../../misc/constants.js';
 import { CategoryChannel, ChannelType, TextChannel } from 'discord.js';
+import ServerManager from '../server_manager.js';
 
 interface ProcessEvents {
   stdlog: [log: string, process: Process];
@@ -16,9 +17,9 @@ interface ProcessEvents {
 }
 
 export default class Process extends EventEmitter<ProcessEvents> {
-  readonly executable: Executable;
   readonly telemetry: Telemetry;
 
+  private _name: string;
   private childProcess?: ChildProcess;
   private outputBuffer: string[];
   private isSending: boolean;
@@ -26,7 +27,7 @@ export default class Process extends EventEmitter<ProcessEvents> {
   constructor(executable: Executable, operatorTelemetry: Telemetry) {
     super();
 
-    this.executable = executable;
+    this._name = executable.name;
     this.telemetry = new Telemetry(this.constructor.name, {
       id: executable.name,
       parent: operatorTelemetry,
@@ -34,6 +35,10 @@ export default class Process extends EventEmitter<ProcessEvents> {
 
     this.outputBuffer = [];
     this.isSending = false;
+  }
+
+  get executable() {
+    return ServerManager.instance().executables.find(e => e.name === this._name)!;
   }
 
   get name() {
