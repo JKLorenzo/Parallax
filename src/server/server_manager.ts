@@ -16,6 +16,7 @@ import SatisfactoryServer from './servers/satisfactory_server.js';
 import AbioticFactorServer from './servers/abiotic_server.js';
 import RustServer from './servers/rust_server.js';
 import type Server from './modules/server.js';
+import Utils from '../misc/utils.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
@@ -40,7 +41,7 @@ export default class ServerManager extends Manager {
     this.upnp = upnpNat({
       ttl: 600_000,
       autoRefresh: true,
-      refreshThreshold: 300_000
+      refreshThreshold: 300_000,
     });
     this.upnp_clients = new Collection();
   }
@@ -90,8 +91,14 @@ export default class ServerManager extends Manager {
 
     const upnp_ports = this.upnp_clients.get(server.name) ?? [];
     for await (const gateway of this.upnp.findGateways({ signal: AbortSignal.timeout(10000) })) {
+      if (gateway.family === 'IPv6') continue;
+
       for (const port of ports) {
-        const mapping = await gateway.map(port.port, ip.address(), {
+        const family = gateway.family === 'IPv4' ? 'ipv4' : 'ipv6';
+        const internalHost = ip.address(undefined, family);
+        if (Utils.hasAny('127.0.0.1', '::1')) break;
+
+        const mapping = await gateway.map(port.port, internalHost, {
           protocol: port.protocol,
           description: server.name,
         });
