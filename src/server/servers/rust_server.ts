@@ -13,6 +13,6 @@ export default class RustServer extends Server {
   }
 
   parseReady(log: string): boolean {
-    return Utils.hasAny(log, 'Session creation completed.');
+    return Utils.hasAny(log, 'Server startup complete');
   }
 }
