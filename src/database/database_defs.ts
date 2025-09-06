@@ -68,6 +68,7 @@ export type Port = {
 export type Executable = {
   name: string;
   path: string[];
+  exec: string[],
   args?: string[];
   connectionInfo: string;
   apiPort?: number;
