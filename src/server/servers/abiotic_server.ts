@@ -17,7 +17,7 @@ export default class AbioticFactorServer extends Server {
   }
 
   async stop(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     const killed = this.process?.kill();
     if (!killed) return await interaction.reply('Failed to shut down the server.');

@@ -40,7 +40,7 @@ export default class PalworldServer extends Server {
   }
 
   async getServerInfo(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
       await interaction.reply('Palworld Dedicated Server API Credentials are not set.');
@@ -91,7 +91,7 @@ export default class PalworldServer extends Server {
   }
 
   async getPlayers(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
       await interaction.reply('Palworld Dedicated Server API Credentials are not set.');
@@ -133,7 +133,7 @@ export default class PalworldServer extends Server {
   }
 
   async save(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
       await interaction.reply('Palworld Dedicated Server API Credentials are not set.');
@@ -171,7 +171,7 @@ export default class PalworldServer extends Server {
   }
 
   async shutdown(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
       await interaction.reply('Palworld Dedicated Server API Credentials are not set.');
@@ -206,7 +206,7 @@ export default class PalworldServer extends Server {
   }
 
   async stop(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
       await interaction.reply('Palworld Dedicated Server API Credentials are not set.');

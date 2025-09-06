@@ -52,7 +52,7 @@ export default class SatisfactoryServer extends Server {
   }
 
   async getServerInfo(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     const telemetry = new Telemetry(this.getServerInfo, { parent: this.telemetry });
 
@@ -81,7 +81,7 @@ export default class SatisfactoryServer extends Server {
   }
 
   async save(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     const telemetry = new Telemetry(this.save, { parent: this.telemetry });
 
@@ -98,7 +98,7 @@ export default class SatisfactoryServer extends Server {
   }
 
   async shutdown(interaction: ChatInputCommandInteraction<CacheType>) {
-    if (this.notRunning(interaction)) return;
+    if (this.notReady(interaction)) return;
 
     const telemetry = new Telemetry(this.shutdown, { parent: this.telemetry });
 

@@ -8,6 +8,7 @@ export default abstract class Server {
   readonly name: string;
   protected telemetry: Telemetry;
   protected isRunning: boolean;
+  protected isReady: boolean;
 
   protected process?: Process;
   protected gameVersion?: string;
@@ -19,14 +20,19 @@ export default abstract class Server {
       parent: manager.telemetry,
     });
     this.isRunning = false;
+    this.isReady = false;
   }
 
   async info() {
     const info: string[] = [];
 
     const connectionInfo = await this.process?.connectionInfo();
-    if (connectionInfo) info.push(connectionInfo);
-    if (this.gameVersion) info.push(`Game version: \`${this.gameVersion}\``);
+    if (!this.isRunning || this.isReady) {
+      if (connectionInfo) info.push(connectionInfo);
+      if (this.gameVersion) info.push(`Game version: \`${this.gameVersion}\``);
+    } else {
+      info.push(`${this.name} has started and is currently loading...`);
+    }
 
     return info.length > 0 ? info.join('\n') : 'No information available.';
   }
@@ -34,9 +40,14 @@ export default abstract class Server {
   abstract parseGameVersion(log: string): string | undefined;
   abstract parseReady(log: string): boolean;
 
-  notRunning(interaction: ChatInputCommandInteraction<CacheType>): boolean {
+  notReady(interaction: ChatInputCommandInteraction<CacheType>): boolean {
     if (!this.isRunning) {
       interaction.reply(`${this.name} Dedicated Server is not running.`);
+      return true;
+    }
+
+    if (!this.isReady) {
+      interaction.reply(`${this.name} Dedicated Server is not yet ready.`);
       return true;
     }
 
@@ -63,12 +74,14 @@ export default abstract class Server {
     if (!pid) return await interaction.editReply(`${this.name} failed to start due to an error.`);
 
     this.process.once('stdlog', async (log, process) => {
+      this.isRunning = true;
       await interaction.editReply(`Starting ${this.name}...`);
       await ServerManager.instance().addActivity(process.executable);
     });
 
     this.process.once('close', async (code, process) => {
       this.isRunning = false;
+      this.isReady = false;
       this.process?.removeAllListeners();
       this.process = undefined;
 
@@ -82,7 +95,7 @@ export default abstract class Server {
       if (version) this.gameVersion = version;
 
       if (this.parseReady(log)) {
-        this.isRunning = true;
+        this.isReady = true;
         this.process?.removeAllListeners('stdlog');
 
         const ports = this.process?.executable.ports;
@@ -128,8 +141,10 @@ export default abstract class Server {
       if (Utils.hasAny(log, ['Update state', '[----]'])) {
         const message = [
           '\`\`\`ansi',
-          log.replace('Update state', '[Updating Game] Update state').replace('[----]', '[Updating Steam]'),
-          '\`\`\`'
+          log
+            .replace('Update state', '[Updating Game] Update state')
+            .replace('[----]', '[Updating Steam]'),
+          '\`\`\`',
         ];
         await interaction.editReply(message.join('\n'));
       } else if (Utils.hasAny(log, ['Success!', 'ERROR!'])) {
