@@ -58,8 +58,9 @@ export default class Process extends EventEmitter<ProcessEvents> {
     const telemetry = new Telemetry(this.run, { parent: this.telemetry });
     const env = EnvironmentFacade.instance();
 
-    this.childProcess = spawn(Utils.joinPaths(...this.executable.exec), this.executable.args, {
-      cwd: Utils.joinPaths(env.cwd, '../../../', ...this.executable.path),
+    const cwd = Utils.joinPaths(env.cwd, '../../../', ...this.executable.path);
+    this.childProcess = spawn(Utils.joinPaths(cwd, ...this.executable.exec), this.executable.args, {
+      cwd,
       detached: true,
     });
 
