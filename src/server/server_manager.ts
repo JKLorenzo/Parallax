@@ -91,13 +91,14 @@ export default class ServerManager extends Manager {
 
     const upnp_ports = this.upnp_clients.get(server.name) ?? [];
     for await (const gateway of this.upnp.findGateways({ signal: AbortSignal.timeout(10000) })) {
-      if (gateway.family === 'IPv6') continue;
+      const family = gateway.family === 'IPv6' ? 'ipv6' : 'ipv4';
+      const internalHost = ip.address(undefined, family);
+      telemetry.log(`${gateway.family} Host ${internalHost} Gateway ${gateway.host}`);
+
+      if (Utils.hasAny(internalHost, ['127.0.0.1', '::1'])) continue;
+      if (family === 'ipv6') continue;
 
       for (const port of ports) {
-        const family = gateway.family === 'IPv4' ? 'ipv4' : 'ipv6';
-        const internalHost = ip.address(undefined, family);
-        if (Utils.hasAny('127.0.0.1', '::1')) break;
-
         const mapping = await gateway.map(port.port, internalHost, {
           protocol: port.protocol,
           description: server.name,
