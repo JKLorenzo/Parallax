@@ -27,7 +27,7 @@ export default class RustCommand extends SlashCommand {
           },
           {
             name: 'update',
-            description: 'Update the game files of the server.',
+            description: '[Admin] Update the game files of the server.',
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
@@ -66,6 +66,8 @@ export default class RustCommand extends SlashCommand {
       case 'start':
         return sm.rust.start(interaction);
       case 'update':
+        if (this.notOwner(interaction)) return;
+
         return sm.rust.update(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
