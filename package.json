@@ -34,7 +34,7 @@
     "async-g-i-s": "^1.5.5",
     "axios": "^1.12.2",
     "discord.js": "^14.22.1",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.2.2",
     "humanize-duration": "^3.33.1",
     "husky": "^9.1.7",
     "ip": "^2.0.1",
