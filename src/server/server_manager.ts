@@ -15,6 +15,7 @@ import PalworldServer from './servers/palworld_server.js';
 import SatisfactoryServer from './servers/satisfactory_server.js';
 import AbioticFactorServer from './servers/abiotic_server.js';
 import RustServer from './servers/rust_server.js';
+import ValheimServer from './servers/valheim_server.js';
 import type Server from './modules/server.js';
 import Utils from '../misc/utils.js';
 
@@ -31,6 +32,7 @@ export default class ServerManager extends Manager {
   private _palworld?: PalworldServer;
   private _rust?: RustServer;
   private _satisfactory?: SatisfactoryServer;
+  private _valheim?: ValheimServer;
 
   constructor() {
     super();
@@ -76,6 +78,11 @@ export default class ServerManager extends Manager {
   get satisfactory() {
     if (!this._satisfactory) this._satisfactory = new SatisfactoryServer(this);
     return this._satisfactory;
+  }
+
+  get valheim() {
+    if (!this._valheim) this._valheim = new ValheimServer(this);
+    return this._valheim;
   }
 
   async init() {
