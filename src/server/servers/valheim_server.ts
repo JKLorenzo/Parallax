@@ -14,6 +14,6 @@ export default class ValheimServer extends Server {
   }
 
   parseReady(log: string): boolean {
-    return Utils.hasAny(log, 'Game server connected');
+    return Utils.hasAll(log, ['Session', 'with join code', 'and IP', 'is active']);
   }
 }
