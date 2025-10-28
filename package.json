@@ -32,7 +32,7 @@
   "dependencies": {
     "@achingbrain/nat-port-mapper": "github:JKLorenzo/nat-port-mapper",
     "async-g-i-s": "^1.5.5",
-    "axios": "^1.12.2",
+    "axios": "^1.13.0",
     "discord.js": "^14.24.0",
     "dotenv": "^16.6.1",
     "humanize-duration": "^3.33.1",
