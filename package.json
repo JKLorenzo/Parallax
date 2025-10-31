@@ -33,7 +33,7 @@
     "@achingbrain/nat-port-mapper": "github:JKLorenzo/nat-port-mapper",
     "async-g-i-s": "^1.5.5",
     "axios": "^1.13.1",
-    "discord.js": "^14.24.1",
+    "discord.js": "^14.24.2",
     "dotenv": "^16.6.1",
     "humanize-duration": "^3.33.1",
     "husky": "^9.1.7",
