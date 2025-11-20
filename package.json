@@ -41,7 +41,7 @@
     "is-ci": "^4.1.0",
     "lodash": "^4.17.21",
     "mongodb": "^6.20.0",
-    "public-ip": "^7.0.1",
+    "public-ip": "^8.0.0",
     "rimraf": "^6.1.2",
     "systeminformation": "^5.27.11"
   },
