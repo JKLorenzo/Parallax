@@ -43,7 +43,7 @@
     "mongodb": "^6.20.0",
     "public-ip": "^7.0.1",
     "rimraf": "^6.1.2",
-    "systeminformation": "^5.27.14"
+    "systeminformation": "^5.28.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
