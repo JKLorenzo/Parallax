@@ -16,6 +16,7 @@ import SatisfactoryServer from './servers/satisfactory_server.js';
 import AbioticFactorServer from './servers/abiotic_server.js';
 import RustServer from './servers/rust_server.js';
 import ValheimServer from './servers/valheim_server.js';
+import ZomboidServer from './servers/zomboid_server.js';
 import type Server from './modules/server.js';
 import Utils from '../misc/utils.js';
 
@@ -33,6 +34,7 @@ export default class ServerManager extends Manager {
   private _rust?: RustServer;
   private _satisfactory?: SatisfactoryServer;
   private _valheim?: ValheimServer;
+  private _zomboid?: ZomboidServer;
 
   constructor() {
     super();
@@ -83,6 +85,11 @@ export default class ServerManager extends Manager {
   get valheim() {
     if (!this._valheim) this._valheim = new ValheimServer(this);
     return this._valheim;
+  }
+
+  get zomboid() {
+    if (!this._zomboid) this._zomboid = new ZomboidServer(this);
+    return this._zomboid;
   }
 
   async init() {
