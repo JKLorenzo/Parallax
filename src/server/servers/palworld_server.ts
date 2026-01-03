@@ -227,6 +227,6 @@ export default class PalworldServer extends Server {
       return;
     }
 
-    await interaction.editReply(res.data);
+    await interaction.editReply('Force shutdown initiated.');
   }
 }
