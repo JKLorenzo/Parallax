@@ -1,3 +1,1 @@
-echo "npx lint-staged" > .husky/pre-commit
-# Ensure the script has executable permissions
-chmod +x .husky/pre-commit
+npx lint-staged
