@@ -9,6 +9,8 @@ import GameManager from './game/game_manager.js';
 import VoiceManager from './voice/voice_manager.js';
 import AutomodManager from './automod/automod_manager.js';
 import ServerManager from './server/server_manager.js';
+import MusicManager from './music/music_manager.js';
+import { CSConstants } from './misc/constants.js';
 
 const database = DatabaseFacade.instance();
 const telemetry = TelemetryFacade.instance();
@@ -36,12 +38,13 @@ export const client = new Client({
   ],
 });
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   await Promise.all([
     AutomodManager.instance().init(),
     GatewayManager.instance().init(),
     GameManager.instance().init(),
     InteractionManager.instance().init(),
+    MusicManager.instance().init(),
     ServerManager.instance().init(),
     VoiceManager.instance().init(),
   ]);
@@ -52,5 +55,10 @@ client.once('ready', async () => {
     broadcast: true,
   });
 });
+
+export function findEmoji(name: string) {
+  const cs = client.guilds.cache.get(CSConstants.GUILD_ID);
+  return cs?.emojis.cache.find(e => e.name === name);
+}
 
 client.login(EnvironmentFacade.instance().get('botToken'));
