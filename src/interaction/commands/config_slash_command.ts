@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import EnvironmentFacade from '../../environment/environment_facade.js';
-import type { GameConfig, GatewayConfig } from '../../database/database_defs.js';
+import type { GameConfig, GatewayConfig, MusicConfig } from '../../database/database_defs.js';
 import { CommandScope, SlashCommand } from '../modules/command.js';
 
 export default class ConfigSlashCommand extends SlashCommand {
@@ -23,6 +23,30 @@ export default class ConfigSlashCommand extends SlashCommand {
         defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
         type: ApplicationCommandType.ChatInput,
         options: [
+          {
+            name: 'music',
+            description: 'Gets or updates the music configuration of this server.',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'enabled',
+                description: 'Enable or disable this config.',
+                type: ApplicationCommandOptionType.Boolean,
+              },
+              {
+                name: 'channel',
+                description: 'The channel where chats are automatically added to the queue.',
+                type: ApplicationCommandOptionType.Channel,
+                channelTypes: [ChannelType.GuildText],
+              },
+              {
+                name: 'ignore_prefix',
+                description: 'Messages sent in the music channel with this prefix are ignored.',
+                type: ApplicationCommandOptionType.String,
+                minLength: 1,
+              },
+            ],
+          },
           {
             name: 'gateway',
             description: 'Gets or updates the gateway configuration of this server.',
@@ -100,7 +124,50 @@ export default class ConfigSlashCommand extends SlashCommand {
       color: Colors.Blurple,
     });
 
-    if (command === 'gateway') {
+    if (command === 'music') {
+      const data = {} as MusicConfig;
+      const config = (await db.musicConfig(guild.id)) ?? {};
+
+      const enabled = interaction.options.getBoolean('enabled');
+      const channel = interaction.options.getChannel('channel');
+      const ignore_prefix = interaction.options.getString('ignore_prefix')?.toLowerCase();
+
+      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
+      if (channel) config.channel = data.channel = channel.id;
+      if (ignore_prefix) {
+        let ignored_prefix = config.ignored_prefix ?? [];
+        if (ignored_prefix.includes(ignore_prefix)) {
+          // Remove prefix
+          ignored_prefix = ignored_prefix.filter(prefix => prefix !== ignore_prefix);
+        } else {
+          // Add prefix
+          ignored_prefix.push(ignore_prefix);
+        }
+        config.ignored_prefix = data.ignored_prefix = ignored_prefix;
+      }
+
+      if (typeof enabled === 'boolean') {
+        if (enabled) {
+          config.enabled = data.enabled = true;
+        } else {
+          config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
+          config.ignored_prefix = data.ignored_prefix = [];
+        }
+      }
+
+      await db.musicConfig(guild.id, data);
+
+      embed.setDescription(
+        [
+          `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
+          `**Music Channel**: ${
+            config.channel ? (guild.channels.cache.get(config.channel) ?? 'Invalid') : 'Not Set'
+          }`,
+          `**Ignored Prefix**: ${config.ignored_prefix?.length ? config.ignored_prefix.join(', ') : 'None'}`,
+        ].join('\n'),
+      );
+    } else if (command === 'gateway') {
       const data = {} as GatewayConfig;
       const config = (await db.gameConfig(guild.id)) ?? {};
 
