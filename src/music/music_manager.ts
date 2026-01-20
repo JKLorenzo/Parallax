@@ -65,6 +65,10 @@ export default class MusicManager extends Manager {
       this.player_operators.get(p.guildId)?.onTrackEnd(p, t as TrackWithMetadata),
     );
 
+    this.lavalink.on('trackError', (p, t) =>
+      this.player_operators.get(p.guildId)?.onTrackError(p, t as TrackWithMetadata),
+    );
+
     client.on('voiceStateUpdate', (o, n) => this.onVoiceStateUpdate(o, n));
   }
 

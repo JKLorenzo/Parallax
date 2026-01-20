@@ -41,7 +41,7 @@ export default class MusicPlayerOperator {
     return this.guild.members.me?.voice.channel;
   }
 
-  createTrackEmbed(track: TrackWithMetadata, state: 'play' | 'pause' | 'finish') {
+  createTrackEmbed(track: TrackWithMetadata, state: 'play' | 'pause' | 'finish' | 'error') {
     const MM = MusicManager.instance();
 
     const { info, requester, metadata } = track;
@@ -90,6 +90,24 @@ export default class MusicPlayerOperator {
       ]);
     }
 
+    switch (state) {
+      case 'play':
+        embed.setAuthor({ name: 'Parallax Music Player: Now Playing' }).setColor(Colors.Aqua);
+        break;
+      case 'pause':
+        embed.setAuthor({ name: 'Parallax Music Player: Paused' }).setColor(Colors.Yellow);
+        break;
+      case 'finish':
+        embed
+          .setAuthor({ name: 'Parallax Music Player: Previously Played' })
+          .setColor(Colors.Blurple);
+        break;
+      case 'error':
+      default:
+        embed.setAuthor({ name: 'Parallax Music Player: Track Failed' }).setColor(Colors.Fuchsia);
+        break;
+    }
+
     const nextTrack = this.player.queue.getTracks(0, 1).at(0) as
       | TrackWithMetadata
       | UnresolvedTrackWithMetadata
@@ -133,7 +151,7 @@ export default class MusicPlayerOperator {
   }
 
   async onTrackEnd(player: Player, track: TrackWithMetadata) {
-    const telemetry = this.telemetry.start('onTrackStart');
+    const telemetry = this.telemetry.start('onTrackEnd');
     const { guildId, textChannelId } = player;
 
     telemetry.log({ player, track });
@@ -162,12 +180,58 @@ export default class MusicPlayerOperator {
     setTimeout(() => {
       if (message && message.deletable) message.delete().catch(() => null);
     }, 15000);
+
+    telemetry.end();
+  }
+
+  async onTrackFailed(player: Player, track: TrackWithMetadata) {
+    const telemetry = this.telemetry.start('onTrackFailed');
+    const { guildId, textChannelId } = player;
+
+    telemetry.log({ player, track });
+
+    if (!track) return telemetry.log('track is undefined.').end();
+
+    if (!textChannelId) return telemetry.log('textChannelId is undefined.').end();
+
+    const guild = client.guilds.cache.get(guildId);
+    const textChannel = guild?.channels.cache.get(textChannelId);
+    if (!textChannel || !textChannel.isSendable())
+      return telemetry.log('textChannel is undefined or not sendable.').end();
+
+    let message = track.metadata.message;
+    const embed = this.createTrackEmbed(track, 'error');
+
+    if (message) {
+      message = await message.edit({ embeds: [embed], components: [] });
+    } else {
+      message = await textChannel.send({
+        embeds: [embed],
+        components: [],
+      });
+    }
+
+    setTimeout(() => {
+      if (message && message.deletable) message.delete().catch(() => null);
+    }, 15000);
+
+    telemetry.end();
   }
 
   async onTrackStuck(player: Player, track: TrackWithMetadata) {
-    const telemetry = this.telemetry.start('onTrackStart');
+    const telemetry = this.telemetry.start('onTrackStuck');
 
-    telemetry.log({ player, track });
+    await this.onTrackFailed(player, track);
+
+    telemetry.end();
+  }
+
+  async onTrackError(player: Player, track: TrackWithMetadata) {
+    const telemetry = this.telemetry.start('onTrackError');
+
+    await this.onTrackFailed(player, track);
+
+    telemetry.end();
   }
 
   async queue(tracks: (TrackWithMetadata | UnresolvedTrackWithMetadata)[]) {
