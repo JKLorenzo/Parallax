@@ -56,7 +56,7 @@ export default class UPSOperator {
   }
 
   onNormal() {
-    const telemetry = this.telemetry.start(this.onNormal);
+    const telemetry = this.telemetry.start('Power State: Normal');
 
     const data = this.getData();
     telemetry.log(`Charging at ${data.status?.capacity}`, true);
@@ -70,10 +70,10 @@ export default class UPSOperator {
   }
 
   onPowerFailure() {
-    const telemetry = this.telemetry.start(this.onPowerFailure);
+    const telemetry = this.telemetry.start('Power State: Blackout');
 
     const data = this.getData();
-    telemetry.log(`${data.status?.remainingRuntime} remaining at ${data.status?.capacity}`);
+    telemetry.log(`${data.status?.remainingRuntime} remaining at ${data.status?.capacity}`, true);
 
     if (!this.interval) this.interval = setInterval(() => this.getData(), 5000);
 
@@ -81,10 +81,10 @@ export default class UPSOperator {
   }
 
   onLowBattery() {
-    const telemetry = this.telemetry.start(this.onLowBattery);
+    const telemetry = this.telemetry.start('Power State: Low Battery');
 
     const data = this.getData();
-    telemetry.log(`${data.status?.remainingRuntime} remaining at ${data.status?.capacity}`);
+    telemetry.log(`${data.status?.remainingRuntime} remaining at ${data.status?.capacity}`, true);
 
     HostManager.instance().proxmox.shutdown();
 
