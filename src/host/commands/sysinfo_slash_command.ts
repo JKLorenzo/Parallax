@@ -7,8 +7,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
-import si from 'systeminformation';
-import EnvironmentFacade from '../environment_facade.js';
+import HostManager from '../host_manager.js';
 
 export default class SysInfoSlashCommand extends SlashCommand {
   constructor() {
@@ -29,56 +28,26 @@ export default class SysInfoSlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const currentLoadData = await si.currentLoad();
-    const cpuSpeedData = await si.cpuCurrentSpeed();
-    const cpuEmbed = new EmbedBuilder({
+    const { cpu, memory } = await HostManager.instance().proxmox.status();
+
+    const sysEmbed = new EmbedBuilder({
       author: { name: 'Parallax Server System Information' },
-      title: 'Processor',
+      title: 'System',
       fields: [
         {
-          name: 'Usage',
-          value: `${Math.round(currentLoadData.currentLoad)} % at ${cpuSpeedData.avg} GHz`,
-        },
-        ...currentLoadData.cpus.map((d, i) => ({
-          name: `Core ${i}`,
-          value: `${Math.round(d.load)} % (${cpuSpeedData.cores[i]} GHz)`,
-          inline: true,
-        })),
-      ],
-    });
-
-    const toGB = (bytes: number) =>
-      `${`${bytes / Math.pow(1000, 3)}`.substring(0, `${bytes / Math.pow(1000, 3)}`.indexOf('.') + 2)} GB`;
-
-    const memData = await si.mem();
-    const memEmbed = new EmbedBuilder({
-      author: { name: 'Parallax Server System Information' },
-      title: 'Memory',
-      fields: [
-        {
-          name: 'Usage',
-          value: `${Math.round((memData.used / memData.total) * 100)} % of ${toGB(memData.total)}`,
-        },
-        {
-          name: 'Cached',
-          value: toGB(memData.buffcache),
+          name: 'CPU Usage',
+          value: cpu,
           inline: true,
         },
         {
-          name: 'Available',
-          value: toGB(memData.available),
-          inline: true,
-        },
-        {
-          name: 'Free',
-          value: toGB(memData.free),
+          name: 'Memory Usage',
+          value: memory,
           inline: true,
         },
       ],
     });
 
-    const env = EnvironmentFacade.instance();
-    const battData = env.battery();
+    const battData = HostManager.instance().ups.getData();
     const battEmbed = new EmbedBuilder({
       author: { name: 'Parallax Server System Information' },
       title: 'Power Supply',
@@ -125,7 +94,7 @@ export default class SysInfoSlashCommand extends SlashCommand {
     }
 
     await interaction.reply({
-      embeds: [cpuEmbed, memEmbed, battEmbed],
+      embeds: [sysEmbed, battEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }

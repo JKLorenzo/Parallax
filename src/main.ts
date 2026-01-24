@@ -10,6 +10,7 @@ import VoiceManager from './voice/voice_manager.js';
 import AutomodManager from './automod/automod_manager.js';
 import ServerManager from './server/server_manager.js';
 import MusicManager from './music/music_manager.js';
+import HostManager from './host/host_manager.js';
 import { CSConstants } from './misc/constants.js';
 
 const database = DatabaseFacade.instance();
@@ -43,6 +44,7 @@ client.once('clientReady', async () => {
     AutomodManager.instance().init(),
     GatewayManager.instance().init(),
     GameManager.instance().init(),
+    HostManager.instance().init(),
     InteractionManager.instance().init(),
     MusicManager.instance().init(),
     ServerManager.instance().init(),
