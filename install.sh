@@ -28,7 +28,7 @@ if [[ -n $(systemctl status $SVC | grep "Active: active") ]]; then
 fi
 
 printf "\nInstalling dependencies...\n"
-npm ci
+npm install
 
 if [ $? -ne 0 ]; then
   printf "Failed to install dependencies.\n"
