@@ -37,7 +37,6 @@ export default class APIOperator {
   upsPowerFailure(req: Request, res: Response) {
     const telemetry = this.telemetry.start(this.upsPowerFailure);
 
-    HostManager.instance().ups.onPowerFailure();
     res.sendStatus(200);
 
     telemetry.end();
@@ -46,7 +45,7 @@ export default class APIOperator {
   upsLowBattery(req: Request, res: Response) {
     const telemetry = this.telemetry.start(this.upsLowBattery);
 
-    HostManager.instance().ups.onLowBattery();
+    HostManager.instance().proxmox.shutdown();
     res.sendStatus(200);
 
     telemetry.end();

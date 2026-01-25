@@ -47,51 +47,26 @@ export default class SysInfoSlashCommand extends SlashCommand {
       ],
     });
 
-    const battData = HostManager.instance().ups.getData();
+    const battData = HostManager.instance().ups.data;
     const battEmbed = new EmbedBuilder({
       author: { name: 'Parallax Server System Information' },
       title: 'Power Supply',
+      fields: [{ name: 'State', value: battData.status.state, inline: false }],
     });
 
-    if (battData.status?.state) {
-      battEmbed.addFields([{ name: 'State', value: battData.status?.state, inline: false }]);
-    }
-    if (battData.status?.powerLoad) {
-      battEmbed.addFields([{ name: 'Load', value: battData.status?.powerLoad, inline: true }]);
-    }
-    if (battData.status?.capacity) {
-      battEmbed.addFields([{ name: 'Capacity', value: battData.status?.capacity, inline: true }]);
-    }
-    if (battData.status?.remainingRuntime) {
+    if (battData.isNormal() || battData.isPowerFail()) {
       battEmbed.addFields([
-        { name: 'Runtime', value: battData.status?.remainingRuntime, inline: true },
+        { name: 'Load', value: battData.status.powerLoad, inline: true },
+        { name: 'Capacity', value: battData.status.capacity, inline: true },
+        { name: 'Runtime', value: battData.status.remainingRuntime, inline: true },
+        { name: 'Source', value: battData.status.source, inline: false },
+        { name: 'Utility', value: battData.status.voltageUtility, inline: true },
+        { name: 'Output', value: battData.status.voltageOutput, inline: true },
+        { name: 'Line Interaction', value: battData.status.lineInteraction, inline: true },
       ]);
     }
 
-    if (battData.status?.source) {
-      battEmbed.addFields([{ name: 'Source', value: battData.status?.source, inline: false }]);
-    }
-    if (battData.status?.voltageUtility) {
-      battEmbed.addFields([
-        { name: 'Utility', value: battData.status?.voltageUtility, inline: true },
-      ]);
-    }
-    if (battData.status?.voltageOutput) {
-      battEmbed.addFields([
-        { name: 'Output', value: battData.status?.voltageOutput, inline: true },
-      ]);
-    }
-    if (battData.status?.lineInteraction) {
-      battEmbed.addFields([
-        { name: 'Line Interaction', value: battData.status?.lineInteraction, inline: true },
-      ]);
-    }
-
-    if (battData.status?.lastEvent) {
-      battEmbed.addFields([
-        { name: 'Last Event', value: battData.status?.lastEvent, inline: true },
-      ]);
-    }
+    battEmbed.addFields([{ name: 'Last Event', value: battData.status.lastEvent, inline: true }]);
 
     await interaction.reply({
       embeds: [sysEmbed, battEmbed],
