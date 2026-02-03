@@ -132,7 +132,6 @@ export default class ConfigSlashCommand extends SlashCommand {
       const channel = interaction.options.getChannel('channel');
       const ignore_prefix = interaction.options.getString('ignore_prefix')?.toLowerCase();
 
-      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (channel) config.channel = data.channel = channel.id;
       if (ignore_prefix) {
         let ignored_prefix = config.ignored_prefix ?? [];
@@ -147,10 +146,9 @@ export default class ConfigSlashCommand extends SlashCommand {
       }
 
       if (typeof enabled === 'boolean') {
-        if (enabled) {
-          config.enabled = data.enabled = true;
-        } else {
-          config.enabled = data.enabled = false;
+        config.enabled = data.enabled = enabled;
+
+        if (!enabled) {
           config.channel = data.channel = undefined;
           config.ignored_prefix = data.ignored_prefix = [];
         }
@@ -175,15 +173,13 @@ export default class ConfigSlashCommand extends SlashCommand {
       const role = interaction.options.getRole('role');
       const channel = interaction.options.getChannel('channel');
 
-      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (role) config.role = data.role = role.id;
       if (channel) config.channel = data.channel = channel.id;
 
       if (typeof enabled === 'boolean') {
-        if (enabled) {
-          config.enabled = data.enabled = true;
-        } else {
-          config.enabled = data.enabled = false;
+        config.enabled = data.enabled = enabled;
+
+        if (!enabled) {
           config.channel = data.channel = undefined;
           config.role = data.role = undefined;
         }
@@ -206,15 +202,13 @@ export default class ConfigSlashCommand extends SlashCommand {
       const role = interaction.options.getRole('role');
       const channel = interaction.options.getChannel('channel');
 
-      if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (role) config.role = data.role = role.id;
       if (channel) config.channel = data.channel = channel.id;
 
       if (typeof enabled === 'boolean') {
-        if (enabled) {
-          config.enabled = data.enabled = true;
-        } else {
-          config.enabled = data.enabled = false;
+        config.enabled = data.enabled = enabled;
+
+        if (!enabled) {
           config.role = data.role = undefined;
           config.channel = data.channel = undefined;
         }
