@@ -169,29 +169,33 @@ export default class ConfigSlashCommand extends SlashCommand {
       );
     } else if (command === 'gateway') {
       const data = {} as GatewayConfig;
-      const config = (await db.gameConfig(guild.id)) ?? {};
+      const config = (await db.gatewayConfig(guild.id)) ?? {};
 
       const enabled = interaction.options.getBoolean('enabled');
       const role = interaction.options.getRole('role');
+      const channel = interaction.options.getChannel('channel');
 
       if (typeof enabled === 'boolean') config.enabled = data.enabled = enabled;
       if (role) config.role = data.role = role.id;
+      if (channel) config.channel = data.channel = channel.id;
 
       if (typeof enabled === 'boolean') {
         if (enabled) {
           config.enabled = data.enabled = true;
         } else {
           config.enabled = data.enabled = false;
+          config.channel = data.channel = undefined;
           config.role = data.role = undefined;
         }
       }
 
-      await db.gameConfig(guild.id, data);
+      db.gatewayConfig(guild.id, data);
 
       embed.setDescription(
         [
           `**Enabled**: ${config.enabled ? 'True' : 'False'}`,
           `**Role**: ${config.role ? (guild.roles.cache.get(config.role) ?? 'Invalid') : 'Not Set'}`,
+          `**Channel**: ${config.channel ? (guild.channels.cache.get(config.channel) ?? 'Invalid') : 'Not Set'}`,
         ].join('\n'),
       );
     } else if (command === 'game') {
