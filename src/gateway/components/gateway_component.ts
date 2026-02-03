@@ -76,29 +76,7 @@ export default class GatewayComponent extends Component {
       message.channel.bulkDelete(pingMessages);
     }
 
-    let feedback: string | undefined;
-    if (customId === Id.Approve) {
-      feedback = [
-        `Hooraaay! 🥳 Your membership request has been approved! Welcome to **${guild.name}**!`,
-        '',
-        [
-          'You can view the commands supported by this server by typing `/`',
-          "in any of the server's text channels.",
-        ].join(' '),
-      ].join('\n');
-    } else if (customId === Id.Kick) {
-      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied.`;
-    } else if (customId === Id.Ban) {
-      feedback = `Sorry, it seems like your request to join the ${guild.name} server has been denied indefinitely.`;
-    }
-
     if (member) {
-      try {
-        if (feedback) await member.send(feedback);
-      } catch (_) {
-        // Ignore if member doesn't accept messages
-      }
-
       switch (customId) {
         case Id.Approve:
           await member.roles.add(role);
