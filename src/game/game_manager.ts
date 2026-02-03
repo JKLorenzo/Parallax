@@ -61,7 +61,7 @@ export default class GameManager extends Manager {
       const db = DatabaseFacade.instance();
 
       const member = newPresence.member;
-      if (!member) return;
+      if (!member || member.roles.cache.size == 0) return;
 
       const games = newPresence.activities.filter(
         activity => activity.type === ActivityType.Playing,
