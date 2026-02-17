@@ -32,8 +32,8 @@ export default class UPSOperator {
 
     const current = new BatteryData(raw);
     if (current.isNormal()) this.onNormal(current);
-    if (current.isPowerFail()) this.onPowerFailure(current);
-    if (current.isLostComms()) this.onLostCommunication(current);
+    else if (current.isPowerFail()) this.onPowerFailure(current);
+    else if (current.isLostComms()) this.onLostCommunication(current);
 
     this.data = current;
   }
@@ -95,10 +95,10 @@ export default class UPSOperator {
     if (!nextThreshold) return false;
 
     const thresholdIndex = this.dischargeThresholds.indexOf(nextThreshold);
+    const thresholdReached = thresholdIndex !== -1;
 
-    const thresholdReached = thresholdIndex > 0;
     if (thresholdReached) {
-      this.dischargeThresholds.splice(0, thresholdIndex);
+      this.dischargeThresholds.splice(0, thresholdIndex + 1);
       telemetry.log(`Threshold reached. Thresholds: ${this.dischargeThresholds}`);
     }
 
