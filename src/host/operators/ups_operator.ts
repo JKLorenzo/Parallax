@@ -12,17 +12,17 @@ export default class UPSOperator {
   private telemetry: Telemetry;
 
   private thresholdReached: boolean;
-  private dischargeThresholds: number[];
+  private thresholds: number[];
 
-  data!: BatteryData;
+  data?: BatteryData;
 
   constructor(manager: HostManager) {
     this.telemetry = new Telemetry(this, { parent: manager.telemetry });
 
     this.thresholdReached = false;
-    this.dischargeThresholds = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5];
+    this.thresholds = [];
 
-    setInterval(() => this.getStatus(), 1000);
+    setInterval(() => this.getStatus(), 10_000);
   }
 
   private getStatus() {
@@ -31,78 +31,83 @@ export default class UPSOperator {
     });
 
     const current = new BatteryData(raw);
-    if (current.isNormal()) this.onNormal(current);
-    else if (current.isPowerFail()) this.onPowerFailure(current);
-    else if (current.isLostComms()) this.onLostCommunication(current);
-
+    const previous = this.data;
     this.data = current;
+
+    if (!previous) return;
+
+    if (current.isNormal()) this.onNormal(previous, current);
+    else if (current.isPowerFail()) this.onPowerFailure(previous, current);
+    else if (current.isLostComms()) this.onLostCommunication(previous, current);
+    else if (current.status.state !== previous.status.state) {
+      this.telemetry
+        .start('UPS State: Unknown')
+        .error(`Received unknown UPS state: ${current.status.state}`)
+        .end();
+    }
   }
 
-  onNormal(data: BatteryDataNormal) {
-    const telemetry = this.telemetry.start('UPS State: Normal');
-    const { state, capacity } = data.status;
-    const previous = this.data;
+  onNormal(previous: BatteryData, current: BatteryDataNormal) {
+    const { capacity, state } = current.status;
 
-    if (previous && previous.status.state !== state) {
-      telemetry.log(`Charging at ${capacity}`, true);
-      this.dischargeThresholds = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5];
+    if (!previous.isNormal()) {
+      this.thresholds = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
     }
 
-    telemetry.end();
+    if (this.checkThreshold(capacity)) {
+      this.telemetry.start(`UPS State: ${state}`).log(`Charging at ${capacity}`, true).end();
+    }
   }
 
-  onPowerFailure(data: BatteryDataPowerFailure) {
-    const telemetry = this.telemetry.start('UPS State: On Battery');
-    const previous = this.data;
-    const { remainingRuntime, capacity } = data.status;
-
+  onPowerFailure(previous: BatteryData, current: BatteryDataPowerFailure) {
+    const { remainingRuntime, capacity, state } = current.status;
     const value = Number(remainingRuntime.split(' ')[0]);
     const unit = remainingRuntime.split(' ')[1];
 
-    if (previous && this.checkThreshold(capacity)) {
-      telemetry.log(`${remainingRuntime} remaining at ${capacity}`, true);
+    if (!previous.isPowerFail()) {
+      this.thresholds = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5];
+    }
+
+    if (this.checkThreshold(capacity) || previous.status.state !== state) {
+      this.telemetry
+        .start(`UPS State: ${state}`)
+        .log(`${remainingRuntime} remaining at ${capacity}`, true)
+        .end();
     }
 
     const runtimeThreshold = value < 5 && Utils.hasAny(unit, 'min');
     const capacityThreshold = Number(capacity.split(' ')[0]) < 30;
     if (!this.thresholdReached && (runtimeThreshold || capacityThreshold)) {
       this.thresholdReached = true;
+      this.telemetry
+        .start(`UPS State: ${state}`)
+        .log(
+          `${runtimeThreshold ? 'Runtime' : 'Capacity'} threshold reached at ${runtimeThreshold ? remainingRuntime : capacity}`,
+          true,
+        )
+        .end();
+
       HostManager.instance().proxmox.shutdown();
     }
-
-    telemetry.end();
   }
 
-  onLostCommunication(data: BatteryDataLostComms) {
-    const telemetry = this.telemetry.start('UPS State: Lost Communication');
-    const previous = this.data;
-    const { state, lastEvent } = data.status;
+  onLostCommunication(previous: BatteryData, current: BatteryDataLostComms) {
+    const { lastEvent, state } = current.status;
 
-    if (previous && previous.status.state !== state) {
-      telemetry.log(`Last event was ${lastEvent}`, true);
+    if (!previous.isLostComms()) {
+      this.telemetry.start(`UPS State: ${state}`).log(`Last event was ${lastEvent}`, true).end();
     }
-
-    telemetry.end();
   }
 
   private checkThreshold(capacity: string) {
-    const telemetry = this.telemetry.start(this.checkThreshold);
-
     const currentCapacity = Number(capacity.split(' ')[0]);
-    const nextThreshold = this.dischargeThresholds
-      .filter(threshold => threshold >= currentCapacity)
-      .pop();
+    const nextThreshold = this.thresholds.filter(threshold => threshold >= currentCapacity).pop();
     if (!nextThreshold) return false;
 
-    const thresholdIndex = this.dischargeThresholds.indexOf(nextThreshold);
+    const thresholdIndex = this.thresholds.indexOf(nextThreshold);
     const thresholdReached = thresholdIndex !== -1;
 
-    if (thresholdReached) {
-      this.dischargeThresholds.splice(0, thresholdIndex + 1);
-      telemetry.log(`Threshold reached. Thresholds: ${this.dischargeThresholds}`);
-    }
-
-    telemetry.end();
+    if (thresholdReached) this.thresholds.splice(0, thresholdIndex + 1);
 
     return thresholdReached;
   }
