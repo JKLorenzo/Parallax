@@ -17,20 +17,34 @@ export default class ProxmoxOperator {
     });
   }
 
-  async status() {
-    const telemetry = this.telemetry.start(this.status);
+  async nodeStatus() {
+    const telemetry = this.telemetry.start(this.nodeStatus);
 
     const node = EnvironmentFacade.instance().get('proxmoxNode');
-    const vmid = EnvironmentFacade.instance().get('proxmoxVMID');
-
-    const status = await this.api.nodes.$(node).qemu.$(parseInt(vmid)).status.current.$get();
-
-    const maxmem = Number(status.maxmem);
-    const freemem = Number(status.freemem);
+    const status = await this.api.nodes.$(node).status.$get();
+    const sensors = JSON.parse(status.sensorsOutput);
 
     const data = {
-      cpu: `${Math.ceil(status.cpu)} %`,
-      memory: `${Math.ceil(((maxmem - freemem) / maxmem) * 100)} %`,
+      cpu: {
+        usage: status['cpu'] as number,
+        freq: status['cpuinfo']['mhz'] as string,
+        loadAvg: status['loadavg'] as string[],
+        temp: sensors['k10temp-pci-00c3']['Tccd1']['temp3_input'] as number,
+      },
+      memory: {
+        used: status['memory']['used'] as number,
+        total: status['memory']['total'] as number,
+        free: status['memory']['free'] as number,
+        available: status['memory']['available'] as number,
+      },
+      gpu: {
+        usage: sensors['nouveau-pci-0600']['GPU core']['in0_input'] as number,
+        temp: sensors['nouveau-pci-0600']['temp1']['temp1_input'] as number,
+      },
+      ssd: {
+        temp: sensors['nvme-pci-0100']['Composite']['temp1_input'] as number,
+      },
+      uptime: status['uptime'] as number,
     };
 
     telemetry.end();
