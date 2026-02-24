@@ -61,7 +61,47 @@ export default class ProxmoxOperator {
       command: 'shutdown',
     });
 
-    telemetry.log('Shutting down...', true);
+    telemetry.log('Shutting system down...', true);
+
+    telemetry.end();
+  }
+
+  async reboot() {
+    const telemetry = this.telemetry.start(this.reboot);
+
+    const node = EnvironmentFacade.instance().get('proxmoxNode');
+
+    await this.api.nodes.$(node).status.$post({
+      command: 'reboot',
+    });
+
+    telemetry.log('Rebooting system...', true);
+
+    telemetry.end();
+  }
+
+  async shutdownVM() {
+    const telemetry = this.telemetry.start(this.shutdownVM);
+
+    const node = EnvironmentFacade.instance().get('proxmoxNode');
+    const vmid = EnvironmentFacade.instance().get('proxmoxVMID');
+
+    await this.api.nodes.$(node).qemu.$(Number(vmid)).status.shutdown.$post();
+
+    telemetry.log('Shutting virtual machine down...', true);
+
+    telemetry.end();
+  }
+
+  async rebootVM() {
+    const telemetry = this.telemetry.start(this.rebootVM);
+
+    const node = EnvironmentFacade.instance().get('proxmoxNode');
+    const vmid = EnvironmentFacade.instance().get('proxmoxVMID');
+
+    await this.api.nodes.$(node).qemu.$(Number(vmid)).status.reboot.$post();
+
+    telemetry.log('Rebooting virtual machine...', true);
 
     telemetry.end();
   }
