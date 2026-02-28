@@ -27,7 +27,7 @@ export interface BatteryDataNormal extends BatteryDataProperties {
 
 export interface BatteryDataPowerFailure extends BatteryDataProperties {
   status: {
-    state: 'Power Failure';
+    state: 'Power Failure' | 'Low Battery';
     source: string;
     voltageUtility: string;
     voltageOutput: string;
@@ -97,7 +97,7 @@ export default class BatteryData {
   }
 
   isPowerFail(): this is BatteryDataPowerFailure {
-    return this.status.state === 'Power Failure';
+    return this.status.state === 'Power Failure' || this.status.state === 'Low Battery';
   }
 
   isLostComms(): this is BatteryDataLostComms {
