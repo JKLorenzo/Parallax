@@ -69,6 +69,22 @@ export default class MusicManager extends Manager {
       this.player_operators.get(p.guildId)?.onTrackError(p, t as TrackWithMetadata),
     );
 
+    this.lavalink.nodeManager.on('disconnect', () => {
+      this.telemetry.log(`Lavalink node disconnected.`);
+    });
+
+    this.lavalink.nodeManager.on('reconnecting', () => {
+      this.telemetry.log(`Lavalink node is reconnecting.`);
+    });
+
+    this.lavalink.nodeManager.on('connect', () => {
+      this.telemetry.log(`Lavalink node is connected.`, true);
+    });
+
+    this.lavalink.nodeManager.on('error', (_, error) => {
+      this.telemetry.error(`Lavalink node encountered an error:\n${error.message}`);
+    });
+
     client.on('voiceStateUpdate', (o, n) => this.onVoiceStateUpdate(o, n));
   }
 
@@ -87,9 +103,7 @@ export default class MusicManager extends Manager {
 
     if (!client.user) return this.telemetry.error('No user data on init.').end();
 
-    await this.lavalink.init({
-      id: client.user.id,
-    });
+    await this.lavalink.init({ id: client.user.id });
 
     client.on('raw', d => {
       this.lavalink.sendRawData(d);
@@ -238,6 +252,16 @@ export default class MusicManager extends Manager {
       return telemetry.log('Wrong channel').end();
     }
 
+    const embed = new EmbedBuilder({
+      description: Constants.MUSIC_NOT_AVAILABLE,
+      color: Colors.Fuchsia,
+    });
+
+    if (!this.lavalink.useable) {
+      await textChannel.send({ embeds: [embed] });
+      return telemetry.error(`Lavalink not useable.`).end();
+    }
+
     const prefix = query.split(' ')[0].toLowerCase();
     if (config.ignored_prefix && Utils.hasAny(prefix, config.ignored_prefix)) {
       return telemetry.log(config.ignored_prefix).end();
@@ -258,13 +282,8 @@ export default class MusicManager extends Manager {
       user: member.user,
     });
 
-    const embed = new EmbedBuilder({
-      description: Constants.MUSIC_QUERY_NO_RESULT,
-      color: Colors.Fuchsia,
-      footer: { text: Utils.formatReqId(metadata.requestId) },
-    });
-
-    console.log(tracks);
+    embed.setDescription(Constants.MUSIC_QUERY_NO_RESULT);
+    embed.setFooter({ text: Utils.formatReqId(metadata.requestId) });
 
     const queuedTracks = await operator.queue(tracks);
     if (queuedTracks > 0) {

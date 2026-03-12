@@ -36,6 +36,7 @@ export abstract class Constants {
     'Invalid skip count. Please try again by enter a number not less than or equal to 0.';
   static readonly MUSIC_PLAYER_IDLE = 'Nothing is currently being played.';
   static readonly MUSIC_QUERY_NO_RESULT = 'No match found for this query.';
+  static readonly MUSIC_NOT_AVAILABLE = 'Music features are currently unavailable. Please try again later.';
 }
 
 export abstract class CSConstants {
