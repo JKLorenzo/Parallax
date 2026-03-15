@@ -12,6 +12,7 @@ import {
   type Executable,
   GameStatus,
   type GameInviteData,
+  type GuildInviteData,
 } from './database_defs.js';
 import EnvironmentFacade from '../environment/environment_facade.js';
 import Utils from '../misc/utils.js';
@@ -25,6 +26,7 @@ export default class DatabaseFacade {
   private gameDataCache: Map<string, GameData>;
   private guildGameDataCache: Map<string, Map<string, GuildGameData>>;
   private gameInviteDataCache: Map<string, GameInviteData>;
+  private guildInviteDataCache: Map<string, Map<string, GuildInviteData>>;
 
   private constructor() {
     this.botConfigCache = new Map();
@@ -33,6 +35,7 @@ export default class DatabaseFacade {
     this.gameDataCache = new Map();
     this.guildGameDataCache = new Map();
     this.gameInviteDataCache = new Map();
+    this.guildInviteDataCache = new Map();
   }
 
   static instance() {
@@ -51,17 +54,16 @@ export default class DatabaseFacade {
   }
 
   async botConfig(key: BotConfigKeys, value?: string) {
+    const db = this.mongoClient.db('global').collection('config');
+
     if (typeof value !== 'undefined') {
       // Upsert
       this.botConfigCache.set(key, value);
 
-      await this.mongoClient
-        .db('global')
-        .collection('config')
-        .updateOne({ key }, { $set: { value } }, { upsert: true });
+      await db.updateOne({ key }, { $set: { value } }, { upsert: true });
     } else if (!this.botConfigCache.get(key)) {
       // Get
-      const result = await this.mongoClient.db('global').collection('config').findOne({ key });
+      const result = await db.findOne({ key });
       if (result?.value) this.botConfigCache.set(key, result.value);
     }
 
@@ -69,6 +71,8 @@ export default class DatabaseFacade {
   }
 
   async musicConfig(guildId: Snowflake, data?: MusicConfig) {
+    const db = this.mongoClient.db(guildId).collection('config');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const config = this.guildConfigCache.get(guildId) ?? {};
@@ -78,16 +82,10 @@ export default class DatabaseFacade {
       if ('ignored_prefix' in data) config.music.ignored_prefix = data.ignored_prefix;
       this.guildConfigCache.set(guildId, config);
 
-      await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .updateOne({ name: 'music' }, { $set: config.music }, { upsert: true });
+      await db.updateOne({ name: 'music' }, { $set: config.music }, { upsert: true });
     } else if (!this.guildConfigCache.get(guildId)?.music) {
       // Get
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .findOne({ name: 'music' });
+      const result = await db.findOne({ name: 'music' });
 
       this.guildConfigCache.set(guildId, {
         music: {
@@ -102,6 +100,8 @@ export default class DatabaseFacade {
   }
 
   async gatewayConfig(guildId: Snowflake, data?: GatewayConfig) {
+    const db = this.mongoClient.db(guildId).collection('config');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const config = this.guildConfigCache.get(guildId) ?? {};
@@ -111,16 +111,10 @@ export default class DatabaseFacade {
       if ('role' in data) config.gateway.role = data.role;
       this.guildConfigCache.set(guildId, config);
 
-      await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .updateOne({ name: 'gateway' }, { $set: config.gateway }, { upsert: true });
+      await db.updateOne({ name: 'gateway' }, { $set: config.gateway }, { upsert: true });
     } else if (!this.guildConfigCache.get(guildId)?.gateway) {
       // Get
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .findOne({ name: 'gateway' });
+      const result = await db.findOne({ name: 'gateway' });
 
       this.guildConfigCache.set(guildId, {
         gateway: {
@@ -135,6 +129,8 @@ export default class DatabaseFacade {
   }
 
   async gameConfig(guildId: Snowflake, data?: GameConfig) {
+    const db = this.mongoClient.db(guildId).collection('config');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const config = this.guildConfigCache.get(guildId) ?? {};
@@ -144,16 +140,10 @@ export default class DatabaseFacade {
       if ('role' in data) config.game.role = data.role;
       this.guildConfigCache.set(guildId, config);
 
-      await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .updateOne({ name: 'game' }, { $set: config.game }, { upsert: true });
+      await db.updateOne({ name: 'game' }, { $set: config.game }, { upsert: true });
     } else if (!this.guildConfigCache.get(guildId)?.game) {
       // Get
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('config')
-        .findOne({ name: 'game' });
+      const result = await db.findOne({ name: 'game' });
 
       this.guildConfigCache.set(guildId, {
         game: {
@@ -168,6 +158,8 @@ export default class DatabaseFacade {
   }
 
   async memberData(guildId: Snowflake, memberId: Snowflake, data?: MemberData) {
+    const db = this.mongoClient.db(guildId).collection('members');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const members = this.memberDataCache.get(guildId) ?? new Map<string, MemberData>();
@@ -181,16 +173,10 @@ export default class DatabaseFacade {
       members.set(memberId, member);
       this.memberDataCache.set(guildId, members);
 
-      await this.mongoClient
-        .db(guildId)
-        .collection('members')
-        .updateOne({ id: memberId }, { $set: member }, { upsert: true });
+      await db.updateOne({ id: memberId }, { $set: member }, { upsert: true });
     } else if (!this.memberDataCache.get(guildId)?.get(memberId)) {
       // Get
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('members')
-        .findOne({ id: memberId });
+      const result = await db.findOne({ id: memberId });
 
       const members = this.memberDataCache.get(guildId) ?? new Map<string, MemberData>();
       const member: MemberData = {
@@ -210,6 +196,8 @@ export default class DatabaseFacade {
   }
 
   async gameData(applicationId: string, data?: GameData) {
+    const db = this.mongoClient.db('global').collection('games');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const game = this.gameDataCache.get(applicationId) ?? { id: applicationId };
@@ -223,16 +211,10 @@ export default class DatabaseFacade {
       if ('moderatorId' in data) game.moderatorId = data.moderatorId;
       this.gameDataCache.set(applicationId, game);
 
-      await this.mongoClient
-        .db('global')
-        .collection('games')
-        .updateOne({ id: applicationId }, { $set: game }, { upsert: true });
+      await db.updateOne({ id: applicationId }, { $set: game }, { upsert: true });
     } else if (!this.gameDataCache.get(applicationId)) {
       // Get
-      const result = await this.mongoClient
-        .db('global')
-        .collection('games')
-        .findOne({ id: applicationId });
+      const result = await db.findOne({ id: applicationId });
 
       if (result?._id) {
         this.gameDataCache.set(applicationId, {
@@ -252,12 +234,9 @@ export default class DatabaseFacade {
   }
 
   async loadGameData() {
-    const results = await this.mongoClient
-      .db('global')
-      .collection('games')
-      .find({ status: GameStatus.Approved })
-      .toArray();
+    const db = this.mongoClient.db('global').collection('games');
 
+    const results = await db.find({ status: GameStatus.Approved }).toArray();
     for (const result of results) {
       const game: GameData = {
         id: result.id,
@@ -275,18 +254,19 @@ export default class DatabaseFacade {
   }
 
   async findGamesByPartialName(name: string) {
-    let games = [...this.gameDataCache.values()];
+    const db = this.mongoClient.db('global').collection('games');
 
+    let games = [...this.gameDataCache.values()];
     if (name.trim().length > 0) {
       games = games.filter(d => d.name && Utils.hasAny(d.name.toLowerCase(), name.toLowerCase()));
     }
 
     if (games.length === 0) {
       // Find game similar to the name (case insensitive)
-      const result = await this.mongoClient
-        .db('global')
-        .collection('games')
-        .findOne({ name: { $regex: name, $options: 'i' }, status: GameStatus.Approved });
+      const result = await db.findOne({
+        name: { $regex: name, $options: 'i' },
+        status: GameStatus.Approved,
+      });
 
       if (result?._id) {
         const game: GameData = {
@@ -308,6 +288,8 @@ export default class DatabaseFacade {
   }
 
   async guildGameData(guildId: string, applicationId: string, data?: GuildGameData) {
+    const db = this.mongoClient.db(guildId).collection('games');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
@@ -320,16 +302,10 @@ export default class DatabaseFacade {
       guildGames.set(applicationId, guildGame);
       this.guildGameDataCache.set(guildId, guildGames);
 
-      await this.mongoClient
-        .db(guildId)
-        .collection('games')
-        .updateOne({ id: applicationId }, { $set: guildGame }, { upsert: true });
+      await db.updateOne({ id: applicationId }, { $set: guildGame }, { upsert: true });
     } else if (!this.guildGameDataCache.get(guildId)?.get(applicationId)) {
       // Get
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('games')
-        .findOne({ id: applicationId });
+      const result = await db.findOne({ id: applicationId });
 
       if (result?._id) {
         const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
@@ -350,12 +326,11 @@ export default class DatabaseFacade {
   }
 
   async findGuildGameByRole(guildId: Snowflake, roleId: Snowflake) {
+    const db = this.mongoClient.db(guildId).collection('games');
+
     const guildGames = this.guildGameDataCache.get(guildId) ?? new Map<string, GuildGameData>();
     if (![...guildGames.values()].some(game => game.roleId === roleId)) {
-      const result = await this.mongoClient
-        .db(guildId)
-        .collection('games')
-        .findOne({ roleId: roleId });
+      const result = await db.findOne({ roleId: roleId });
 
       if (result?._id) {
         const guildGame: GuildGameData = {
@@ -378,7 +353,9 @@ export default class DatabaseFacade {
   }
 
   async fetchExecutables() {
-    const results = await this.mongoClient.db('global').collection('executables').find().toArray();
+    const db = this.mongoClient.db('global').collection('executables');
+
+    const results = await db.find().toArray();
     const executables: Executable[] = results.map(result => ({
       name: result.name,
       path: result.path,
@@ -397,22 +374,17 @@ export default class DatabaseFacade {
   }
 
   async gameInviteData(inviteId: string, data?: Omit<GameInviteData, 'id'>) {
+    const db = this.mongoClient.db('global').collection('game_invites');
+
     if (data && Object.keys(data).length > 0) {
       // Upsert
       const invite = this.gameInviteDataCache.get(inviteId) ?? { id: inviteId, ...data };
       this.gameInviteDataCache.set(inviteId, invite);
 
-      await this.mongoClient
-        .db('global')
-        .collection('game_invites')
-        .updateOne({ id: inviteId }, { $set: invite }, { upsert: true });
+      await db.updateOne({ id: inviteId }, { $set: invite }, { upsert: true });
     } else if (!this.gameInviteDataCache.get(inviteId)) {
       // Get
-      const result = await this.mongoClient
-        .db('global')
-        .collection('game_invites')
-        .findOne({ id: inviteId });
-
+      const result = await db.findOne({ id: inviteId });
       if (result?._id) {
         this.gameInviteDataCache.set(inviteId, {
           id: inviteId,
@@ -435,13 +407,16 @@ export default class DatabaseFacade {
   }
 
   async deleteGameInvite(inviteId: string) {
-    await this.mongoClient.db('global').collection('game_invites').deleteOne({ id: inviteId });
+    const db = this.mongoClient.db('global').collection('game_invites');
+
+    await db.deleteOne({ id: inviteId });
     this.gameInviteDataCache.delete(inviteId);
   }
 
   async loadGameInviteData() {
-    const results = await this.mongoClient.db('global').collection('game_invites').find().toArray();
+    const db = this.mongoClient.db('global').collection('game_invites');
 
+    const results = await db.find().toArray();
     for (const result of results) {
       this.gameInviteDataCache.set(result.id, {
         id: result.id,
@@ -462,5 +437,55 @@ export default class DatabaseFacade {
 
   async findGameInvitesOfInviter(inviterId: string) {
     return [...this.gameInviteDataCache.values()].filter(d => d.inviterId === inviterId);
+  }
+
+  async guildInviteData(guildId: Snowflake, inviteId: string, data?: Omit<GuildInviteData, 'id'>) {
+    const db = this.mongoClient.db(guildId).collection('invites');
+
+    if (data && Object.keys(data).length > 0) {
+      // Upsert
+      const invites = this.guildInviteDataCache.get(guildId) ?? new Map<string, GuildInviteData>();
+      const invite: GuildInviteData = invites.get(inviteId) ?? {
+        id: inviteId,
+        inviterId: data.inviterId,
+        createdTimestamp: data.createdTimestamp,
+        expiresTimestamp: data.expiresTimestamp,
+        maxUses: data.maxUses,
+        uses: data.uses,
+      };
+
+      invites.set(inviteId, invite);
+      this.guildInviteDataCache.set(guildId, invites);
+
+      await db.updateOne({ id: inviteId }, { $set: invite }, { upsert: true });
+    } else if (!this.guildInviteDataCache.get(guildId)?.get(inviteId)) {
+      // Get
+      const result = await db.findOne({ id: inviteId });
+      const invites = this.guildInviteDataCache.get(guildId) ?? new Map<string, GuildInviteData>();
+      const invite: GuildInviteData = {
+        id: inviteId,
+        inviterId: result?.inviterId,
+        createdTimestamp: result?.createdTimestamp,
+        expiresTimestamp: result?.expiresTimestamp,
+        maxUses: result?.maxUses,
+        uses: result?.uses,
+      };
+
+      invites.set(inviteId, invite);
+      this.guildInviteDataCache.set(guildId, invites);
+    }
+
+    return this.guildInviteDataCache.get(guildId)?.get(inviteId);
+  }
+
+  async deleteGuildInvite(guildId: string, inviteId: string) {
+    const db = this.mongoClient.db(guildId).collection('invites');
+
+    await db.deleteOne({ id: inviteId });
+    const invites = this.guildInviteDataCache.get(guildId);
+    if (invites) {
+      invites.delete(inviteId);
+      this.guildInviteDataCache.set(guildId, invites);
+    }
   }
 }

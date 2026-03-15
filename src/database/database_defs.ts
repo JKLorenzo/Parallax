@@ -93,3 +93,12 @@ export type GameInviteData = {
   maxSlot?: number;
   time?: number;
 };
+
+export type GuildInviteData = {
+  id: string;
+  inviterId: Snowflake;
+  createdTimestamp: number;
+  expiresTimestamp?: number;
+  uses?: number;
+  maxUses?: number;
+}

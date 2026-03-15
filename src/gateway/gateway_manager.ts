@@ -13,6 +13,8 @@ import Manager from '../modules/manager.js';
 import DatabaseFacade from '../database/database_facade.js';
 import GatewayComponent from './components/gateway_component.js';
 import { client } from '../main.js';
+import GuildInviteComponent from './components/guild_invite_component.js';
+import type { GuildInviteData } from '../database/database_defs.js';
 
 export default class GatewayManager extends Manager {
   private static _instance: GatewayManager;
@@ -73,35 +75,58 @@ export default class GatewayManager extends Manager {
     const db = DatabaseFacade.instance();
 
     const guild = invite.guild;
-    if (!guild) return;
+    if (!guild || !(guild instanceof Guild)) return;
 
     const config = await db.gatewayConfig(guild.id);
-    if (!config?.enabled) return;
+    if (!config?.enabled || !config.channel) return;
 
-    const invites = this.cache.get(guild.id) ?? new Collection();
-    invites.set(invite.code, invite);
-    this.cache.set(guild.id, invites);
+    const channel = guild.channels.cache.get(config.channel);
+    if (!channel?.isTextBased()) return;
+
+    const inviter = invite.inviter;
+    if (!inviter) return;
+
+    const data: GuildInviteData = {
+      id: invite.code,
+      inviterId: inviter.id,
+      createdTimestamp: invite.createdTimestamp ?? Date.now(),
+      expiresTimestamp: invite.expiresTimestamp ?? undefined,
+      maxUses: invite.maxUses ?? undefined,
+      uses: invite.uses ?? undefined,
+    };
+
+    await db.guildInviteData(guild.id, invite.code, data);
+
+    await channel.send(GuildInviteComponent.createNewInvite(data));
   }
 
   private async onInviteDelete(invite: Invite) {
     const db = DatabaseFacade.instance();
 
     const guild = invite.guild;
-    if (!guild) return;
+    if (!(guild instanceof Guild)) return;
 
     const config = await db.gatewayConfig(guild.id);
-    if (!config?.enabled) return;
+    if (!config?.enabled || !config.channel) return;
 
-    const invites = this.cache.get(guild.id);
-    if (!invites) return;
+    const channel = guild.channels.cache.get(config.channel);
+    if (!channel?.isTextBased()) return;
 
-    const cachedInvite = invites.get(invite.code);
-    if (!cachedInvite) return;
+    const inviter = invite.inviter;
+    if (!inviter) return;
 
-    if (cachedInvite.maxUses !== 1 || Date.now() >= (cachedInvite.expiresTimestamp ?? 0)) {
-      invites.delete(cachedInvite.code);
-      this.cache.set(guild.id, invites);
-    }
+    const data: GuildInviteData = {
+      id: invite.code,
+      inviterId: inviter.id,
+      createdTimestamp: invite.createdTimestamp ?? Date.now(),
+      expiresTimestamp: invite.expiresTimestamp ?? undefined,
+      maxUses: invite.maxUses ?? undefined,
+      uses: invite.uses ?? undefined,
+    };
+
+    await db.deleteGuildInvite(guild.id, data.id);
+
+    await channel.send(GuildInviteComponent.createDeletedInvite(data));
   }
 
   private async onMemberAdd(member: GuildMember) {

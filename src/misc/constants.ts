@@ -59,6 +59,7 @@ export abstract class QGConstants {
 enum Containers {
   GAME_INVITE = 1 << 10,
   AUTOMOD = 2 << 10,
+  GUILD_INVITE = 3 << 10,
 }
 
 export enum GameInviteComponents {
@@ -71,4 +72,9 @@ export enum AutoModComponents {
   AUTOMOD_CONTAINER = Containers.AUTOMOD,
   AUTOMOD_OFFENDER,
   AUTOMOD_EVIDENCE,
+}
+
+export enum GuildInviteComponents {
+  CONTAINER = Containers.GUILD_INVITE,
+  INVITE_ID,
 }
