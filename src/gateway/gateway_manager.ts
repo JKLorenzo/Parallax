@@ -13,7 +13,7 @@ import Manager from '../modules/manager.js';
 import DatabaseFacade from '../database/database_facade.js';
 import GatewayComponent from './components/gateway_component.js';
 import { client } from '../main.js';
-import GuildInviteComponent from './components/guild_invite_component.js';
+import GuildInviteComponent, { InviteType } from './components/guild_invite_component.js';
 import type { GuildInviteData } from '../database/database_defs.js';
 
 export default class GatewayManager extends Manager {
@@ -97,7 +97,7 @@ export default class GatewayManager extends Manager {
 
     await db.guildInviteData(guild.id, invite.code, data);
 
-    await channel.send(GuildInviteComponent.createNewInvite(data));
+    await channel.send(GuildInviteComponent.createInteractive(guild, data, InviteType.Create));
   }
 
   private async onInviteDelete(invite: Invite) {
@@ -112,21 +112,14 @@ export default class GatewayManager extends Manager {
     const channel = guild.channels.cache.get(config.channel);
     if (!channel?.isTextBased()) return;
 
-    const inviter = invite.inviter;
-    if (!inviter) return;
-
-    const data: GuildInviteData = {
-      id: invite.code,
-      inviterId: inviter.id,
-      createdTimestamp: invite.createdTimestamp ?? Date.now(),
-      expiresTimestamp: invite.expiresTimestamp ?? undefined,
-      maxUses: invite.maxUses ?? undefined,
-      uses: invite.uses ?? undefined,
-    };
+    const data = await db.guildInviteData(guild.id, invite.code);
+    if (!data) return;
 
     await db.deleteGuildInvite(guild.id, data.id);
 
-    await channel.send(GuildInviteComponent.createDeletedInvite(data));
+    if (invite.uses) data.uses = invite.uses;
+
+    await channel.send(GuildInviteComponent.create(guild, data, InviteType.DeleteOrExpired));
   }
 
   private async onMemberAdd(member: GuildMember) {

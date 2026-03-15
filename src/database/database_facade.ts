@@ -449,10 +449,11 @@ export default class DatabaseFacade {
         id: inviteId,
         inviterId: data.inviterId,
         createdTimestamp: data.createdTimestamp,
-        expiresTimestamp: data.expiresTimestamp,
-        maxUses: data.maxUses,
-        uses: data.uses,
       };
+
+      if ('expiresTimestamp' in data) invite.expiresTimestamp = data.expiresTimestamp;
+      if ('maxUses' in data) invite.maxUses = data.maxUses;
+      if ('uses' in data) invite.uses = data.uses;
 
       invites.set(inviteId, invite);
       this.guildInviteDataCache.set(guildId, invites);

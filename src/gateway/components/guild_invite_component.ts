@@ -5,66 +5,88 @@ import {
   ComponentType,
   ContainerBuilder,
   ContainerComponent,
+  Guild,
   MessageComponentInteraction,
   MessageFlags,
+  SectionBuilder,
+  SectionComponent,
   SeparatorSpacingSize,
+  TextDisplayBuilder,
   TextDisplayComponent,
-  type MessageReplyOptions,
+  ThumbnailBuilder,
+  type MessageCreateOptions,
 } from 'discord.js';
 import type { GuildInviteData } from '../../database/database_defs.js';
 import { Component } from '../../interaction/modules/component.js';
 import { GuildInviteComponents } from '../../misc/constants.js';
 import DatabaseFacade from '../../database/database_facade.js';
 import Utils from '../../misc/utils.js';
+import e from 'express';
 
 enum Id {
   Delete = 'delete',
 }
 
+export enum InviteType {
+  Create,
+  Delete,
+  DeleteOrExpired,
+}
+
 export default class GuildInviteComponent extends Component {
-  private static createBaseComponent(data: GuildInviteData) {
+  private static createBaseComponent(guild: Guild, data: GuildInviteData, type: InviteType) {
     const container = new ContainerBuilder({
       id: GuildInviteComponents.CONTAINER,
     });
 
-    container.addTextDisplayComponents(b =>
-      b.setContent(['### Gateway Manager', '**New Invite Created**'].join('\n')),
-    );
+    const inviter = guild.members.cache.get(data.inviterId);
 
-    container.addTextDisplayComponents(b =>
-      b.setId(GuildInviteComponents.INVITE_ID).setContent(`-# ${data.id}`),
-    );
+    const info = [
+      `### Parallax Gatekeeper: ${guild.name}`,
+      `**Invite ${type === InviteType.Create ? 'Created' : type === InviteType.Delete ? 'Deleted' : 'Expired or Deleted'}**`,
+      '',
+      `-# **Inviter**: ${Utils.mentionUserById(data.inviterId)}`,
+      `-# **Invite Code**: ${data.id}`,
+    ];
 
-    const other_info = [`**Inviter**: ${Utils.mentionUserById(data.inviterId)}`];
-    if (data.maxUses) {
-      other_info.push(`**Max Uses**: ${data.maxUses}`);
-    }
-    if (data.expiresTimestamp) {
-      other_info.push(`**Expires At**: ${new Date(data.expiresTimestamp)}`);
+    if (data.uses) {
+      info.push(`-# **Uses**: ${data.uses}`);
     }
 
-    container.addTextDisplayComponents(b =>
-      b.setId(GuildInviteComponents.INVITE_ID).setContent(other_info.join('\n')),
+    if (data.maxUses !== undefined) {
+      info.push(`-# **Max Uses**: ${data.maxUses === 0 ? 'Unlimited' : data.maxUses}`);
+    }
+
+    if (type === InviteType.Create) {
+      if (data.expiresTimestamp) {
+        info.push(`-# **Expires At**: ${new Date(data.expiresTimestamp).toLocaleString()}`);
+      }
+    } else {
+      if (data.createdTimestamp) {
+        info.push(`-# **Created At**: ${new Date(data.createdTimestamp).toLocaleString()}`);
+      }
+    }
+
+    container.addSectionComponents(
+      new SectionBuilder()
+        .setId(GuildInviteComponents.INFO_SECTION)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setId(GuildInviteComponents.INFO_TEXT)
+            .setContent(info.join('\n')),
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(inviter?.displayAvatarURL() ?? guild?.iconURL()!),
+        ),
     );
+
+    container.setAccentColor(type === InviteType.Create ? Colors.Green : Colors.Fuchsia);
 
     return container;
   }
 
-  static createNewInvite(data: GuildInviteData): MessageReplyOptions {
-    const container = this.createBaseComponent(data);
-
-    container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Small));
-
-    container.addActionRowComponents(row =>
-      row.addComponents([
-        new ButtonBuilder()
-          .setCustomId(this.makeId(Id.Delete))
-          .setLabel('Delete')
-          .setStyle(ButtonStyle.Danger),
-      ]),
-    );
-
-    container.setAccentColor(Colors.Green);
+  static create(guild: Guild, data: GuildInviteData, type: InviteType): MessageCreateOptions {
+    const container = this.createBaseComponent(guild, data, type);
 
     return {
       components: [container],
@@ -72,14 +94,21 @@ export default class GuildInviteComponent extends Component {
     };
   }
 
-  static createDeletedInvite(data: GuildInviteData): MessageReplyOptions {
-    const container = this.createBaseComponent(data);
+  static createInteractive(
+    guild: Guild,
+    data: GuildInviteData,
+    type: InviteType,
+  ): MessageCreateOptions {
+    const container = this.createBaseComponent(guild, data, type);
 
-    if (data.uses) {
-      container.addTextDisplayComponents(b => b.setContent(`**Uses**: ${data.uses}`));
-    }
+    container.addSeparatorComponents(builder => builder.setSpacing(SeparatorSpacingSize.Large));
 
-    container.setAccentColor(Colors.Fuchsia);
+    const rejectButton = new ButtonBuilder()
+      .setCustomId(this.makeId(Id.Delete))
+      .setLabel('Delete this invite')
+      .setStyle(ButtonStyle.Secondary);
+
+    container.addActionRowComponents(row => row.addComponents([rejectButton]));
 
     return {
       components: [container],
@@ -88,8 +117,6 @@ export default class GuildInviteComponent extends Component {
   }
 
   async exec(interaction: MessageComponentInteraction, customId: string) {
-    const db = DatabaseFacade.instance();
-
     const guild = interaction.guild;
     if (!guild) return await interaction.reply('Failed to identify the guild for this invite.');
 
@@ -97,31 +124,52 @@ export default class GuildInviteComponent extends Component {
       c => c.type === ComponentType.Container && c.id === GuildInviteComponents.CONTAINER,
     ) as ContainerComponent | undefined;
     if (!container)
-      return await interaction.reply('Failed to identify the invite data for this interaction.');
+      return await interaction.reply(
+        'Failed to identify the component container for this interaction.',
+      );
 
-    const headerText = container.components.find(
-      c => c.type === ComponentType.TextDisplay && c.id === GuildInviteComponents.INVITE_ID,
+    const infoSection = container.components.find(
+      c => c.type === ComponentType.Section && c.id === GuildInviteComponents.INFO_SECTION,
+    ) as SectionComponent | undefined;
+    if (!infoSection)
+      return await interaction.reply(
+        'Failed to identify the information section for this interaction.',
+      );
+
+    const infoText = infoSection.components.find(
+      c => c.type === ComponentType.TextDisplay && c.id === GuildInviteComponents.INFO_TEXT,
     ) as TextDisplayComponent | undefined;
+    if (!infoText)
+      return await interaction.reply(
+        'Failed to identify the text information for this interaction.',
+      );
 
-    const inviteId = headerText?.content.split('\n').at(1);
-    if (!inviteId)
-      return await interaction.reply('Failed to identify the invite ID for this interaction.');
+    const inviteCode = infoText?.content
+      .split('\n')
+      .find(t => Utils.hasAny(t, 'Invite Code'))
+      ?.split(':')
+      .at(1)
+      ?.trim();
 
-    const inviteData = await db.guildInviteData(guild.id, Utils.removeLeadingWord(inviteId));
-    if (!inviteData)
-      return await interaction.reply('Failed to retrieve the invite data for this interaction.');
+    if (!inviteCode)
+      return await interaction.reply('Failed to identify the invite code for this interaction.');
+
+    await interaction.deferReply();
+
+    const invite = await guild.invites.fetch(inviteCode);
 
     switch (customId) {
       case Id.Delete:
-        await db.deleteGuildInvite(guild.id, inviteData.id);
+        if (!invite)
+          return await interaction.editReply(
+            'This invite has already expired or has been deleted.',
+          );
 
-        await interaction.update({
-          components: GuildInviteComponent.createDeletedInvite(inviteData).components,
-          flags: MessageFlags.IsComponentsV2,
-        });
+        await invite.delete().catch(() => null);
+        await interaction.editReply(`This invite was successfully deleted by ${interaction.user}`);
         break;
       default:
-        await interaction.reply('Unknown action.');
+        await interaction.editReply('Unknown action.');
     }
   }
 }
