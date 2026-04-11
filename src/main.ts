@@ -12,6 +12,7 @@ import ServerManager from './server/server_manager.js';
 import MusicManager from './music/music_manager.js';
 import HostManager from './host/host_manager.js';
 import { CSConstants } from './misc/constants.js';
+import PresenceManager from './presence/presence_manager.js';
 
 const database = DatabaseFacade.instance();
 const telemetry = TelemetryFacade.instance();
@@ -47,6 +48,7 @@ client.once('clientReady', async () => {
     HostManager.instance().init(),
     InteractionManager.instance().init(),
     MusicManager.instance().init(),
+    PresenceManager.instance().init(),
     ServerManager.instance().init(),
     VoiceManager.instance().init(),
   ]);

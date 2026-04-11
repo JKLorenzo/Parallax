@@ -1,8 +1,9 @@
-import type { CacheType, ChatInputCommandInteraction, InteractionResponse } from 'discord.js';
+import { ActivityType, type CacheType, type ChatInputCommandInteraction } from 'discord.js';
 import Process from './process.js';
 import Telemetry from '../../telemetry/telemetry.js';
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
+import PresenceManager from '../../presence/presence_manager.js';
 
 export default abstract class Server {
   readonly name: string;
@@ -76,7 +77,10 @@ export default abstract class Server {
     this.process.once('stdlog', async (log, process) => {
       this.isRunning = true;
       await interaction.editReply(`Starting ${this.name}...`);
-      await ServerManager.instance().addActivity(process.executable);
+      await PresenceManager.instance().addActivity({
+        name: executable.name,
+        type: ActivityType.Playing,
+      });
     });
 
     this.process.once('close', async (code, process) => {
@@ -86,8 +90,7 @@ export default abstract class Server {
       this.process = undefined;
 
       await ServerManager.instance().unmapPorts(this);
-
-      await ServerManager.instance().removeActivity(process.executable);
+      await PresenceManager.instance().removeActivity(executable.name);
     });
 
     this.process.on('stdlog', async log => {
@@ -128,11 +131,14 @@ export default abstract class Server {
 
     this.process.once('stdlog', async (log, process) => {
       await interaction.editReply(`Preparing to update ${this.name}...`);
-      ServerManager.instance().addActivity(process.executable);
+      PresenceManager.instance().addActivity({
+        name: executable.name,
+        type: ActivityType.Playing,
+      });
     });
 
     this.process.once('close', (code, process) => {
-      ServerManager.instance().removeActivity(process.executable);
+      PresenceManager.instance().removeActivity(executable.name);
       this.process?.removeAllListeners();
       this.process = undefined;
     });

@@ -1,4 +1,5 @@
 import {
+  ActivityType,
   Colors,
   EmbedBuilder,
   GuildChannel,
@@ -22,6 +23,7 @@ import Queuer from '../misc/queuer.js';
 import { Constants } from '../misc/constants.js';
 import MusicSearchOperator from './operators/music_search_operator.js';
 import type { Metadata, TrackWithMetadata, UnresolvedTrackWithMetadata } from './music_defs.js';
+import PresenceManager from '../presence/presence_manager.js';
 
 export default class MusicManager extends Manager {
   private static _instance: MusicManager;
@@ -53,21 +55,48 @@ export default class MusicManager extends Manager {
       autoSkip: true,
     });
 
-    this.lavalink.on('trackStart', (p, t) =>
-      this.player_operators.get(p.guildId)?.onTrackStart(p, t as TrackWithMetadata),
-    );
+    this.lavalink.on('trackStart', (p, t) => {
+      const track = t as TrackWithMetadata;
 
-    this.lavalink.on('trackStuck', (p, t) =>
-      this.player_operators.get(p.guildId)?.onTrackStuck(p, t as TrackWithMetadata),
-    );
+      this.player_operators.get(p.guildId)?.onTrackStart(p, track);
 
-    this.lavalink.on('trackEnd', (p, t) =>
-      this.player_operators.get(p.guildId)?.onTrackEnd(p, t as TrackWithMetadata),
-    );
+      PresenceManager.instance().addActivity({
+        name: track.metadata.title ?? 'Unknown Title',
+        type: ActivityType.Listening,
+      });
+    });
 
-    this.lavalink.on('trackError', (p, t) =>
-      this.player_operators.get(p.guildId)?.onTrackError(p, t as TrackWithMetadata),
-    );
+    this.lavalink.on('trackStuck', (p, t) => {
+      const track = t as TrackWithMetadata;
+
+      this.player_operators.get(p.guildId)?.onTrackStuck(p, track);
+
+      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+    });
+
+    this.lavalink.on('trackEnd', (p, t) => {
+      const track = t as TrackWithMetadata;
+
+      this.player_operators.get(p.guildId)?.onTrackEnd(p, track);
+
+      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+    });
+
+    this.lavalink.on('queueEnd', (p, t) => {
+      const track = t as TrackWithMetadata;
+
+      this.player_operators.get(p.guildId)?.onTrackEnd(p, track);
+
+      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+    });
+
+    this.lavalink.on('trackError', (p, t) => {
+      const track = t as TrackWithMetadata;
+
+      this.player_operators.get(p.guildId)?.onTrackError(p, track);
+
+      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+    });
 
     this.lavalink.nodeManager.on('disconnect', () => {
       this.telemetry.log(`Lavalink node disconnected.`);

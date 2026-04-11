@@ -1,4 +1,4 @@
-import { ActivityType, Collection, type ActivityOptions } from 'discord.js';
+import { Collection } from 'discord.js';
 import {
   upnpNat,
   type Gateway,
@@ -8,9 +8,7 @@ import {
 import ip from 'ip';
 import type { Executable, Port } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
-import { client } from '../main.js';
 import Manager from '../modules/manager.js';
-import Telemetry from '../telemetry/telemetry.js';
 import PalworldServer from './servers/palworld_server.js';
 import SatisfactoryServer from './servers/satisfactory_server.js';
 import AbioticFactorServer from './servers/abiotic_server.js';
@@ -93,7 +91,7 @@ export default class ServerManager extends Manager {
   }
 
   async init() {
-    const telemetry = new Telemetry(this.init, { parent: this.telemetry });
+    const telemetry = this.telemetry.start(this.init);
 
     await this.updateExecutables();
 
@@ -101,7 +99,7 @@ export default class ServerManager extends Manager {
   }
 
   async mapPorts(server: Server, ports: Port[]) {
-    const telemetry = new Telemetry(this.mapPorts, { parent: this.telemetry });
+    const telemetry = this.telemetry.start(this.mapPorts);
 
     const upnp_ports = this.upnp_clients.get(server.name) ?? [];
     for await (const gateway of this.upnp.findGateways({ signal: AbortSignal.timeout(10000) })) {
@@ -141,7 +139,7 @@ export default class ServerManager extends Manager {
   }
 
   async unmapPorts(server: Server) {
-    const telemetry = new Telemetry(this.unmapPorts, { parent: this.telemetry });
+    const telemetry = this.telemetry.start(this.unmapPorts);
 
     for (const upnp_port of this.upnp_clients.get(server.name) ?? []) {
       await upnp_port.gateway.unmap(upnp_port.mapping.internalPort);
@@ -164,7 +162,7 @@ export default class ServerManager extends Manager {
   }
 
   async updateExecutables() {
-    const telemetry = new Telemetry(this.updateExecutables, { parent: this.telemetry });
+    const telemetry = this.telemetry.start(this.updateExecutables);
     const db = DatabaseFacade.instance();
 
     this._executables = await db.fetchExecutables();
@@ -172,41 +170,5 @@ export default class ServerManager extends Manager {
     telemetry.end();
 
     return this.executables;
-  }
-
-  async addActivity(executable: Executable) {
-    if (this.activities.some(a => a === executable.name)) return;
-
-    this.activities.push(executable.name);
-    await this.updateActivities();
-  }
-
-  async removeActivity(executable: Executable) {
-    if (!this.activities.some(a => a === executable.name)) return;
-
-    this.activities = this.activities.filter(a => a !== executable.name);
-    await this.updateActivities();
-  }
-
-  private async updateActivities() {
-    const telemetry = new Telemetry(this.updateActivities, { parent: this.telemetry });
-
-    await client.user?.setPresence({
-      activities: this.activities.map(name => {
-        const activity: ActivityOptions = {
-          name: name,
-          type: ActivityType.Playing,
-        };
-        return activity;
-      }),
-    });
-
-    if (this.activities.length > 0) {
-      this.activityInterval ??= setInterval(() => this.updateActivities(), 1000 * 60 * 30);
-    } else if (this.activityInterval) {
-      clearInterval(this.activityInterval);
-    }
-
-    telemetry.end();
   }
 }
