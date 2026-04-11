@@ -30,8 +30,7 @@ export default class SysInfoSlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const toGB = (bytes: number) =>
-      `${`${bytes / Math.pow(1000, 3)}`.substring(0, `${bytes / Math.pow(1000, 3)}`.indexOf('.') + 2)} GB`;
+    const toGB = (bytes: number) => `${(bytes / Math.pow(1000, 3)).toFixed(2)} GB`;
 
     const nodeStatus = await HostManager.instance().proxmox.nodeStatus();
     const currentLoadData = await si.currentLoad();
@@ -49,21 +48,23 @@ export default class SysInfoSlashCommand extends SlashCommand {
           },
           {
             name: 'CPU Temperature',
-            value: `${nodeStatus.cpu.temp} °C`,
+            value: `${nodeStatus.cpu.temp.toFixed(2)} °C`,
             inline: true,
           },
           {
             name: 'Average Load',
-            value: nodeStatus.cpu.loadAvg.map(v => `${v} %`).join(' , '),
+            value: nodeStatus.cpu.loadAvg
+              .map((v, i) => `${v} % - ${3 * Math.pow(i + 1, 2) - 5 * (i + 1) + 3} mins`)
+              .join('\n'),
           },
           {
             name: 'GPU Usage',
-            value: `${nodeStatus.gpu.usage} %`,
+            value: `${nodeStatus.gpu.usage.toFixed(2)} %`,
             inline: true,
           },
           {
             name: 'GPU Temperature',
-            value: `${nodeStatus.gpu.temp} °C`,
+            value: `${nodeStatus.gpu.temp.toFixed(2)} °C`,
             inline: true,
           },
           {
@@ -92,15 +93,17 @@ export default class SysInfoSlashCommand extends SlashCommand {
       }),
       new EmbedBuilder({
         author: { name: 'System Information' },
-        title: 'Parallax Information',
+        title: 'Server Information',
         fields: [
           {
             name: 'CPU Usage',
-            value: [
-              `**Core Average:** ${Math.round(currentLoadData.currentLoad)} %`,
-              ...currentLoadData.cpus.map((d, i) => `**Core ${i}:** ${Math.round(d.load)} %`),
-            ].join('\n'),
+            value: `${currentLoadData.currentLoad.toFixed(2)} %`,
           },
+          ...currentLoadData.cpus.map((d, i) => ({
+            name: `Core ${i}`,
+            value: `${d.load.toFixed(2)} %`,
+            inline: true,
+          })),
           {
             name: 'Memory Usage',
             value: `${Math.round((memData.used / memData.total) * 100)} % of ${toGB(memData.total)}`,
