@@ -269,6 +269,10 @@ export default class MusicPlayerOperator {
             });
           }
         }
+
+        setTimeout(() => {
+          if (message && message.deletable) message.delete().catch(() => null);
+        }, 15000);
       }
     } catch (error) {
       telemetry.error(error);
