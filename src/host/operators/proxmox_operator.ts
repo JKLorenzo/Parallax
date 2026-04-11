@@ -22,7 +22,7 @@ export default class ProxmoxOperator {
 
     const node = EnvironmentFacade.instance().get('proxmoxNode');
     const status = await this.api.nodes.$(node).status.$get();
-    const sensors = JSON.parse(status.sensorsOutput);
+    const sensors = JSON.parse(status.thermalstate);
 
     const data = {
       cpu: {
