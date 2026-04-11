@@ -56,46 +56,23 @@ export default class MusicManager extends Manager {
     });
 
     this.lavalink.on('trackStart', (p, t) => {
-      const track = t as TrackWithMetadata;
-
-      this.player_operators.get(p.guildId)?.onTrackStart(p, track);
-
-      PresenceManager.instance().addActivity({
-        name: track.metadata.title ?? 'Unknown Title',
-        type: ActivityType.Listening,
-      });
+      this.player_operators.get(p.guildId)?.onTrackStart(p, t as TrackWithMetadata);
     });
 
     this.lavalink.on('trackStuck', (p, t) => {
-      const track = t as TrackWithMetadata;
-
-      this.player_operators.get(p.guildId)?.onTrackStuck(p, track);
-
-      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+      this.player_operators.get(p.guildId)?.onTrackStuck(p, t as TrackWithMetadata);
     });
 
     this.lavalink.on('trackEnd', (p, t) => {
-      const track = t as TrackWithMetadata;
-
-      this.player_operators.get(p.guildId)?.onTrackEnd(p, track);
-
-      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+      this.player_operators.get(p.guildId)?.onTrackEnd(p, t as TrackWithMetadata);
     });
 
     this.lavalink.on('queueEnd', (p, t) => {
-      const track = t as TrackWithMetadata;
-
-      this.player_operators.get(p.guildId)?.onTrackEnd(p, track);
-
-      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+      this.player_operators.get(p.guildId)?.onTrackEnd(p, t as TrackWithMetadata);
     });
 
     this.lavalink.on('trackError', (p, t) => {
-      const track = t as TrackWithMetadata;
-
-      this.player_operators.get(p.guildId)?.onTrackError(p, track);
-
-      PresenceManager.instance().removeActivity(track.metadata.title ?? 'Unknown Title');
+      this.player_operators.get(p.guildId)?.onTrackError(p, t as TrackWithMetadata);
     });
 
     this.lavalink.nodeManager.on('disconnect', () => {
@@ -163,7 +140,7 @@ export default class MusicManager extends Manager {
     if (isMe && !newState.channelId) {
       telemetry.log('On bot disconnect');
 
-      await operator.player.destroy();
+      await operator.onDisconnect();
       this.player_operators.delete(guild.id);
 
       /**

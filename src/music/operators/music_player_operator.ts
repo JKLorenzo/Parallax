@@ -1,4 +1,5 @@
 import {
+  ActivityType,
   Colors,
   EmbedBuilder,
   type Guild,
@@ -12,6 +13,7 @@ import Telemetry from '../../telemetry/telemetry.js';
 import Utils from '../../misc/utils.js';
 import MusicComponent from '../components/music_component.js';
 import type { TrackWithMetadata, UnresolvedTrackWithMetadata } from '../music_defs.js';
+import PresenceManager from '../../presence/presence_manager.js';
 
 export default class MusicPlayerOperator {
   private telemetry: Telemetry;
@@ -147,6 +149,11 @@ export default class MusicPlayerOperator {
       components: MusicComponent.data(),
     });
 
+    await PresenceManager.instance().addActivity({
+      name: track.metadata.title ?? track.info.title,
+      type: ActivityType.Listening,
+    });
+
     telemetry.end();
   }
 
@@ -180,6 +187,8 @@ export default class MusicPlayerOperator {
     setTimeout(() => {
       if (message && message.deletable) message.delete().catch(() => null);
     }, 15000);
+
+    await PresenceManager.instance().removeActivity(track.metadata.title ?? track.info.title);
 
     telemetry.end();
   }
@@ -215,6 +224,8 @@ export default class MusicPlayerOperator {
       if (message && message.deletable) message.delete().catch(() => null);
     }, 15000);
 
+    await PresenceManager.instance().removeActivity(track.metadata.title ?? track.info.title);
+
     telemetry.end();
   }
 
@@ -230,6 +241,40 @@ export default class MusicPlayerOperator {
     const telemetry = this.telemetry.start('onTrackError');
 
     await this.onTrackFailed(player, track);
+
+    telemetry.end();
+  }
+
+  async onDisconnect() {
+    const telemetry = this.telemetry.start(this.onDisconnect);
+    const { guildId, textChannelId } = this.player;
+
+    try {
+      const track = this.player.queue.current as TrackWithMetadata | null;
+      if (track) {
+        await PresenceManager.instance().removeActivity(track.metadata.title ?? track.info.title);
+
+        let message = track.metadata.message;
+        const embed = this.createTrackEmbed(track, 'finish');
+
+        if (message) {
+          message = await message.edit({ embeds: [embed], components: [] });
+        } else if (textChannelId) {
+          const guild = client.guilds.cache.get(guildId);
+          const textChannel = guild?.channels.cache.get(textChannelId);
+          if (textChannel?.isSendable()) {
+            message = await textChannel.send({
+              embeds: [embed],
+              components: [],
+            });
+          }
+        }
+      }
+    } catch (error) {
+      telemetry.error(error);
+    } finally {
+      await this.player.destroy();
+    }
 
     telemetry.end();
   }
