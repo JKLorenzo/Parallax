@@ -89,7 +89,6 @@ export default abstract class Server {
       this.process?.removeAllListeners();
       this.process = undefined;
 
-      await ServerManager.instance().unmapPorts(this);
       await PresenceManager.instance().removeActivity(executable.name);
     });
 
@@ -100,9 +99,6 @@ export default abstract class Server {
       if (this.parseReady(log)) {
         this.isReady = true;
         this.process?.removeAllListeners('stdlog');
-
-        const ports = this.process?.executable.ports;
-        if (ports) await ServerManager.instance().mapPorts(this, ports);
 
         const info = await this.info();
         await interaction.editReply(info);

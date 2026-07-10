@@ -1,12 +1,4 @@
-import { Collection } from 'discord.js';
-import {
-  upnpNat,
-  type Gateway,
-  type PortMapping,
-  type UPnPNAT,
-} from '@achingbrain/nat-port-mapper';
-import ip from 'ip';
-import type { Executable, Port } from '../database/database_defs.js';
+import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
 import Manager from '../modules/manager.js';
 import PalworldServer from './servers/palworld_server.js';
@@ -15,17 +7,10 @@ import AbioticFactorServer from './servers/abiotic_server.js';
 import RustServer from './servers/rust_server.js';
 import ValheimServer from './servers/valheim_server.js';
 import ZomboidServer from './servers/zomboid_server.js';
-import type Server from './modules/server.js';
-import Utils from '../misc/utils.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
   private _executables: Executable[];
-
-  private upnp: UPnPNAT;
-  private upnp_clients: Collection<string, { mapping: PortMapping; gateway: Gateway }[]>;
-  private activities: string[];
-  private activityInterval?: NodeJS.Timeout;
 
   private _abiotic?: AbioticFactorServer;
   private _palworld?: PalworldServer;
@@ -38,14 +23,6 @@ export default class ServerManager extends Manager {
     super();
 
     this._executables = [];
-    this.activities = [];
-
-    this.upnp = upnpNat({
-      ttl: 600_000,
-      autoRefresh: true,
-      refreshThreshold: 300_000,
-    });
-    this.upnp_clients = new Collection();
   }
 
   static instance() {
@@ -94,69 +71,6 @@ export default class ServerManager extends Manager {
     const telemetry = this.telemetry.start(this.init);
 
     await this.updateExecutables();
-
-    telemetry.end();
-  }
-
-  async mapPorts(server: Server, ports: Port[]) {
-    const telemetry = this.telemetry.start(this.mapPorts);
-
-    const upnp_ports = this.upnp_clients.get(server.name) ?? [];
-    for await (const gateway of this.upnp.findGateways({ signal: AbortSignal.timeout(10000) })) {
-      const family = gateway.family === 'IPv6' ? 'ipv6' : 'ipv4';
-      const internalHost = ip.address(undefined, family);
-      telemetry.log(`${gateway.family} Host ${internalHost} Gateway ${gateway.host}`);
-
-      if (Utils.hasAny(internalHost, ['127.0.0.1', '::1'])) continue;
-      if (family === 'ipv6') continue;
-
-      for (const port of ports) {
-        const mapping = await gateway.map(port.port, internalHost, {
-          protocol: port.protocol,
-          description: server.name,
-        });
-
-        upnp_ports.push({ mapping, gateway });
-
-        telemetry.log(
-          [
-            `Mapped ${mapping.protocol}`,
-            `${mapping.internalHost}:${mapping.internalPort}`,
-            'to',
-            `${mapping.externalHost}:${mapping.externalPort}`,
-            'on',
-            `${gateway.host}`,
-          ].join(' '),
-        );
-      }
-
-      break;
-    }
-
-    this.upnp_clients.set(server.name, upnp_ports);
-
-    telemetry.end();
-  }
-
-  async unmapPorts(server: Server) {
-    const telemetry = this.telemetry.start(this.unmapPorts);
-
-    for (const upnp_port of this.upnp_clients.get(server.name) ?? []) {
-      await upnp_port.gateway.unmap(upnp_port.mapping.internalPort);
-
-      telemetry.log(
-        [
-          `Unmapped ${upnp_port.mapping.protocol}`,
-          `${upnp_port.mapping.internalHost}:${upnp_port.mapping.internalPort}`,
-          'from',
-          `${upnp_port.mapping.externalHost}:${upnp_port.mapping.externalPort}`,
-          'on',
-          `${upnp_port.gateway.host}`,
-        ].join(' '),
-      );
-    }
-
-    this.upnp_clients.delete(server.name);
 
     telemetry.end();
   }
