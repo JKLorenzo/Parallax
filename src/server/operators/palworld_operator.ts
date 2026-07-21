@@ -39,6 +39,43 @@ export default class PalworldOperator extends ServerOperator {
     };
   }
 
+  async announce(interaction: ChatInputCommandInteraction<CacheType>) {
+    if (this.notReady(interaction)) return;
+
+    if (!this.apiAuth()) {
+      await interaction.reply('Palworld Dedicated Server API Credentials are not set.');
+      return;
+    }
+
+    const msg = interaction.options.getString('message');
+    if (msg === null || msg.trim() === '') {
+      await interaction.reply('Please provide a message to announce.');
+      return;
+    }
+
+    await interaction.deferReply();
+    
+    const res = await axios({
+      method: 'post',
+      url: this.apiURL('announce'),
+      auth: this.apiAuth(),
+      maxBodyLength: Infinity,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: JSON.stringify({
+        message: `${msg}`,
+      }),
+    });
+
+    if (res.status !== HttpStatusCode.Ok) {
+      await interaction.editReply(`Failed to process request: \`${res.statusText}\``);
+      return;
+    }
+
+    await interaction.editReply('The message was announced.');
+  }
+
   async getServerInfo(interaction: ChatInputCommandInteraction<CacheType>) {
     if (this.notReady(interaction)) return;
 

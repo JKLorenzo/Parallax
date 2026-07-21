@@ -36,6 +36,19 @@ export default class PalworldSlashCommand extends SlashCommand {
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
+            name: 'announce',
+            description: 'Send an announcement to the server.',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+              {
+                name: 'message',
+                description: 'The message to announce.',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+              },
+            ],
+          },
+          {
             name: 'save',
             description: 'Initiate a world save.',
             type: ApplicationCommandOptionType.Subcommand,
@@ -94,6 +107,8 @@ export default class PalworldSlashCommand extends SlashCommand {
         return sm.palworld.getServerInfo(interaction);
       case 'players':
         return sm.palworld.getPlayers(interaction);
+      case 'announce':
+        return sm.palworld.announce(interaction);
       case 'save':
         return sm.palworld.save(interaction);
       case 'update':
