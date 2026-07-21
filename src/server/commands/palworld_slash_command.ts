@@ -26,11 +26,6 @@ export default class PalworldSlashCommand extends SlashCommand {
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
-            name: 'update',
-            description: 'Update the game files of the server.',
-            type: ApplicationCommandOptionType.Subcommand,
-          },
-          {
             name: 'info',
             description: 'Shows the server information and metrics.',
             type: ApplicationCommandOptionType.Subcommand,
@@ -43,6 +38,11 @@ export default class PalworldSlashCommand extends SlashCommand {
           {
             name: 'save',
             description: 'Initiate a world save.',
+            type: ApplicationCommandOptionType.Subcommand,
+          },
+          {
+            name: 'update',
+            description: '[Admin] Update the game files of the server.',
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
@@ -90,14 +90,15 @@ export default class PalworldSlashCommand extends SlashCommand {
     switch (command) {
       case 'start':
         return sm.palworld.start(interaction);
-      case 'update':
-        return sm.palworld.update(interaction);
       case 'info':
         return sm.palworld.getServerInfo(interaction);
       case 'players':
         return sm.palworld.getPlayers(interaction);
       case 'save':
         return sm.palworld.save(interaction);
+      case 'update':
+        if (this.notOwner(interaction)) return;
+        return sm.palworld.update(interaction);
       case 'shutdown':
         return sm.palworld.shutdown(interaction);
       case 'stop':
