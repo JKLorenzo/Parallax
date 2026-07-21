@@ -208,7 +208,7 @@ export default class PalworldOperator extends ServerOperator {
     await interaction.editReply('Game successfully saved.');
   }
 
-  async shutdown(interaction: ChatInputCommandInteraction<CacheType>) {
+  async shutdown(interaction: ChatInputCommandInteraction<CacheType>, force: boolean) {
     if (this.notReady(interaction)) return;
 
     if (!this.apiAuth()) {
@@ -217,6 +217,31 @@ export default class PalworldOperator extends ServerOperator {
     }
 
     await interaction.deferReply();
+
+    if (!force) {
+      // Ensure no players are online before shutting down
+      const resPlayers = await axios({
+        method: 'get',
+        url: this.apiURL('players'),
+        auth: this.apiAuth(),
+        maxBodyLength: Infinity,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (resPlayers.status !== HttpStatusCode.Ok) {
+        await interaction.editReply(`Failed to process request: \`${resPlayers.statusText}\``);
+        return;
+      }
+
+      if (resPlayers.data.players.length > 0) {
+        await interaction.editReply(
+          `There are currently ${resPlayers.data.players.length} players online. Please ensure the server is empty before shutting down.`,
+        );
+        return;
+      }
+    }
 
     const res = await axios({
       method: 'post',

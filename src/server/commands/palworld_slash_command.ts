@@ -54,18 +54,18 @@ export default class PalworldSlashCommand extends SlashCommand {
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
-            name: 'update',
-            description: '[Admin] Update the game files of the server.',
-            type: ApplicationCommandOptionType.Subcommand,
-          },
-          {
             name: 'shutdown',
             description: 'Initiate a server shutdown.',
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
+            name: 'update',
+            description: '[Admin] Update the game files of the server.',
+            type: ApplicationCommandOptionType.Subcommand,
+          },
+          {
             name: 'stop',
-            description: 'Force a server shutdown.',
+            description: '[Admin] Force a server shutdown (no save).',
             type: ApplicationCommandOptionType.Subcommand,
           },
           {
@@ -115,7 +115,7 @@ export default class PalworldSlashCommand extends SlashCommand {
         if (this.notOwner(interaction)) return;
         return sm.palworld.update(interaction);
       case 'shutdown':
-        return sm.palworld.shutdown(interaction);
+        return sm.palworld.shutdown(interaction, this.notOwner(interaction) ? false : true);
       case 'stop':
         if (this.notOwner(interaction)) return;
         return sm.palworld.stop(interaction);
