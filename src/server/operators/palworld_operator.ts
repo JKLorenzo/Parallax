@@ -121,6 +121,7 @@ export default class PalworldOperator extends ServerOperator {
       `Version: ${resInfo.data.version}`,
       `Uptime: ${humanizeDuration(resMetrics.data.uptime * 1000)}`,
       `In-game Days: ${resMetrics.data.days} days`,
+      `Performance: ${resMetrics.data.serverfps} fps (${resMetrics.data.serverframetime} ms)`,
       `Players Online: ${resMetrics.data.currentplayernum} / ${resMetrics.data.maxplayernum}`,
     ];
 
