@@ -1,8 +1,8 @@
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
-import Server from '../modules/server.js';
+import ServerOperator from '../modules/server_operator.js';
 
-export default class ZomboidServer extends Server {
+export default class ZomboidOperator extends ServerOperator {
   constructor(manager: ServerManager) {
     super('Zomboid', manager);
   }

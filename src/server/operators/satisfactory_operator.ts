@@ -1,13 +1,13 @@
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
-import Server from '../modules/server.js';
+import ServerOperator from '../modules/server_operator.js';
 import axios from 'axios';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import humanizeDuration from 'humanize-duration';
 import { Agent } from 'https';
 import Telemetry from '../../telemetry/telemetry.js';
 
-export default class SatisfactoryServer extends Server {
+export default class SatisfactoryOperator extends ServerOperator {
   private agent: Agent;
 
   constructor(manager: ServerManager) {

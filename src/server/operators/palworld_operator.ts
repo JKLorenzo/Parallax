@@ -3,9 +3,9 @@ import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import Utils from '../../misc/utils.js';
 import axios, { HttpStatusCode, type AxiosBasicCredentials } from 'axios';
 import humanizeDuration from 'humanize-duration';
-import Server from '../modules/server.js';
+import ServerOperator from '../modules/server_operator.js';
 
-export default class PalworldServer extends Server {
+export default class PalworldOperator extends ServerOperator {
   constructor(manager: ServerManager) {
     super('Palworld', manager);
   }

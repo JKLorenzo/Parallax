@@ -1,23 +1,24 @@
 import type { Executable } from '../database/database_defs.js';
 import DatabaseFacade from '../database/database_facade.js';
 import Manager from '../modules/manager.js';
-import PalworldServer from './servers/palworld_server.js';
-import SatisfactoryServer from './servers/satisfactory_server.js';
-import AbioticFactorServer from './servers/abiotic_server.js';
-import RustServer from './servers/rust_server.js';
-import ValheimServer from './servers/valheim_server.js';
-import ZomboidServer from './servers/zomboid_server.js';
+import PalworldOperator from './operators/palworld_operator.js';
+import SatisfactoryOperator from './operators/satisfactory_operator.js';
+import AbioticFactorOperator from './operators/abiotic_operator.js';
+import RustOperator from './operators/rust_operator.js';
+import ValheimOperator from './operators/valheim_operator.js';
+import ZomboidOperator from './operators/zomboid_operator.js';
 
 export default class ServerManager extends Manager {
   private static _instance: ServerManager;
   private _executables: Executable[];
 
-  private _abiotic?: AbioticFactorServer;
-  private _palworld?: PalworldServer;
-  private _rust?: RustServer;
-  private _satisfactory?: SatisfactoryServer;
-  private _valheim?: ValheimServer;
-  private _zomboid?: ZomboidServer;
+  // Operators
+  private _abiotic?: AbioticFactorOperator;
+  private _palworld?: PalworldOperator;
+  private _rust?: RustOperator;
+  private _satisfactory?: SatisfactoryOperator;
+  private _valheim?: ValheimOperator;
+  private _zomboid?: ZomboidOperator;
 
   constructor() {
     super();
@@ -38,32 +39,32 @@ export default class ServerManager extends Manager {
   }
 
   get abiotic() {
-    if (!this._abiotic) this._abiotic = new AbioticFactorServer(this);
+    if (!this._abiotic) this._abiotic = new AbioticFactorOperator(this);
     return this._abiotic;
   }
 
   get palworld() {
-    if (!this._palworld) this._palworld = new PalworldServer(this);
+    if (!this._palworld) this._palworld = new PalworldOperator(this);
     return this._palworld;
   }
 
   get rust() {
-    if (!this._rust) this._rust = new RustServer(this);
+    if (!this._rust) this._rust = new RustOperator(this);
     return this._rust;
   }
 
   get satisfactory() {
-    if (!this._satisfactory) this._satisfactory = new SatisfactoryServer(this);
+    if (!this._satisfactory) this._satisfactory = new SatisfactoryOperator(this);
     return this._satisfactory;
   }
 
   get valheim() {
-    if (!this._valheim) this._valheim = new ValheimServer(this);
+    if (!this._valheim) this._valheim = new ValheimOperator(this);
     return this._valheim;
   }
 
   get zomboid() {
-    if (!this._zomboid) this._zomboid = new ZomboidServer(this);
+    if (!this._zomboid) this._zomboid = new ZomboidOperator(this);
     return this._zomboid;
   }
 

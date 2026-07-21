@@ -1,9 +1,9 @@
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
-import Server from '../modules/server.js';
+import ServerOperator from '../modules/server_operator.js';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 
-export default class AbioticFactorServer extends Server {
+export default class AbioticFactorOperator extends ServerOperator {
   constructor(manager: ServerManager) {
     super('Abiotic Factor', manager);
   }

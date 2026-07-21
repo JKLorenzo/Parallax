@@ -5,7 +5,7 @@ import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
 import PresenceManager from '../../presence/presence_manager.js';
 
-export default abstract class Server {
+export default abstract class ServerOperator {
   readonly name: string;
   protected telemetry: Telemetry;
   protected isRunning: boolean;
