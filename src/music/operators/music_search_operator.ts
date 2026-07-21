@@ -30,20 +30,18 @@ export default class MusicSearchOperator {
     this.refreshTime = Date.now();
   }
 
-  async refreshToken() {
-    const telemetry = this.telemetry.start(this.refreshToken);
+  async requestToken() {
+    const telemetry = this.telemetry.start(this.requestToken);
 
     try {
-      const result = await this.spotified.auth.AuthorizationCode.refreshAccessToken(
-        EnvironmentFacade.instance().get('spotifyRefrresh'),
-      );
+      const result = await this.spotified.auth.ClientCredentials.requestAccessToken();
 
       this.spotified.setBearerToken(result.access_token);
       this.refreshTime = Date.now() + (result.expires_in - 60) * 1000;
 
-      telemetry.log(`Spotify access token refreshed.`);
+      telemetry.log('Spotify access token requested.');
     } catch (error) {
-      telemetry.error(`Failed to refresh Spotify access token: ${error}`);
+      telemetry.error(`Failed to request Spotify access token: ${error}`);
     }
 
     telemetry.end();
@@ -74,9 +72,9 @@ export default class MusicSearchOperator {
   async search(params: SearchParams): Promise<SearchResult> {
     const telemetry = this.telemetry.start(this.search);
 
-    // Check if we need to refresh Spotify token
+    // Check if we need to request a new Spotify token
     if (Date.now() >= this.refreshTime) {
-      await this.refreshToken();
+      await this.requestToken();
     }
 
     const metadata: Metadata = {
