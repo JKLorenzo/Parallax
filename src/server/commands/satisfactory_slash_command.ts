@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
+import type SatisfactoryOperator from '../operators/satisfactory_operator.js';
 
 export default class SatisfactorySlashCommand extends SlashCommand {
   constructor() {
@@ -74,25 +75,25 @@ export default class SatisfactorySlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const sm = ServerManager.instance();
+    const operator = await ServerManager.instance().operator<SatisfactoryOperator>(this.data.name);
     const command = interaction.options.getSubcommand();
 
     switch (command) {
       case 'start':
-        return sm.satisfactory.start(interaction);
+        return operator?.start(interaction);
       case 'update':
-        return sm.satisfactory.update(interaction);
+        return operator?.update(interaction);
       case 'info':
-        return sm.satisfactory.getServerInfo(interaction);
+        return operator?.getServerInfo(interaction);
       case 'save':
-        return sm.satisfactory.save(interaction);
+        return operator?.save(interaction);
       case 'shutdown':
-        return sm.satisfactory.shutdown(interaction);
+        return operator?.shutdown(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
 
         const signal = interaction.options.getInteger('signal') ?? 15;
-        return sm.satisfactory.kill(interaction, signal);
+        return operator?.kill(interaction, signal);
     }
   }
 }

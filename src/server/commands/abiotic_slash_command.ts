@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
+import type AbioticFactorOperator from '../operators/abiotic_operator.js';
 
 export default class AbioticCommand extends SlashCommand {
   constructor() {
@@ -64,21 +65,21 @@ export default class AbioticCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const sm = ServerManager.instance();
+    const operator = await ServerManager.instance().operator<AbioticFactorOperator>(this.data.name);
     const command = interaction.options.getSubcommand();
 
     switch (command) {
       case 'start':
-        return sm.abiotic.start(interaction);
+        return operator?.start(interaction);
       case 'update':
-        return sm.abiotic.update(interaction);
+        return operator?.update(interaction);
       case 'stop':
-        return sm.abiotic.stop(interaction);
+        return operator?.stop(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
 
         const signal = interaction.options.getInteger('signal') ?? 15;
-        return sm.abiotic.kill(interaction, signal);
+        return operator?.kill(interaction, signal);
     }
   }
 }

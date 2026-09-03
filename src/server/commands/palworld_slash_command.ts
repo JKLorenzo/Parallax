@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
+import type PalworldOperator from '../operators/palworld_operator.js';
 
 export default class PalworldSlashCommand extends SlashCommand {
   constructor() {
@@ -97,33 +98,33 @@ export default class PalworldSlashCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const sm = ServerManager.instance();
+    const operator = await ServerManager.instance().operator<PalworldOperator>(this.data.name);
+    
     const command = interaction.options.getSubcommand();
-
     switch (command) {
       case 'start':
-        return sm.palworld.start(interaction);
+        return operator?.start(interaction);
       case 'info':
-        return sm.palworld.getServerInfo(interaction);
+        return operator?.getServerInfo(interaction);
       case 'players':
-        return sm.palworld.getPlayers(interaction);
+        return operator?.getPlayers(interaction);
       case 'announce':
-        return sm.palworld.announce(interaction);
+        return operator?.announce(interaction);
       case 'save':
-        return sm.palworld.save(interaction);
+        return operator?.save(interaction);
       case 'update':
         if (this.notOwner(interaction)) return;
-        return sm.palworld.update(interaction);
+        return operator?.update(interaction);
       case 'shutdown':
-        return sm.palworld.shutdown(interaction, this.notOwner(interaction) ? false : true);
+        return operator?.shutdown(interaction, this.notOwner(interaction) ? false : true);
       case 'stop':
         if (this.notOwner(interaction)) return;
-        return sm.palworld.stop(interaction);
+        return operator?.stop(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
 
         const signal = interaction.options.getInteger('signal') ?? 15;
-        return sm.palworld.kill(interaction, signal);
+        return operator?.kill(interaction, signal);
     }
   }
 }

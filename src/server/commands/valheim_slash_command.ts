@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
+import type ValheimOperator from '../operators/valheim_operator.js';
 
 export default class ValheimCommand extends SlashCommand {
   constructor() {
@@ -59,21 +60,21 @@ export default class ValheimCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const sm = ServerManager.instance();
+    const operator = await ServerManager.instance().operator<ValheimOperator>(this.data.name);
     const command = interaction.options.getSubcommand();
 
     switch (command) {
       case 'start':
-        return sm.valheim.start(interaction);
+        return operator?.start(interaction);
       case 'update':
         if (this.notOwner(interaction)) return;
 
-        return sm.valheim.update(interaction);
+        return operator?.update(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
 
         const signal = interaction.options.getInteger('signal') ?? 15;
-        return sm.valheim.kill(interaction, signal);
+        return operator?.kill(interaction, signal);
     }
   }
 }

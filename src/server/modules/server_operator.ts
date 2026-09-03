@@ -4,6 +4,7 @@ import Telemetry from '../../telemetry/telemetry.js';
 import ServerManager from '../server_manager.js';
 import Utils from '../../misc/utils.js';
 import PresenceManager from '../../presence/presence_manager.js';
+import HostManager from '../../host/host_manager.js';
 
 export default abstract class ServerOperator {
   readonly name: string;
@@ -57,6 +58,7 @@ export default abstract class ServerOperator {
 
   async start(interaction: ChatInputCommandInteraction<CacheType>) {
     const sm = ServerManager.instance();
+    const hm = HostManager.instance();
 
     const executable = sm.executables.find(e => e.name === `${this.name} Dedicated Server`);
     if (!executable) return await interaction.reply('Could not find the executable information.');
@@ -66,6 +68,8 @@ export default abstract class ServerOperator {
       return await interaction.reply(info);
     } else if (this.process) {
       return await interaction.reply('Could not start when a similar process is running.');
+    } else if (!hm.ups.data?.isNormal()) {
+      return await interaction.reply('Could not start the server at this time due to power issues.');
     }
 
     await interaction.deferReply();

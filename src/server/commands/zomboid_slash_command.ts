@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { CommandScope, SlashCommand } from '../../interaction/modules/command.js';
 import ServerManager from '../server_manager.js';
+import type ZomboidOperator from '../operators/zomboid_operator.js';
 
 export default class ZomboidCommand extends SlashCommand {
   constructor() {
@@ -59,21 +60,21 @@ export default class ZomboidCommand extends SlashCommand {
   }
 
   async exec(interaction: ChatInputCommandInteraction<CacheType>) {
-    const sm = ServerManager.instance();
+    const operator = await ServerManager.instance().operator<ZomboidOperator>(this.data.name);
     const command = interaction.options.getSubcommand();
 
     switch (command) {
       case 'start':
-        return sm.zomboid.start(interaction);
+        return operator?.start(interaction);
       case 'update':
         if (this.notOwner(interaction)) return;
 
-        return sm.zomboid.update(interaction);
+        return operator?.update(interaction);
       case 'kill':
         if (this.notOwner(interaction)) return;
 
         const signal = interaction.options.getInteger('signal') ?? 15;
-        return sm.zomboid.kill(interaction, signal);
+        return operator?.kill(interaction, signal);
     }
   }
 }
