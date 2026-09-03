@@ -48,7 +48,7 @@ export default class SysInfoSlashCommand extends SlashCommand {
           },
           {
             name: 'CPU Temperature',
-            value: `${nodeStatus.cpu.temp.toFixed(2)} °C`,
+            value: `${(nodeStatus.cpu.temp ?? 0).toFixed(2)} °C`,
             inline: true,
           },
           {
@@ -59,12 +59,12 @@ export default class SysInfoSlashCommand extends SlashCommand {
           },
           {
             name: 'GPU Usage',
-            value: `${nodeStatus.gpu.usage.toFixed(2)} %`,
+            value: `${(nodeStatus.gpu.usage ?? 0).toFixed(2)} %`,
             inline: true,
           },
           {
             name: 'GPU Temperature',
-            value: `${nodeStatus.gpu.temp.toFixed(2)} °C`,
+            value: `${(nodeStatus.gpu.temp ?? 0).toFixed(2)} °C`,
             inline: true,
           },
           {
@@ -83,7 +83,7 @@ export default class SysInfoSlashCommand extends SlashCommand {
           },
           {
             name: 'SSD Temperature',
-            value: `${nodeStatus.ssd.temp.toFixed(2)} °C`,
+            value: `${(nodeStatus.ssd.temp ?? 0).toFixed(2)} °C`,
           },
           {
             name: 'System Uptime',

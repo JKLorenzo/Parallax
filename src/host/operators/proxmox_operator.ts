@@ -24,12 +24,18 @@ export default class ProxmoxOperator {
     const status = await this.api.nodes.$(node).status.$get();
     const sensors = JSON.parse(status.thermalstate);
 
+    const sensorKeys = {
+      cpu: Object.keys(sensors).find(key => key.startsWith('k10temp')),
+      gpu: Object.keys(sensors).find(key => key.startsWith('nouveau')),
+      ssd: Object.keys(sensors).find(key => key.startsWith('nvme')),
+    }
+
     const data = {
       cpu: {
         usage: status['cpu'] as number,
         freq: status['cpuinfo']['mhz'] as string,
         loadAvg: status['loadavg'] as string[],
-        temp: sensors['k10temp-pci-00c3']['Tccd1']['temp3_input'] as number,
+        temp: sensorKeys.cpu ? sensors[sensorKeys.cpu]['Tccd1']['temp3_input'] as number : undefined,
       },
       memory: {
         used: status['memory']['used'] as number,
@@ -38,11 +44,11 @@ export default class ProxmoxOperator {
         available: status['memory']['available'] as number,
       },
       gpu: {
-        usage: sensors['nouveau-pci-0600']['GPU core']['in0_input'] as number,
-        temp: sensors['nouveau-pci-0600']['temp1']['temp1_input'] as number,
+        usage: sensorKeys.gpu ? sensors[sensorKeys.gpu]['GPU core']['in0_input'] as number : undefined,
+        temp: sensorKeys.gpu ? sensors[sensorKeys.gpu]['temp1']['temp1_input'] as number : undefined,
       },
       ssd: {
-        temp: sensors['nvme-pci-0100']['Composite']['temp1_input'] as number,
+        temp: sensorKeys.ssd ? sensors[sensorKeys.ssd]['Composite']['temp1_input'] as number : undefined,
       },
       uptime: status['uptime'] as number,
     };
