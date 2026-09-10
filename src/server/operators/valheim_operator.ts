@@ -14,6 +14,6 @@ export default class ValheimOperator extends ServerOperator {
   }
 
   parseReady(log: string): boolean {
-    return Utils.hasAll(log, ['Session', 'with join code', 'and IP', 'is active']);
+    return Utils.hasAny(log, 'Game server connected');
   }
 }
